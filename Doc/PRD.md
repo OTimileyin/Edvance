@@ -375,7 +375,7 @@ No secrets should be committed to the public repository.
 
 ### 16.1 Current Status
 
-**Current Phase:** Phase 3 — Accounts & Authentication (complete; Appendix A, Change 8), on top of Phase 2, the landing page/demo sign-in steering addition (Change 6), and the "Field Guide" visual redesign (Change 7). Next phase: Phase 4 — Course Data & PostgreSQL.
+**Current Phase:** Phase 3 — Accounts & Authentication (complete; Appendix A, Change 8), on top of Phase 2, the landing page/demo sign-in steering addition (Change 6), the "Field Guide" visual redesign (Change 7), and the "Press Room" redesign + Edvance identity (Change 9). Next phase: Phase 4 — Course Data & PostgreSQL.
 
 **Completed (2026-09-27):**
 - Phase 1 — Design System & Assessment Intelligence Prototype.
@@ -401,6 +401,12 @@ No secrets should be committed to the public repository.
   - Real email/password sign-up and sign-in replace the localStorage demo session; sessions are HTTP-only cookies.
   - `/courses` and all workspace routes are guarded **server-side** by a Better Auth session check; unauthenticated requests redirect to `/signin?next=…`.
   - Course workspaces are scoped per signed-in user (keyed by email in browser storage) and new users are seeded with demo workspaces on first visit.
+- "Press Room" visual redesign and Edvance identity (steering addition, Appendix A, Change 9).
+  - Design language rebuilt from the Product Owner's artisan-poster reference: deep teal structure, cream page, rust flags, sage growth; italic Fraunces display voice; hand-illustrated poster hero; circular medallions with stitched rims; captioned product tiles; cream editorial footer.
+  - **Edvance logo delivered**: a seal monogram (an "E" built from three stacked source bars, the middle one rust-highlighted) plus a wordmark lockup, app-icon favicon (`app/icon.svg`), and shareable `public/logo.svg`. Documented in the `design.html` brand sheet.
+  - Landing page restructured to the reference's rhythm: two-panel poster hero → dark teal product band → cream medallion row → sand editorial spread → dark teal honest-status band.
+  - Applied to the header (logo lockup, centred nav, circular tool buttons), footer, auth panels, and — through the token layer — every workspace surface.
+  - Pure presentation change: no route, data, or authentication behaviour was altered.
   - Credentials live only in the git-ignored `.env`; `.env.example` documents the shape. Course data itself remains browser-local mock data (PostgreSQL integration is Phase 4).
 
 **Not yet implemented:**
@@ -502,25 +508,44 @@ Edvance should feel:
 - Focused
 - Easy to scan
 
-### Initial Color Direction
+### Current Color Direction — "Press Room" (Appendix A, Change 9)
+
+An artisan-poster palette: teal for structure, cream for the page, rust for flags,
+sage for growth. Implemented in `app/globals.css`; mirrored in the `design.html` brand sheet.
 
 | Token | Value | Usage |
 |---|---|---|
-| `--color-primary-700` | `#1D4ED8` | Primary actions |
-| `--color-primary-500` | `#3B82F6` | Links and highlights |
-| `--color-success-600` | `#059669` | Mastered / consistent |
-| `--color-warning-500` | `#F59E0B` | Developing / caution |
-| `--color-error-600` | `#DC2626` | Weak / inconsistency |
-| `--color-neutral-950` | `#0F172A` | Main text |
-| `--color-neutral-600` | `#475569` | Secondary text |
-| `--color-neutral-200` | `#E2E8F0` | Borders |
-| `--color-neutral-50` | `#F8FAFC` | Page background |
-| `--color-surface` | `#FFFFFF` | Cards and panels |
+| `--teal-950` / `--teal-900` | `#0D2327` / `#123236` | Deep bands, footers, dark chrome |
+| `--teal-700` | `#22545A` | Primary actions |
+| `--teal-600` | `#2C6E70` | Secondary accents, mastery |
+| `--teal-300` / `--teal-100` | `#9AC8BE` / `#DCEAE3` | On-dark text, tints |
+| `--cream-50` / `--cream-100` | `#FBF6EA` / `#F6EFDD` | Page background |
+| `--cream-200` / `--cream-300` | `#EDE2C9` / `#DBC9A8` | Borders, rules |
+| `--rust-700` / `--rust-600` / `--rust-500` | `#A03B1E` / `#C9502E` / `#DC6338` | Flags, inconsistencies, calls to act |
+| `--sage-600` / `--sage-100` | `#6B8A5E` / `#E4EBD6` | Mastered / consistent |
+| `--gold-600` / `--gold-100` | `#C99A3C` / `#F5ECD4` | Developing / caution |
+| `--color-surface` | `#FFFCF5` | Cards and panels |
+| `--color-neutral-950` / `--color-neutral-600` | `#23201A` / `#5A5344` | Main and secondary text |
+
+Legacy token names (`--forest-*`, `--paper-*`, `--coral-*`, `--oak-*`) are kept as aliases
+to the values above so existing components retint without churn.
+
+### Brand Identity (Appendix A, Change 9)
+
+- **The mark** is a seal containing an "E" built from three stacked source bars; the middle
+  bar is rust because Edvance highlights the evidence that matters and flags the source that
+  disagrees. It must read at 16px.
+- **Lockups**: horizontal (mark left, wordmark right) for header and footer; mark alone for
+  favicons and collapsed chrome; wordmark alone only above 24px.
+- **Assets**: `public/logo.svg` (lockup), `app/icon.svg` (favicon / app icon), and the
+  `components/logo.tsx` React components used in the app.
+- **Rules**: never rotate, outline, or re-colour the mark outside this palette.
 
 These values may be refined after reviewing the first design preview.
 
 ### Typography
-**Inter, system-ui, sans-serif**
+**Fraunces** (variable, italic, SOFT/WONK/opsz axes) for display and headings, over
+**Inter** for body and UI. Both loaded through `next/font/google`.
 
 ### Initial Components
 - Primary button
@@ -901,6 +926,31 @@ The approved implementation plan places real accounts (Better Auth) in Phase 3, 
 
 ### Impact on this document
 §16.1 updated to Phase 3 complete; next phase Phase 4. No functionality claims beyond what is implemented.
+
+---
+
+## Change 9 — "Press Room" Redesign & Edvance Identity
+
+**Date:** 2026-09-27  
+**Requested by:** Product Owner — "follow this inspiration to redesign the website. don't forget the Apple design skills… also create a logo that sells for me", with an artisan travel-poster reference design attached.  
+**Status:** Completed
+
+### Reason
+Phase 2's "Field Guide" system was a forest/paper palette with a glass evidence card. The Product Owner supplied an artisan-poster reference — vintage illustration, teal/cream/rust palette, italic serif display type, a dark band of product tiles, circular icon medallions, pill controls — and asked for a redesign in that spirit, executed with Apple-grade craft, plus a logo. A product without a mark cannot be presented or remembered, so the identity was treated as a deliverable rather than a decoration.
+
+### Decision
+- **Palette shifted**: forest green → **deep teal** (`#0D2327`–`#2C6E70`); coral → **rust** (`#C9502E`); paper → **cream** (`#FBF6EA`); **sage** added for growth/mastery. The existing semantics were preserved deliberately — rust still means *flag*, teal still means *structure/evidence* — so the redesign changed the voice without changing what any colour means. Legacy token names remain as aliases, which retinted every workspace surface without touching workspace components.
+- **A real logo was designed, not decorated**: the mark is a seal containing an "E" built from three stacked source bars with the middle bar rust-highlighted. It encodes the product's single idea (highlight the evidence, flag the source that disagrees) and stays legible at 16px. Delivered as `components/logo.tsx`, `public/logo.svg`, and `app/icon.svg` (Next.js file-convention favicon), with lockup rules documented on the `design.html` brand sheet.
+- **Landing page restructured to the reference's rhythm**: a two-panel printed poster hero (cream paper panel with the words, hand-drawn SVG poster with the illustration), a dark teal band with three captioned illustration tiles, a cream band of four medallions with stitched rims, a sand editorial spread with step chips, and a dark teal honest-status band.
+- **Header and footer rebuilt**: logo lockup left, centred anchor navigation, circular tool buttons right (the reference's medallion controls); the footer moved from forest-dark to cream with a real status note.
+- **Craft decisions**: display type set in italic Fraunces with optical sizing (`opsz`) and WONK/SOFT axes; one shared grain texture token; one easing curve; a dotted stitched seam between the poster's two panels and dotted rims on the medallions; print-style paper grain over dark bands; `prefers-reduced-motion` respected globally.
+- **Honesty fix**: the footer previously claimed "no backend involved", which Change 8 made false. It now states that accounts and sessions are real (local PostgreSQL + Better Auth) while course analysis is still mock data.
+
+### Verification
+`npm run typecheck` and `npm run build` pass; all routes build as before (`/`, `/_not-found`, `/signin`, `/signup`, `/courses*`, `/api/auth/[...all]`) plus the new `/icon.svg`. Browser-verified at 1440×980: header shows the logo lockup and centred nav with no horizontal overflow; the poster renders with the illustration panel's composition confirmed numerically (sun, sailboat, headland, lighthouse, and the document card all inside the frame at the intended coordinates); the medallion icons measure 76×76 after a selector fix; `/signin` shows the teal panel with the cream logo; `/courses` and `/courses/ai-foundry/mastery` render with teal navigation, teal mastery bars, and rust weak bars. A sweep for zero-size decorative SVGs returns none.
+
+### Impact on this document
+§16.1 updated; §17 palette, typography, and brand sections rewritten to the implemented system. No route, data, or authentication behaviour changed. No functionality claims beyond what is implemented.
 
 ---
 

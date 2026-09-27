@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { Logo } from "@/components/logo";
 
 function nextPath(): string {
   if (typeof window === "undefined") return "/courses";
@@ -13,7 +14,9 @@ function nextPath(): string {
 export function AuthForest() {
   return (
     <aside className="auth-forest">
-      <p className="auth-brand">Edvance</p>
+      <span className="auth-brand">
+        <Logo idSuffix="auth" size={44} tag="Course Intelligence" />
+      </span>
       <p className="auth-quote">
         Never study a <em className="em-coral">contradiction</em> blind again.
       </p>

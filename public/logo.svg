@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 56" width="260" height="56" role="img" aria-label="Edvance">
+  <defs>
+    <linearGradient id="seal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2C6E70" />
+      <stop offset="58%" stop-color="#1A4245" />
+      <stop offset="100%" stop-color="#0D2327" />
+    </linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Mark -->
+  <g transform="translate(4 8)">
+    <rect width="40" height="40" rx="12" fill="url(#seal)" />
+    <rect x="1.25" y="1.25" width="37.5" height="37.5" rx="11" fill="none" stroke="#FBF6EA" stroke-opacity="0.16" />
+    <rect width="40" height="16" rx="12" fill="url(#gloss)" />
+    <rect x="11.5" y="11.6" width="17" height="3.7" rx="1.85" fill="#FBF6EA" />
+    <rect x="11.5" y="18.15" width="12.6" height="3.7" rx="1.85" fill="#DC6338" />
+    <rect x="11.5" y="24.7" width="8.6" height="3.7" rx="1.85" fill="#FBF6EA" />
+  </g>
+
+  <!-- Wordmark (Fraunces where available, Georgia fallback) -->
+  <text x="56" y="33" font-family="Fraunces, Georgia, 'Times New Roman', serif" font-size="27" font-weight="600" letter-spacing="-0.8" fill="#0D2327">Edvance</text>
+  <text x="57" y="46" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="700" letter-spacing="2.6" fill="#C9502E">COURSE INTELLIGENCE</text>
+</svg>

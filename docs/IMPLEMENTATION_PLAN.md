@@ -81,7 +81,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 ### Current Status
 
-**Current phase:** Phase 3 — Accounts & Authentication (complete; `Doc/PRD.md` Appendix A, Change 8), on top of Phase 2 with steering additions: landing page and demo sign-in (Change 6) and the "Field Guide" visual redesign (Change 7).
+**Current phase:** Phase 3 — Accounts & Authentication (complete; `Doc/PRD.md` Appendix A, Change 8), on top of Phase 2 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), and the "Press Room" redesign + Edvance logo (Change 9).
 
 **Completed:**
 - Phase 1 — Design System & Assessment Intelligence Prototype (static local pages, mock data; `design.html`, `assessment-intelligence.html`).
@@ -106,6 +106,12 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
   - Real sign-up/sign-in (HTTP-only cookie sessions); header reflects session; Sign out revokes server-side.
   - Course workspaces scoped per signed-in user; new users seeded with demo workspaces.
   - Secrets only in git-ignored `.env`; `.env.example` committed.
+- "Press Room" redesign & Edvance identity (steering addition, Change 9).
+  - Palette recalibrated to deep teal / cream / rust / sage, with legacy token names kept as aliases so every workspace surface retinted without component churn.
+  - Edvance logo designed and shipped (`components/logo.tsx`, `public/logo.svg`, `app/icon.svg`) with lockup rules on the `design.html` brand sheet.
+  - Landing page restructured from the artisan-poster reference: two-panel poster hero with a hand-drawn SVG scene, dark teal band of captioned tiles, cream medallion row, sand editorial spread, dark teal status band.
+  - Header (logo lockup, centred nav, circular controls) and footer (cream, accurate status copy) rebuilt.
+  - Presentation only — no route, data, or auth behaviour changed.
 
 **Not yet implemented:**
 - PostgreSQL application integration for course data (auth already runs on PostgreSQL).

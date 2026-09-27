@@ -302,16 +302,48 @@ Exactly once: the Windows elevation prompt to install PostgreSQL (requested via 
 
 ---
 
+## Episode 15 — "Press Room" redesign from an artisan-poster reference, plus a real logo
+
+### Product Owner prompt (verbatim)
+> follow this inspiration to redesign the websitte. dont foeget the apple design skills. ans other importan skills. also create a logo that sells for me
+
+(Reference attached: an artisan website design — vintage travel-poster illustration, teal/cream/rust palette, italic serif display type, a dark band of captioned product tiles, circular icon medallions, pill controls.)
+
+### What the AI builder did
+1. **Read the reference then made one call explicitly**: shift the palette to match the reference (deep teal, cream, rust, sage) rather than adopt only its layout. Rationale recorded in PRD Change 9 — the reference's dominant band colour is deep teal, and it is close enough to the old forest green that the *meaning* of every colour survives (rust still = flag, teal still = structure/evidence). Legacy token names (`--forest-*`, `--paper-*`, `--coral-*`, `--oak-*`) were kept as aliases, so the entire workspace retinted with zero component churn — verified on `/courses` and `/courses/ai-foundry/mastery`.
+2. **Designed the logo as a product statement, not decoration.** The mark is a seal containing an "E" built from three stacked source bars; the middle bar is rust, because Edvance highlights the evidence that matters and flags the source that disagrees. Shipped as `components/logo.tsx` (`LogoMark` / `Logo`, with an `idSuffix` so the gradient ids stay unique across header, footer, and auth instances), `app/icon.svg` (Next.js file-convention favicon → new `/icon.svg` route) and `public/logo.svg` (full lockup with a serif fallback stack).
+3. **Rebuilt the landing page to the reference's rhythm**: a two-panel printed poster hero — cream paper panel for the words, a hand-drawn SVG poster (sky, seal-sun, layered ranges with snow caps, sea, sailboat, headland with a lighthouse) for the art — then a dark teal band of three captioned illustration tiles, a cream band of four medallions with dotted stitched rims, a sand editorial spread with six step chips and a desk illustration, and a dark teal honest-status band with the stamp.
+4. **Rebuilt header and footer.** Header: logo lockup left, centred anchor nav, circular tool buttons right (the reference's medallion controls). Footer: forest-dark → cream, with circular action buttons and a corrected honesty note.
+   - **Honesty fix found along the way:** the footer still claimed "no backend involved", which Change 8 made false. It now says accounts and sessions are real (local PostgreSQL + Better Auth) while course analysis is still mock data.
+5. **Craft pass (the "Apple skills"):** italic Fraunces display with optical sizing and WONK/SOFT axes; one shared grain-texture token instead of four copy-pasted data URIs; one easing curve; a dotted stitched seam where paper meets illustration; print-style grain over dark bands; `prefers-reduced-motion` respected globally; 44px+ touch targets on the circular buttons with `aria-label`s.
+6. **Two real bugs caught by measuring instead of guessing.** The medallion icons rendered at 0×0 — the CSS rule targeted `svg.medallion-art` while the class sat on a wrapping `<span>`; a sweep for decorative SVGs under 8px now returns none. The poster's card originally sat on the water *and* the copy ran down over the sea; the hero was restructured into two panels so all text sits on cream (a contrast problem no screenshot would have flagged as clearly as the numbers did). The illustration's composition was then verified numerically (sun upper-right, sailboat and wave band above the card, lighthouse inside the frame, card docked at 31% of the panel).
+7. **Verified**: `npm run typecheck` ✓ · `npm run build` ✓ (all routes plus `/icon.svg`) · browser DOM checks at 1440×980 — no horizontal overflow anywhere, medallion discs 148px with 76px icons, `/signin` teal panel with cream logo, workspace teal nav/mastery and rust weak bars.
+8. **Docs**: PRD **Change 9** + §16.1 + §17 (palette, typography, brand identity rewritten to what is actually implemented), plan status block, README (new Brand section), this episode. `design.html` rewritten as the brand & interface sheet, since the Product Owner's second ask was a logo — the logo needed a home where its rules live.
+
+### Notes / limits
+- `preview_screenshot` failed repeatedly ("webview is not being composited") even after closing and reopening the tab, so visual verification was done by measuring computed layout, geometry, and colour in the live page rather than by looking at pixels. This is a tooling limit, not a page fault.
+- No route, data, or authentication behaviour changed. This was a presentation change; the only functional fix was the false footer claim.
+
+### Files changed
+- New: `components/logo.tsx`, `app/icon.svg`, `public/logo.svg`
+- Rewritten: `app/page.tsx`, `app/globals.css`, `design.html`
+- Changed: `app/layout.tsx`, `components/header.tsx`, `app/signin/page.tsx`
+- Docs: `Doc/PRD.md`, `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md`
+
+---
+
 ## Current state (2026-09-27)
 
 - **Committed & pushed:** Phase 1 (`cd4bcdb`, `9090f45`), Phase 2 + Field Guide redesign (`2af22eb`). `origin/main` last synced at `9090f45`; `2af22eb` and Phase 3 are local-only until the Product Owner asks for a push.
 - **Phase 3 (Episode 14):** Better Auth over local PostgreSQL (service `postgresql-edvance`, db `edvance`); server-side guard on `/courses`; per-user workspaces; Phase 3 docs committed separately.
+- **Press Room redesign + logo (Episode 15):** teal/cream/rust/sage palette with legacy aliases; Edvance seal monogram shipped as React components, favicon, and a shareable SVG; landing page, header, and footer rebuilt; `design.html` is now the brand & interface sheet. Presentation only — no behaviour changed.
 - **Running:** dev server on http://localhost:3000 (started detached; log `/tmp/edvance-dev.log`); PostgreSQL service running.
 - **Verified:** typecheck ✓ · build ✓ · auth flows (sign-up, session, guard 307/200) ✓ · browser sign-up + scoped workspace ✓.
 
 ## Suggested next steps
-1. Product Owner reviews the Phase 3 auth flow in the browser (sign-up, demo account, sign-out, guard redirect).
-2. Push `origin/main` when the Product Owner asks (two local commits ahead).
+1. Product Owner reviews the new landing page and logo in the browser at http://localhost:3000, and the brand sheet at `design.html`.
+2. Push `origin/main` when the Product Owner asks (local commits ahead of `origin/main`).
+3. Optional polish: a light-theme/dark-theme pass on the new tokens, and a social/OG image built from the poster scene and logo lockup.
 3. Phase 4 — Course Data & PostgreSQL: move courses/concepts/assessments from browser storage into the database with a proper schema and data-access layer.
 4. Phase 5+ — Cloudflare R2 ingestion, intelligence phases (per `docs/IMPLEMENTATION_PLAN.md`).
 5. Dark-mode variant of the Field Guide system (forest-forward, paper text) — not started, no commitment made.
