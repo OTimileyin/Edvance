@@ -375,7 +375,7 @@ No secrets should be committed to the public repository.
 
 ### 16.1 Current Status
 
-**Current Phase:** Phase 2 — Core Application Structure (complete), plus landing page and demo sign-in (steering addition, Appendix A, Change 6) and the "Field Guide" visual redesign (steering addition, Appendix A, Change 7). Next phase: Phase 3 — Accounts & Authentication (Better Auth).
+**Current Phase:** Phase 3 — Accounts & Authentication (complete; Appendix A, Change 8), on top of Phase 2, the landing page/demo sign-in steering addition (Change 6), and the "Field Guide" visual redesign (Change 7). Next phase: Phase 4 — Course Data & PostgreSQL.
 
 **Completed (2026-09-27):**
 - Phase 1 — Design System & Assessment Intelligence Prototype.
@@ -396,17 +396,22 @@ No secrets should be committed to the public repository.
 - "Field Guide" visual redesign (steering addition, Appendix A, Change 7).
   - Design system rebuilt from three Product Owner reference designs: deep forest-green structure, warm paper surfaces, coral flag accents; Fraunces serif display over Inter body; glassmorphism panels on atmospheric gradients; stamp badges and tinted journey tiles.
   - Applied across the landing page (glass evidence hero card, forest feature band, oak journey band, stamp demo section), split-screen sign-in/sign-up, workspace surfaces, and the standalone `design.html` preview.
+- Phase 3 — Accounts & Authentication (Better Auth; Appendix A, Change 8).
+  - Local PostgreSQL provisioned (Windows service `postgresql-edvance`, database `edvance`); Better Auth schema (`user`, `session`, `account`, `verification`) migrated.
+  - Real email/password sign-up and sign-in replace the localStorage demo session; sessions are HTTP-only cookies.
+  - `/courses` and all workspace routes are guarded **server-side** by a Better Auth session check; unauthenticated requests redirect to `/signin?next=…`.
+  - Course workspaces are scoped per signed-in user (keyed by email in browser storage) and new users are seeded with demo workspaces on first visit.
+  - Credentials live only in the git-ignored `.env`; `.env.example` documents the shape. Course data itself remains browser-local mock data (PostgreSQL integration is Phase 4).
 
 **Not yet implemented:**
-- Better Auth (accounts & authentication).
-- PostgreSQL application integration.
+- PostgreSQL application integration (course data; auth already runs on PostgreSQL).
 - Cloudflare R2 file storage.
 - Real course ingestion.
 - Live AI APIs.
 - Source-processing pipeline.
 - Production deployment.
 
-**Next Phase:** Phase 3 — Accounts & Authentication (Better Auth).
+**Next Phase:** Phase 4 — Course Data & PostgreSQL.
 
 ### Phase 0 — Project Foundation
 **Goal:** Establish the project environment and documentation.
@@ -869,6 +874,33 @@ Fuse the three references into one coherent system, named **"Field Guide"**:
 
 ### Impact on this document
 §16.1 updated to record the redesign. Scope remains the same: demo data, demo sessions, no backend. No functionality claims beyond what is implemented.
+
+---
+
+## Change 8 — Phase 3: Accounts & Authentication (Better Auth)
+
+**Date:** 2026-09-27  
+**Requested by:** Product Owner (standing instruction to proceed autonomously through the approved plan)  
+**Status:** Completed — Phase 3
+
+### Reason
+The approved implementation plan places real accounts (Better Auth) in Phase 3, with PostgreSQL running locally per Decision 1. The Product Owner granted blanket permission for normal local development operations, including installing tools and configuring the local environment.
+
+### Decision
+- **Local PostgreSQL provisioned** via the PostgreSQL 18 installer (winget, elevated with Product Owner approval): Windows service `postgresql-edvance` on `127.0.0.1:5432`, database `edvance`, dev-only superuser password (kept out of Git in `.env`).
+- **Better Auth 1.7** with the Kysely adapter on `pg` + `Pool` over `DATABASE_URL`; `emailAndPassword.enabled`; `nextCookies()` plugin last so server actions can set cookies. Handler mounted at `/api/auth/[...all]` via `toNextJsHandler` (Next.js 16 proxy-style notes followed from Better Auth's Next.js guide).
+- **Schema** created with `npx auth migrate` (`user`, `session`, `account`, `verification`).
+- **Route protection is server-side**: `app/courses/layout.tsx` (RSC) calls `auth.api.getSession({ headers: await headers() })` and redirects to `/signin?next=/courses` when absent — the check is not bypassable by client code.
+- **Per-user workspaces**: course storage is keyed by the signed-in user's email (`edvance.courses.v1.<email>`), so different accounts see different workspaces. First sign-in seeds demo workspaces. Course data itself is still browser-local mock data — PostgreSQL persistence for courses is Phase 4.
+- **Demo entry preserved**: "Continue with a demo account" provisions/signs in a real local `demo@edvance.app` account (fixed demo password, local-only).
+- **Header** is driven by the reactive Better Auth session (`authClient.useSession`) — user name and Sign out reflect real session state; Sign out revokes the server session.
+- **Env**: `.env` (git-ignored) holds `DATABASE_URL`, `BETTER_AUTH_SECRET` (32-char base64), `BETTER_AUTH_URL`; committed `.env.example` documents the shape without values.
+
+### Verification
+`npm run typecheck` and `npm run build` pass (`/api/auth/[...all]` and `/courses` now server-rendered). API-level: `POST /api/auth/sign-up/email` creates the user; `get-session` with the cookie returns the session; `GET /courses` without a session → 307 to `/signin?next=/courses`, with a session → 200. PostgreSQL contains the created users and hashed credential accounts. Browser-level: real sign-up (Amara Okafor) lands on `/courses` with the header showing the account name and Sign out; workspace pages render scoped data. Sign-up form errors (short password, duplicate email) surface inline.
+
+### Impact on this document
+§16.1 updated to Phase 3 complete; next phase Phase 4. No functionality claims beyond what is implemented.
 
 ---
 

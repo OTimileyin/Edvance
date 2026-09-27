@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** In progress — Phase 2 complete (2026-09-27)
+**Status:** In progress — Phase 3 complete (2026-09-27)
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -81,7 +81,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 ### Current Status
 
-**Current phase:** Phase 2 — Core Application Structure (complete), plus steering additions: landing page and demo sign-in (see `Doc/PRD.md` Appendix A, Change 6) and the "Field Guide" visual redesign (Change 7).
+**Current phase:** Phase 3 — Accounts & Authentication (complete; `Doc/PRD.md` Appendix A, Change 8), on top of Phase 2 with steering additions: landing page and demo sign-in (Change 6) and the "Field Guide" visual redesign (Change 7).
 
 **Completed:**
 - Phase 1 — Design System & Assessment Intelligence Prototype (static local pages, mock data; `design.html`, `assessment-intelligence.html`).
@@ -99,17 +99,23 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 - "Field Guide" visual redesign (steering addition, Change 7).
   - Design system rebuilt around forest/paper/coral palette, Fraunces display serif + Inter body, glassmorphism panels, stamp badges, and tinted journey tiles, fused from three Product Owner reference designs.
   - Applied across the landing page, split-screen sign-in/sign-up, workspace surfaces, header/footer, and `design.html`.
+- Phase 3 — Accounts & Authentication (Better Auth).
+  - Local PostgreSQL provisioned and running as Windows service `postgresql-edvance`; database `edvance` created.
+  - Better Auth configured (email/password, `pg` Pool, `nextCookies`); schema migrated (`user`, `session`, `account`, `verification`).
+  - Server-side route guard on `/courses` and below; client-side guard as a second layer.
+  - Real sign-up/sign-in (HTTP-only cookie sessions); header reflects session; Sign out revokes server-side.
+  - Course workspaces scoped per signed-in user; new users seeded with demo workspaces.
+  - Secrets only in git-ignored `.env`; `.env.example` committed.
 
 **Not yet implemented:**
-- Better Auth (real accounts & authentication).
-- PostgreSQL application integration.
+- PostgreSQL application integration for course data (auth already runs on PostgreSQL).
 - Cloudflare R2.
 - Real course ingestion.
 - Live AI APIs.
 - Source-processing pipeline.
 - Production deployment.
 
-**Next phase:** Phase 3 — Accounts & Authentication (Better Auth).
+**Next phase:** Phase 4 — Course Data & PostgreSQL.
 
 ---
 
@@ -215,10 +221,10 @@ This is the **Lesson 6 deliverable**.
 - Protected application routes.
 
 **Acceptance Criteria:**
-- [ ] Sign-up and sign-in work locally.
-- [ ] Authenticated users can create courses.
-- [ ] Unauthenticated access to protected routes is blocked.
-- [ ] No credentials or session secrets are committed.
+- [x] Sign-up and sign-in work locally.
+- [x] Authenticated users can create courses.
+- [x] Unauthenticated access to protected routes is blocked.
+- [x] No credentials or session secrets are committed.
 
 ---
 

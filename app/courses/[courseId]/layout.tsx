@@ -2,9 +2,18 @@
 
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
+import { SessionGuard } from "@/components/session-guard";
 import { useCourse } from "@/lib/useCourses";
 
 export default function CourseWorkspaceLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SessionGuard>
+      <WorkspaceShell>{children}</WorkspaceShell>
+    </SessionGuard>
+  );
+}
+
+function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const params = useParams<{ courseId: string }>();
   const { course, ready } = useCourse(params.courseId);

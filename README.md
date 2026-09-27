@@ -63,7 +63,14 @@ The core problem is lack of alignment between learning materials, assessment exp
 
 ## Project Status
 
-Phase 1 — Design System & Assessment Intelligence Prototype and Phase 2 — Core Application Structure are complete, plus a landing page with demo sign-in and the "Field Guide" visual redesign (forest green, warm paper, coral flags, Fraunces serif display, glassmorphism panels — see `Doc/PRD.md` Appendix A, Change 7). The product requirements are defined in `Doc/PRD.md` (source of truth), with the plan in `docs/IMPLEMENTATION_PLAN.md`. The current deliverable is a Next.js learning workspace that runs locally: it opens on a marketing landing page, sign-in/sign-up create a local **demo session** (not a real account), and the course workspace uses mock data only. Later capabilities (Better Auth + a real database, Cloudflare R2, real course ingestion, live AI APIs, source processing, and production deployment) are not yet implemented.
+Phase 1, Phase 2, and Phase 3 are complete, plus two steering additions (landing page/demo sign-in, Change 6; "Field Guide" visual redesign, Change 7). The product requirements are defined in `Doc/PRD.md` (source of truth), with the plan in `docs/IMPLEMENTATION_PLAN.md`. The current deliverable is a Next.js learning workspace that runs locally: it opens on a marketing landing page, **sign-up/sign-in create real local accounts** (Better Auth over local PostgreSQL, HTTP-only cookie sessions), and course workspaces are per-user. Course content itself is still browser-local mock data — full PostgreSQL persistence for courses is Phase 4. Later capabilities (Cloudflare R2, real course ingestion, live AI APIs, source processing, production deployment) are not yet implemented.
+
+### Prerequisites (local)
+- Node.js + npm
+- PostgreSQL running locally. This repo expects a server on `127.0.0.1:5432` with a database named `edvance` (the dev machine runs it as the Windows service `postgresql-edvance`).
+- A `.env` file in the repo root (copy `.env.example`) with `DATABASE_URL`, `BETTER_AUTH_SECRET` (32+ chars), and `BETTER_AUTH_URL`.
+
+First auth run creates its tables with `npx auth migrate` (already applied on the dev machine).
 
 ## Running the Local Prototype
 
@@ -75,7 +82,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000` in a browser. The app opens on the landing page; picking **Get started** (sign-up) or **Sign in** creates a local demo session and enters the course workspace at `/courses` (any email/password is accepted — nothing leaves the browser). Every route after sign-in renders mock data, and workspaces or questions you create are stored in your browser's local storage — demo only, no backend.
+Open `http://localhost:3000` in a browser. The app opens on the landing page; **Get started** (sign-up) or **Sign in** creates/uses a real local account (password must be 8+ characters) and enters the course workspace at `/courses`. Workspaces are scoped to the signed-in user — browser storage is keyed by account email, and new accounts are seeded with demo workspaces. **Continue with a demo account** provisions and signs in a local `demo@edvance.app` account. Unauthenticated visits to `/courses` (and below) redirect to the sign-in page server-side.
 
 ### Static previews (Phase 1)
 Phase 1 pages are plain HTML/CSS with no build tooling. Open them directly in a browser (double-click the files):

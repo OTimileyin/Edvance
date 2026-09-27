@@ -272,16 +272,46 @@ The three references: a glassmorphism ride-sharing welcome screen, a web-design 
 
 ---
 
+## Episode 14 — Phase 3: real accounts with Better Auth (autonomous run)
+
+### Product Owner prompt (verbatim, condensed)
+> From this point forward, operate as autonomously as possible… proceed with all normal development actions yourself… only stop for things you genuinely cannot complete (credentials, external accounts, OS confirmations, product decisions)… never do destructive/irreversible/security-sensitive/externally-consequential actions without asking.
+
+### What the AI builder did
+1. **Committed Phase 2 + redesign** as `2af22eb` (33 files, +5406/−1223) — a normal commit covered by the autonomy grant; push still deferred (externally consequential).
+2. **Provisioned local PostgreSQL** (Decision 1 stack) for Phase 3:
+   - Found no running server; installed PostgreSQL 18 via `winget` — **stopped to request OS elevation** (the one thing that cannot be done without the user; approval granted, UAC prompt clicked).
+   - The EDB silent install hit a transient resource lock and registered no service initially; diagnosed, re-ran, and the service `postgresql-edvance` came up on `127.0.0.1:5432` with the intended dev password.
+   - A parallel manual `initdb` cluster on 5433 was initialized, found redundant, and removed (own artifact, reversible).
+   - Created database `edvance`.
+3. **Integrated Better Auth 1.7**: installed `better-auth` + `pg`; `lib/auth.ts` (Kysely adapter over `pg.Pool`, email/password, `nextCookies()` last); `app/api/auth/[...all]/route.ts` via `toNextJsHandler`; `lib/auth-client.ts` React client; `npx auth migrate` created `user`, `session`, `account`, `verification`.
+4. **Secrets hygiene**: generated a 32-char base64 secret locally; `.env` (git-ignored) holds `DATABASE_URL`/`BETTER_AUTH_SECRET`/`BETTER_AUTH_URL`; committed `.env.example` template. `git status --short` confirmed `.env` never appears.
+5. **Auth flows**: sign-up/sign-in rewritten to `authClient.signUp.email` / `signIn.email` with inline error states (401 mismatch, 422 duplicate, 8-char minimum); "Continue with a demo account" now provisions/signs in a real local `demo@edvance.app`; header driven by `authClient.useSession`; Sign out calls the server (`authClient.signOut`).
+6. **Route protection, server-side**: `app/courses/layout.tsx` converted to an RSC calling `auth.api.getSession({ headers: await headers() })` → `redirect("/signin?next=/courses")`; client `SessionGuard` kept as second layer. This closes the Phase 2 gap where the guard was client-only.
+7. **Per-user workspaces**: `lib/store.ts` and hooks now take the signed-in email and key storage `edvance.courses.v1.<email>`; a `UserBootstrapper` seeds demo workspaces on a user's first visit. (Course rows as DB entities remain Phase 4 — PRD governance kept: no claims beyond what is built.)
+8. **Verified end-to-end**: typecheck ✓, build ✓ (`/api/auth/[...all]`, `/courses` now dynamic). curl: sign-up → user created; get-session with cookie → session; `/courses` without cookie → **307 → /signin?next=/courses**; with cookie → 200. PostgreSQL shows 2 users with hashed `credential` accounts. Browser: real sign-up (Amara Okafor) → lands on `/courses`, header shows "Amara Okafor · Sign out", workspace renders 6 scoped concept rows. (Sign-up click-through needed `requestSubmit` due to a preview-bridge quirk; form logic itself worked.)
+9. **Docs**: PRD **Change 8** + §16.1 (Phase 3 complete, next Phase 4), plan status + Phase 3 acceptance criteria checked, README prerequisites/run instructions rewritten, this episode appended.
+
+### Where the user was asked to act
+Exactly once: the Windows elevation prompt to install PostgreSQL (requested via the elevation dialog, approved, UAC clicked by the user). Everything else — installs, services, database, migrations, code, tests, docs, commit — was done autonomously. Push to GitHub remains deferred until the Product Owner asks.
+
+### Files changed
+- New: `lib/auth.ts`, `lib/auth-client.ts`, `lib/demo-data.ts`, `components/user-bootstrapper.tsx`, `app/api/auth/[...all]/route.ts`, `.env` (untracked), `.env.example`
+- Changed: `app/courses/layout.tsx`, `app/courses/[courseId]/layout.tsx`, `app/signin/page.tsx`, `app/signup/page.tsx`, `components/header.tsx`, `components/session-guard.tsx`, `components/course-directory.tsx`, `components/add-assessment-form.tsx`, `lib/store.ts`, `lib/useCourses.ts`, `package.json`, `package-lock.json`
+- Docs: `Doc/PRD.md`, `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md`
+
+---
+
 ## Current state (2026-09-27)
 
-- **Committed & pushed:** Phase 1 (`cd4bcdb`, `9090f45`), `origin/main` in sync.
-- **Built but uncommitted:** Phase 2 app + landing page + demo sign-in (Episode 6 + 10) + "Field Guide" visual redesign (Episode 13). Working tree: M `Doc/PRD.md`, M `README.md`, M `docs/IMPLEMENTATION_PLAN.md`, M `conversation.md`; untracked `app/`, `components/`, `lib/`, `next.config.ts`, `package.json`, `package-lock.json`, `tsconfig.json`, plus Next-generated `AGENTS.md`/`CLAUDE.md`.
-- **Running:** dev server on http://localhost:3000 (pid in `C:\Users\ADMIN\AppData\Local\Temp\opencode\edvance-dev.pid`).
-- **Verified:** typecheck ✓ · build ✓ · routes `/`, `/signin`, `/signup`, `/courses` 200 ✓.
+- **Committed & pushed:** Phase 1 (`cd4bcdb`, `9090f45`), Phase 2 + Field Guide redesign (`2af22eb`). `origin/main` last synced at `9090f45`; `2af22eb` and Phase 3 are local-only until the Product Owner asks for a push.
+- **Phase 3 (Episode 14):** Better Auth over local PostgreSQL (service `postgresql-edvance`, db `edvance`); server-side guard on `/courses`; per-user workspaces; Phase 3 docs committed separately.
+- **Running:** dev server on http://localhost:3000 (started detached; log `/tmp/edvance-dev.log`); PostgreSQL service running.
+- **Verified:** typecheck ✓ · build ✓ · auth flows (sign-up, session, guard 307/200) ✓ · browser sign-up + scoped workspace ✓.
 
 ## Suggested next steps
-1. Product Owner reviews the landing page + demo sign-in flow in the browser.
-2. Commit Phase 2, e.g. `feat: build Phase 2 core application structure` (must be explicitly requested).
-3. Phase 3 — Accounts & Authentication with **Better Auth** (real accounts; the demo sign-in already defines the intended UX).
-4. Phase 4+ — PostgreSQL, Cloudflare R2, ingestion, live AI, deployment (per `docs/IMPLEMENTATION_PLAN.md`).
+1. Product Owner reviews the Phase 3 auth flow in the browser (sign-up, demo account, sign-out, guard redirect).
+2. Push `origin/main` when the Product Owner asks (two local commits ahead).
+3. Phase 4 — Course Data & PostgreSQL: move courses/concepts/assessments from browser storage into the database with a proper schema and data-access layer.
+4. Phase 5+ — Cloudflare R2 ingestion, intelligence phases (per `docs/IMPLEMENTATION_PLAN.md`).
 5. Dark-mode variant of the Field Guide system (forest-forward, paper text) — not started, no commitment made.

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { setSession } from "@/lib/session";
+import { authClient } from "@/lib/auth-client";
 import { AuthForest } from "@/app/signin/page";
 
 function nextPath(): string {
@@ -17,15 +17,36 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     if (!name.trim() || !email.trim() || !password.trim()) {
       setError("Fill in your name, email, and password to continue.");
       return;
     }
-    setSession({ name: name.trim(), email: email.trim() });
+    if (password.length < 8) {
+      setError("Choose a password with at least 8 characters.");
+      return;
+    }
+    setBusy(true);
+    const result = await authClient.signUp.email({
+      name: name.trim(),
+      email: email.trim(),
+      password,
+    });
+    setBusy(false);
+    if (result.error) {
+      setError(
+        result.error.status === 422
+          ? "An account with that email already exists — sign in instead."
+          : result.error.message ?? "Sign-up failed. Try again.",
+      );
+      return;
+    }
     router.replace(nextPath());
+    router.refresh();
   }
 
   return (
@@ -35,8 +56,8 @@ export default function SignUpPage() {
         <div className="auth-card" aria-live="polite">
           <h1>Create your account</h1>
           <p className="auth-sub">
-            Demo account — details are saved only in this browser, not on any
-            server.
+            Real local account — name, email, and a hashed password are stored in
+            PostgreSQL on this machine.
           </p>
           <form className="form" onSubmit={handleSubmit} style={{ maxWidth: "none" }}>
             <div className="field">
@@ -83,8 +104,8 @@ export default function SignUpPage() {
                 {error}
               </p>
             ) : null}
-            <button className="btn btn-primary" type="submit">
-              Create account
+            <button className="btn btn-primary" type="submit" disabled={busy}>
+              {busy ? "Creating account…" : "Create account"}
             </button>
           </form>
           <p className="auth-alt">

@@ -2,25 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { clearSession, getSession } from "@/lib/session";
+import { authClient } from "@/lib/auth-client";
 
 export function AppHeader() {
   const router = useRouter();
-  const pathname = usePathname();
-  const [name, setName] = useState<string | null>(null);
+  const { data, isPending } = authClient.useSession();
 
-  // Re-check the session on every route change so sign-in/sign-out from
-  // client-side navigations is reflected immediately.
-  useEffect(() => {
-    setName(getSession()?.name ?? null);
-  }, [pathname]);
-
-  function handleSignOut() {
-    clearSession();
-    setName(null);
+  async function handleSignOut() {
+    await authClient.signOut();
     router.push("/");
+    router.refresh();
   }
 
   return (
@@ -32,16 +23,15 @@ export function AppHeader() {
           <span className="brand-accent">Course Intelligence</span>
         </Link>
         <nav aria-label="Primary" className="header-nav">
-          {name ? (
+          {!isPending && data?.user ? (
             <>
-              <span className="nav-user">{name}</span>
+              <span className="nav-user">{data.user.name || data.user.email}</span>
               <button type="button" className="nav-action" onClick={handleSignOut}>
                 Sign out
               </button>
             </>
-          ) : (
-            <Link href="/signin">Sign in</Link>
-          )}
+          ) : null}
+          {!isPending && !data?.user ? <Link href="/signin">Sign in</Link> : null}
           <span className="demo-flag">Demo · mock data</span>
         </nav>
       </div>

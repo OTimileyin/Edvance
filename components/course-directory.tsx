@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createCourse, getCourses } from "@/lib/store";
 import { useCourses } from "@/lib/useCourses";
+import { authClient } from "@/lib/auth-client";
 import { ConsistencyBadge } from "./badges";
 
 export function CourseDirectory() {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const ownerEmail = session?.user.email ?? "";
   const { courses, ready } = useCourses();
   const [name, setName] = useState("");
   const [institution, setInstitution] = useState("");
@@ -21,7 +24,7 @@ export function CourseDirectory() {
       setError("Give the course a name before creating a workspace.");
       return;
     }
-    const course = createCourse({ name, institution, lesson });
+    const course = createCourse(ownerEmail, { name, institution, lesson });
     setName("");
     setInstitution("");
     setLesson("");
@@ -39,7 +42,8 @@ export function CourseDirectory() {
         <span className="kicker">Learning workspace</span>
         <h1 className="page-title">Courses</h1>
         <p className="page-lede">
-          Open a course workspace to explore its sources, assessments, and your mastery progress.
+          Workspaces belong to {ownerEmail || "your account"} and live on this device in the
+          demo. Open one to explore its sources, assessments, and mastery progress.
         </p>
       </section>
 

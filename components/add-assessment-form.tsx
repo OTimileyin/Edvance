@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { addAssessment } from "@/lib/store";
+import { authClient } from "@/lib/auth-client";
 
 export function AddAssessmentForm({
   courseId,
@@ -10,6 +11,8 @@ export function AddAssessmentForm({
   courseId: string;
   onAdded: () => void;
 }) {
+  const { data: session } = authClient.useSession();
+  const ownerEmail = session?.user.email ?? "";
   const [question, setQuestion] = useState("");
   const [lesson, setLesson] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +23,7 @@ export function AddAssessmentForm({
       setError("Enter the assessment question before adding it.");
       return;
     }
-    addAssessment(courseId, lesson, question);
+    addAssessment(ownerEmail, courseId, lesson, question);
     setQuestion("");
     setLesson("");
     setError(null);

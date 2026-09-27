@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { setSession } from "@/lib/session";
+import { authClient } from "@/lib/auth-client";
 
 function nextPath(): string {
   if (typeof window === "undefined") return "/courses";
@@ -37,20 +37,55 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  function enter(name: string, mail: string) {
-    setSession({ name, email: mail });
+  function navigate() {
     router.replace(nextPath());
+    router.refresh();
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     if (!email.trim() || !password.trim()) {
       setError("Enter an email and password to continue.");
       return;
     }
-    const name = email.trim().split("@")[0] || "Demo learner";
-    enter(name, email.trim());
+    setBusy(true);
+    const result = await authClient.signIn.email({
+      email: email.trim(),
+      password,
+    });
+    setBusy(false);
+    if (result.error) {
+      setError(
+        result.error.status === 401
+          ? "That email and password don't match an account. Create one below."
+          : result.error.message ?? "Sign-in failed. Try again.",
+      );
+      return;
+    }
+    navigate();
+  }
+
+  async function handleDemo() {
+    setBusy(true);
+    // Provision the shared local demo account on the fly.
+    await authClient.signUp.email({
+      name: "Demo learner",
+      email: "demo@edvance.app",
+      password: "demo-password-123",
+    });
+    const result = await authClient.signIn.email({
+      email: "demo@edvance.app",
+      password: "demo-password-123",
+    });
+    setBusy(false);
+    if (result.error) {
+      setError(result.error.message ?? "Demo sign-in failed. Try again.");
+      return;
+    }
+    navigate();
   }
 
   return (
@@ -60,7 +95,7 @@ export default function SignInPage() {
         <div className="auth-card" aria-live="polite">
           <h1>Sign in</h1>
           <p className="auth-sub">
-            Demo account — any email and password are accepted locally.
+            Real local account — stored in PostgreSQL on this machine.
           </p>
           <form className="form" onSubmit={handleSubmit} style={{ maxWidth: "none" }}>
             <div className="field">
@@ -94,13 +129,14 @@ export default function SignInPage() {
                 {error}
               </p>
             ) : null}
-            <button className="btn btn-primary" type="submit">
-              Sign in
+            <button className="btn btn-primary" type="submit" disabled={busy}>
+              {busy ? "Signing in…" : "Sign in"}
             </button>
             <button
               className="btn btn-secondary"
               type="button"
-              onClick={() => enter("Demo learner", "demo@edvance.app")}
+              onClick={handleDemo}
+              disabled={busy}
             >
               Continue with a demo account
             </button>
