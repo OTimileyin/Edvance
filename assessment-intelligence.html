@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Edvance — Assessment Intelligence. Mock prototype: what an assessment tests, where it was taught, and what to review next.">
+<title>Edvance — Assessment Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-primary-700: #1D4ED8;
+    --color-primary-500: #3B82F6;
+    --color-success-600: #059669;
+    --color-warning-500: #F59E0B;
+    --color-error-600: #DC2626;
+    --color-neutral-950: #0F172A;
+    --color-neutral-600: #475569;
+    --color-neutral-200: #E2E8F0;
+    --color-neutral-50: #F8FAFC;
+    --color-surface: #FFFFFF;
+
+    --color-success-50: #ECFDF5;
+    --color-success-700: #047857;
+    --color-warning-50: #FFFBEB;
+    --color-warning-700: #92400E;
+    --color-error-50: #FEF2F2;
+    --color-error-700: #B91C1C;
+    --color-neutral-100: #F1F5F9;
+    --color-neutral-300: #CBD5E1;
+
+    --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.1);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.09), 0 2px 4px rgba(15, 23, 42, 0.05);
+    --shadow-primary: 0 1px 0 rgba(255, 255, 255, 0.45) inset, 0 2px 4px rgba(15, 23, 42, 0.18), 0 10px 18px -10px rgba(29, 78, 216, 0.6);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 84px;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-neutral-50);
+    color: var(--color-neutral-950);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  a {
+    color: var(--color-primary-700);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  a:hover {
+    color: #1E40AF;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-primary-500);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--color-primary-700);
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 0 0 var(--radius-sm) 0;
+    z-index: 100;
+  }
+
+  .skip-link:focus {
+    left: 0;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-neutral-200);
+  }
+
+  .header-inner {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--color-primary-700);
+    color: #fff;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .brand-name {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .brand-descriptor {
+    margin: 2px 0 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-neutral-600);
+    letter-spacing: 0.01em;
+  }
+
+  .demo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-warning-700);
+    background: var(--color-warning-50);
+    border: 1px solid #FDE68A;
+    border-radius: 999px;
+    padding: 8px 16px;
+    line-height: 1.2;
+  }
+
+  .site-main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 24px 96px;
+  }
+
+  .breadcrumb {
+    list-style: none;
+    margin: 0;
+    padding: 16px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: baseline;
+    font-size: 14px;
+    color: var(--color-neutral-600);
+  }
+
+  .breadcrumb li {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .breadcrumb li:not(:last-child)::after {
+    content: "/";
+    color: var(--color-neutral-300);
+  }
+
+  .breadcrumb a {
+    font-weight: 500;
+  }
+
+  .breadcrumb [aria-current="page"] {
+    color: var(--color-neutral-950);
+    font-weight: 600;
+  }
+
+  .section {
+    margin-bottom: 48px;
+  }
+
+  .section-kicker {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-primary-700);
+  }
+
+  .section-heading {
+    margin: 0 0 12px;
+    font-size: 24px;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-neutral-950);
+  }
+
+  .section-lede {
+    margin: 0 0 24px;
+    max-width: 680px;
+    font-size: 16px;
+    color: var(--color-neutral-600);
+  }
+
+  .note {
+    margin: 16px 0 0;
+    font-size: 14px;
+    color: var(--color-neutral-600);
+  }
+
+  .question-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-left: 4px solid var(--color-primary-700);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 28px 32px;
+  }
+
+  .question-kicker {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-primary-700);
+  }
+
+  .question-title {
+    margin: 0;
+    font-size: 32px;
+    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--color-neutral-950);
+    max-width: 720px;
+  }
+
+  .question-meta {
+    margin: 12px 0 0;
+    font-size: 14px;
+    color: var(--color-neutral-600);
+  }
+
+  .concept-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .concept-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-neutral-950);
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 999px;
+    padding: 8px 16px;
+  }
+
+  .concept-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-neutral-300);
+    flex-shrink: 0;
+  }
+
+  .evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  .evidence-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-left: 4px solid var(--color-primary-700);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+  }
+
+  .evidence-title {
+    margin: 0 0 12px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-neutral-950);
+  }
+
+  .evidence-quote {
+    margin: 0 0 16px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-neutral-950);
+  }
+
+  .evidence-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  .source-pill {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-neutral-600);
+    background: var(--color-neutral-100);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 999px;
+    padding: 4px 12px;
+    white-space: nowrap;
+  }
+
+  .consistency-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 28px 32px 24px;
+  }
+
+  .consistency-banner {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    background: var(--color-warning-50);
+    border: 1px solid #FDE68A;
+    border-left: 5px solid var(--color-warning-500);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+  }
+
+  .consistency-banner-copy {
+    min-width: 0;
+  }
+
+  .consistency-title {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-warning-700);
+  }
+
+  .consistency-text {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-neutral-950);
+  }
+
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .badge-row.mt {
+    margin-top: 16px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 8px 16px;
+    line-height: 1.2;
+  }
+
+  .badge-success {
+    background: var(--color-success-50);
+    color: var(--color-success-700);
+    border: 1px solid #A7F3D0;
+  }
+
+  .badge-warning {
+    background: var(--color-warning-50);
+    color: var(--color-warning-700);
+    border: 1px solid #FDE68A;
+  }
+
+  .badge-error {
+    background: var(--color-error-50);
+    color: var(--color-error-700);
+    border: 1px solid #FECACA;
+  }
+
+  .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .badge-success .badge-dot {
+    background: var(--color-success-600);
+  }
+
+  .badge-warning .badge-dot {
+    background: var(--color-warning-500);
+  }
+
+  .badge-error .badge-dot {
+    background: var(--color-error-600);
+  }
+
+  .mastery-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .mastery-table {
+    display: grid;
+    grid-template-columns: minmax(150px, 1.2fr) minmax(140px, 2fr) 170px;
+    column-gap: 16px;
+    row-gap: 4px;
+    align-items: center;
+  }
+
+  .mastery-thead {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-neutral-600);
+    padding: 6px 12px;
+    background: var(--color-neutral-100);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-sm);
+  }
+
+  .mastery-row {
+    display: contents;
+  }
+
+  .mastery-cell-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-neutral-950);
+    padding: 10px 12px;
+  }
+
+  .mastery-cell-track {
+    padding: 10px 12px;
+  }
+
+  .mastery-cell-status {
+    padding: 10px 12px;
+    text-align: right;
+  }
+
+  .mastery-track {
+    display: block;
+    height: 8px;
+    background: var(--color-neutral-100);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .mastery-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+  }
+
+  .mastery-fill.is-mastered {
+    background: var(--color-success-600);
+  }
+
+  .mastery-fill.is-developing {
+    background: var(--color-warning-500);
+  }
+
+  .mastery-fill.is-weak {
+    background: var(--color-error-600);
+  }
+
+  .revision-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-left: 5px solid var(--color-warning-500);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 28px 32px;
+    max-width: 640px;
+  }
+
+  .revision-title {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-neutral-950);
+  }
+
+  .revision-text {
+    margin: 0 0 16px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-neutral-950);
+  }
+
+  .revision-steps {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-neutral-600);
+  }
+
+  .revision-steps li {
+    margin-bottom: 8px;
+  }
+
+  .revision-steps li:last-child {
+    margin-bottom: 0;
+  }
+
+  .site-footer {
+    border-top: 1px solid var(--color-neutral-200);
+    background: var(--color-surface);
+  }
+
+  .footer-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: var(--color-neutral-600);
+  }
+
+  @media (max-width: 760px) {
+    .site-main {
+      padding: 16px 16px 64px;
+    }
+
+    .question-card {
+      padding: 24px;
+    }
+
+    .question-title {
+      font-size: 28px;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .consistency-card {
+      padding: 24px;
+    }
+
+    .consistency-banner {
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .mastery-table {
+      grid-template-columns: 1fr;
+      row-gap: 4px;
+      margin-top: 16px;
+    }
+
+    .mastery-thead {
+      display: none;
+    }
+
+    .mastery-cell-status {
+      text-align: left;
+      padding-top: 0;
+    }
+
+    .revision-card {
+      padding: 24px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition-duration: 0.01ms;
+    }
+
+    html {
+      scroll-behavior: auto;
+    }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">E</span>
+      <div>
+        <p class="brand-name">Edvance</p>
+        <p class="brand-descriptor">AI Assessment Intelligence</p>
+      </div>
+    </div>
+    <span class="demo-badge">Demo data</span>
+  </div>
+</header>
+
+<main id="main" class="site-main">
+
+  <nav aria-label="Course context">
+    <ol class="breadcrumb">
+      <li><span class="sr-only">Course:</span><strong>Qubators AI Foundry</strong></li>
+      <li aria-current="page">Lesson: Prompt Engineering</li>
+    </ol>
+  </nav>
+
+  <section class="section" aria-labelledby="assessment-title">
+    <div class="question-card">
+      <p class="question-kicker">Assessment</p>
+      <h1 class="question-title" id="assessment-title">What are the five components of the PROMPT framework?</h1>
+      <p class="question-meta">Assessment 1 &middot; Lesson checkpoint &middot; Short-answer</p>
+      <p class="note">Assessment intelligence mapped from 3 mock course sources in Lesson 2.</p>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="concepts-title">
+    <p class="section-kicker">Concepts being tested</p>
+    <h2 class="section-heading" id="concepts-title">What this assessment tests</h2>
+    <p class="section-lede">The component concepts this assessment draws on, as named in the course materials.</p>
+    <ul class="concept-list" aria-label="Concepts tested by this assessment">
+      <li class="concept-chip"><span class="concept-dot" aria-hidden="true"></span>Purpose</li>
+      <li class="concept-chip"><span class="concept-dot" aria-hidden="true"></span>Role</li>
+      <li class="concept-chip"><span class="concept-dot" aria-hidden="true"></span>Objective</li>
+      <li class="concept-chip"><span class="concept-dot" aria-hidden="true"></span>Method</li>
+      <li class="concept-chip"><span class="concept-dot" aria-hidden="true"></span>Parameters</li>
+      <li class="concept-chip"><span class="concept-dot" aria-hidden="true"></span>Target Output</li>
+    </ul>
+    <p class="note">Six components appear in the course&apos;s PROMPT framework definitions; the assessment wording asks for five.</p>
+  </section>
+
+  <section class="section" aria-labelledby="evidence-title">
+    <p class="section-kicker">Supporting evidence</p>
+    <h2 class="section-heading" id="evidence-title">Where each component was taught</h2>
+    <div class="evidence-grid">
+      <article class="evidence-card">
+        <h3 class="evidence-title">PROMPT framework slide</h3>
+        <p class="evidence-quote">&ldquo;A prompt shapes the model's response through six defined components: Purpose, Role, Objective, Method, Parameters, and Target Output.&rdquo;</p>
+        <p class="evidence-pills"><span class="source-pill">L02 &middot; Slide 14</span><span class="source-pill">Timestamp 04:12</span></p>
+      </article>
+      <article class="evidence-card">
+        <h3 class="evidence-title">Instructor terminology</h3>
+        <p class="evidence-quote">&ldquo;Let's walk through each of the six building blocks of the PROMPT framework &mdash; Purpose, Role, Objective, Method, Parameters, and Target Output &mdash; one at a time.&rdquo;</p>
+        <p class="evidence-pills"><span class="source-pill">L02 &middot; Lesson transcript</span><span class="source-pill">Timestamp 01:37</span><span class="source-pill">Instructor terminology</span></p>
+      </article>
+      <article class="evidence-card">
+        <h3 class="evidence-title">Framework summary table</h3>
+        <p class="evidence-quote">&ldquo;The summary table lists one row per component, with a definition and example for each of the six: Purpose, Role, Objective, Method, Parameters, Target Output.&rdquo;</p>
+        <p class="evidence-pills"><span class="source-pill">L02 &middot; Slide 16</span><span class="source-pill">Timestamp 06:58</span></p>
+      </article>
+    </div>
+    <p class="note">Counted 6 component names across 3 evidence sources. Quotes and timestamps are mock sample data mapped to Lesson 2.</p>
+  </section>
+
+  <section class="section" aria-labelledby="consistency-title">
+    <p class="section-kicker">Consistency status</p>
+    <h2 class="section-heading" id="consistency-title">Does the assessment agree with the evidence?</h2>
+    <div class="consistency-card">
+      <div class="consistency-banner">
+        <span class="badge badge-warning"><span class="badge-dot" aria-hidden="true"></span>Possible inconsistency</span>
+        <div class="consistency-banner-copy">
+          <h3 class="consistency-title">The assessment asks for five components while the supplied lesson evidence contains six.</h3>
+          <p class="consistency-text">The assessment wording counts five components, but the PROMPT framework taught in Lesson 2 defines six: Purpose, Role, Objective, Method, Parameters, and Target Output. The mismatch is flagged rather than guessed &mdash; check the question wording against the slide before relying on the count.</p>
+        </div>
+      </div>
+      <p class="note">Status inferred from mapped course evidence. The assessment may simply use different wording.</p>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="mastery-title">
+    <p class="section-kicker">Mastery status</p>
+    <h2 class="section-heading" id="mastery-title">How ready I am per component</h2>
+    <p class="mastery-summary" aria-label="Mastery summary">
+      <span class="badge badge-success"><span class="badge-dot" aria-hidden="true"></span>Mastered &middot; 3</span>
+      <span class="badge badge-warning"><span class="badge-dot" aria-hidden="true"></span>Developing &middot; 1</span>
+      <span class="badge badge-error"><span class="badge-dot" aria-hidden="true"></span>Weak &middot; 2</span>
+    </p>
+    <div class="mastery-table">
+      <p class="mastery-thead">Component</p>
+      <p class="mastery-thead">Progress</p>
+      <p class="mastery-thead">Status</p>
+      <div class="mastery-row">
+        <p class="mastery-cell-name">Purpose</p>
+        <p class="mastery-cell-track"><span class="mastery-track"><span class="mastery-fill is-mastered" style="width:90%" role="progressbar" aria-label="Purpose progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="90"></span></span></p>
+        <p class="mastery-cell-status"><span class="badge badge-success">Mastered</span></p>
+      </div>
+      <div class="mastery-row">
+        <p class="mastery-cell-name">Role</p>
+        <p class="mastery-cell-track"><span class="mastery-track"><span class="mastery-fill is-mastered" style="width:88%" role="progressbar" aria-label="Role progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="88"></span></span></p>
+        <p class="mastery-cell-status"><span class="badge badge-success">Mastered</span></p>
+      </div>
+      <div class="mastery-row">
+        <p class="mastery-cell-name">Objective</p>
+        <p class="mastery-cell-track"><span class="mastery-track"><span class="mastery-fill is-developing" style="width:62%" role="progressbar" aria-label="Objective progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="62"></span></span></p>
+        <p class="mastery-cell-status"><span class="badge badge-warning">Developing</span></p>
+      </div>
+      <div class="mastery-row">
+        <p class="mastery-cell-name">Method</p>
+        <p class="mastery-cell-track"><span class="mastery-track"><span class="mastery-fill is-mastered" style="width:85%" role="progressbar" aria-label="Method progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="85"></span></span></p>
+        <p class="mastery-cell-status"><span class="badge badge-success">Mastered</span></p>
+      </div>
+      <div class="mastery-row">
+        <p class="mastery-cell-name">Parameters</p>
+        <p class="mastery-cell-track"><span class="mastery-track"><span class="mastery-fill is-weak" style="width:34%" role="progressbar" aria-label="Parameters progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="34"></span></span></p>
+        <p class="mastery-cell-status"><span class="badge badge-error">Weak</span></p>
+      </div>
+      <div class="mastery-row">
+        <p class="mastery-cell-name">Target Output</p>
+        <p class="mastery-cell-track"><span class="mastery-track"><span class="mastery-fill is-weak" style="width:28%" role="progressbar" aria-label="Target Output progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="28"></span></span></p>
+        <p class="mastery-cell-status"><span class="badge badge-error">Weak</span></p>
+      </div>
+    </div>
+    <p class="note">Formative profile from mock practice data. Real mastery tracking arrives in a later phase.</p>
+  </section>
+
+  <section class="section" aria-labelledby="next-title">
+    <p class="section-kicker">Recommended revision</p>
+    <h2 class="section-heading" id="next-title">What to review next</h2>
+    <div class="revision-card">
+      <h3 class="revision-title">Review Parameters and Target Output before attempting this assessment.</h3>
+      <p class="revision-text">These two components are the weakest signals in your mastery profile and are central to the PROMPT framework definition the question relies on.</p>
+      <ol class="revision-steps">
+        <li>Re-watch the PROMPT framework walkthrough &mdash; Lesson 2 transcript at 01:37.</li>
+        <li>Read the component definitions on the PROMPT framework slide &mdash; Lesson 2 at 04:12.</li>
+        <li>Re-check the summary table at 06:58 to contrast Parameters and Target Output with the other four components.</li>
+      </ol>
+      <p class="note">Recommendation generated from mastery signals and mapped evidence (mock).</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Edvance. Qubators AI Foundry workspace.</p>
+    <p>Phase 1 prototype &middot; Mock data only &middot; No learner data is stored.</p>
+  </div>
+</footer>
+</body>
+</html>

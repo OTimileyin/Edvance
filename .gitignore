@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Environment files — never commit secrets
+.env
+.env.*
+!.env.example
+
+# Build output
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Runtime logs
+*.log
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Package manager state
+.yarn/
+.pnpm-store/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.idea/
+.vscode/
+
+# Local agent tooling (reinstallable skills)
+.opencode/

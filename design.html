@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edvance — Design System Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-primary-700: #1D4ED8;
+    --color-primary-500: #3B82F6;
+    --color-success-600: #059669;
+    --color-warning-500: #F59E0B;
+    --color-error-600: #DC2626;
+    --color-neutral-950: #0F172A;
+    --color-neutral-600: #475569;
+    --color-neutral-200: #E2E8F0;
+    --color-neutral-50: #F8FAFC;
+    --color-surface: #FFFFFF;
+
+    --color-success-50: #ECFDF5;
+    --color-success-700: #047857;
+    --color-warning-50: #FFFBEB;
+    --color-warning-700: #92400E;
+    --color-error-50: #FEF2F2;
+    --color-error-700: #B91C1C;
+    --color-neutral-100: #F1F5F9;
+    --color-neutral-300: #CBD5E1;
+
+    --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.1);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.09), 0 2px 4px rgba(15, 23, 42, 0.05);
+    --shadow-primary: 0 1px 0 rgba(255, 255, 255, 0.45) inset, 0 2px 4px rgba(15, 23, 42, 0.18), 0 10px 18px -10px rgba(29, 78, 216, 0.6);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 84px;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-neutral-50);
+    color: var(--color-neutral-950);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  a {
+    color: var(--color-primary-700);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  a:hover {
+    color: #1E40AF;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-primary-500);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--color-primary-700);
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 0 0 var(--radius-sm) 0;
+    z-index: 100;
+  }
+
+  .skip-link:focus {
+    left: 0;
+  }
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-neutral-200);
+  }
+
+  .header-inner {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--color-primary-700);
+    color: #fff;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .brand-name {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .brand-descriptor {
+    margin: 2px 0 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-neutral-600);
+    letter-spacing: 0.01em;
+  }
+
+  .site-nav {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .site-nav a {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-neutral-600);
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+  }
+
+  .site-nav a:hover {
+    color: var(--color-primary-700);
+    background: var(--color-neutral-100);
+  }
+
+  .site-main {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+
+  .hero {
+    margin-bottom: 88px;
+    padding: 48px 40px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .hero-title {
+    margin: 0;
+    font-size: 40px;
+    line-height: 1.14;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    max-width: 760px;
+  }
+
+  .hero-lede {
+    margin: 20px 0 0;
+    max-width: 680px;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--color-neutral-600);
+  }
+
+  .pipeline {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 0;
+    align-items: stretch;
+  }
+
+  .pipeline-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-neutral-950);
+    background: var(--color-neutral-50);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 999px;
+    padding: 8px 16px;
+  }
+
+  .pipeline-step .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: var(--color-primary-700);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .pipeline-arrow {
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-neutral-300);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 0 4px;
+  }
+
+  .section {
+    margin-bottom: 96px;
+  }
+
+  .section-kicker {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-primary-700);
+  }
+
+  .section-heading {
+    margin: 0 0 12px;
+    font-size: 24px;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-neutral-950);
+  }
+
+  .section-lede {
+    margin: 0 0 40px;
+    max-width: 660px;
+    font-size: 16px;
+    color: var(--color-neutral-600);
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--color-neutral-200);
+    margin: 80px 0;
+  }
+
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+  }
+
+  .component-label {
+    display: inline-block;
+    margin: 0 0 18px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--color-neutral-600);
+    padding: 4px 12px;
+    background: var(--color-neutral-100);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 999px;
+  }
+
+  .swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+    gap: 20px;
+  }
+
+  .swatch {
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .swatch-block {
+    height: 80px;
+    border-bottom: 1px solid var(--color-neutral-200);
+  }
+
+  .swatch-meta {
+    padding: 12px 16px 16px;
+  }
+
+  .swatch-token {
+    margin: 0 0 2px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-neutral-950);
+    word-break: break-all;
+  }
+
+  .swatch-value {
+    margin: 0 0 4px;
+    font-size: 14px;
+    color: var(--color-neutral-600);
+    letter-spacing: 0.02em;
+  }
+
+  .swatch-usage {
+    margin: 0;
+    font-size: 12px;
+    color: var(--color-neutral-600);
+  }
+
+  .usage-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .usage-demo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-md);
+  }
+
+  .usage-demo .note {
+    font-size: 14px;
+    color: var(--color-neutral-600);
+  }
+
+  .type-scale {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .type-item {
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-md);
+    padding: 24px 28px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .type-spec {
+    margin: 0 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-neutral-600);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .type-display {
+    margin: 0;
+    font-size: 40px;
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--color-neutral-950);
+  }
+
+  .type-h1 {
+    margin: 0;
+    font-size: 32px;
+    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--color-neutral-950);
+  }
+
+  .type-h2 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.3;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-neutral-950);
+  }
+
+  .type-h3 {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.35;
+    font-weight: 700;
+    color: var(--color-neutral-950);
+  }
+
+  .type-body {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--color-neutral-950);
+  }
+
+  .type-body strong {
+    font-weight: 600;
+  }
+
+  .type-small {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--color-neutral-600);
+  }
+
+  .type-label {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--color-neutral-600);
+  }
+
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    align-items: start;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .field-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-neutral-950);
+  }
+
+  .field-hint {
+    font-size: 14px;
+    color: var(--color-neutral-600);
+  }
+
+  .text-input,
+  .text-area {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--color-neutral-950);
+    background: var(--color-surface);
+    border: 2px solid var(--color-neutral-500);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    width: 100%;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .text-input::placeholder,
+  .text-area::placeholder {
+    color: var(--color-neutral-600);
+  }
+
+  .text-input:hover,
+  .text-area:hover {
+    border-color: var(--color-primary-500);
+  }
+
+  .text-input:focus,
+  .text-area:focus {
+    outline: none;
+    border-color: var(--color-primary-700);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.28);
+  }
+
+  .text-area {
+    min-height: 100px;
+    resize: vertical;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1;
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 80ms ease;
+  }
+
+  .btn-primary {
+    background: var(--color-primary-700);
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: var(--shadow-primary);
+  }
+
+  .btn-primary:hover {
+    background: #1E40AF;
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-secondary {
+    background: var(--color-surface);
+    color: var(--color-primary-700);
+    border-color: var(--color-primary-700);
+    font-weight: 600;
+  }
+
+  .btn-secondary:hover {
+    background: var(--color-neutral-100);
+  }
+
+  .btn-secondary:active {
+    transform: translateY(1px);
+  }
+
+  .components-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .components-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 32px;
+    align-items: stretch;
+  }
+
+  .consistency-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 28px 32px 24px;
+  }
+
+  .consistency-banner {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    background: var(--color-warning-50);
+    border: 1px solid #FDE68A;
+    border-left: 5px solid var(--color-warning-500);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+  }
+
+  .consistency-banner-copy {
+    min-width: 0;
+  }
+
+  .consistency-title {
+    margin: 0 0 6px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-warning-700);
+  }
+
+  .consistency-text {
+    margin: 0 0 12px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-neutral-950);
+  }
+
+  .consistency-source {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-neutral-600);
+  }
+
+  .variant-note {
+    margin: 20px 0 0;
+    font-size: 14px;
+    color: var(--color-neutral-600);
+  }
+
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .badge-row.mt {
+    margin-top: 16px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 8px 16px;
+    line-height: 1.2;
+  }
+
+  .badge-success {
+    background: var(--color-success-50);
+    color: var(--color-success-700);
+    border: 1px solid #A7F3D0;
+  }
+
+  .badge-warning {
+    background: var(--color-warning-50);
+    color: var(--color-warning-700);
+    border: 1px solid #FDE68A;
+  }
+
+  .badge-error {
+    background: var(--color-error-50);
+    color: var(--color-error-700);
+    border: 1px solid #FECACA;
+  }
+
+  .badge-neutral {
+    background: var(--color-neutral-100);
+    color: var(--color-neutral-600);
+    border: 1px solid var(--color-neutral-200);
+  }
+
+  .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .evidence-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-left: 4px solid var(--color-primary-700);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+  }
+
+  .evidence-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .evidence-kicker {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--color-primary-700);
+  }
+
+  .source-pill {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-neutral-600);
+    background: var(--color-neutral-100);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 999px;
+    padding: 4px 12px;
+    white-space: nowrap;
+  }
+
+  .evidence-quote {
+    margin: 0 0 16px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-neutral-950);
+  }
+
+  .evidence-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: var(--color-neutral-600);
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .concept-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-neutral-950);
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 999px;
+    padding: 8px 16px;
+  }
+
+  .concept-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .mastery-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .mastery-summary .badge {
+    cursor: default;
+  }
+
+  .mastery-table {
+    display: grid;
+    grid-template-columns: minmax(150px, 1.2fr) minmax(140px, 2fr) 150px;
+    column-gap: 16px;
+    row-gap: 2px;
+    align-items: center;
+  }
+
+  .mastery-thead {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-neutral-600);
+    padding: 6px 12px;
+    background: var(--color-neutral-100);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-sm);
+  }
+
+  .mastery-row {
+    display: contents;
+  }
+
+  .mastery-cell-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-neutral-950);
+    padding: 10px 12px;
+  }
+
+  .mastery-cell-track {
+    padding: 10px 12px;
+  }
+
+  .mastery-cell-status {
+    padding: 10px 12px;
+    text-align: right;
+  }
+
+  .mastery-track {
+    display: block;
+    height: 8px;
+    background: var(--color-neutral-100);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .mastery-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+  }
+
+  .revision-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral-200);
+    border-left: 5px solid var(--color-warning-500);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 28px 32px;
+    max-width: 560px;
+  }
+
+  .revision-title {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-neutral-950);
+  }
+
+  .revision-text {
+    margin: 0 0 14px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-neutral-950);
+  }
+
+  .revision-meta {
+    margin: 0 0 18px;
+    font-size: 14px;
+    color: var(--color-neutral-600);
+  }
+
+  .site-footer {
+    border-top: 1px solid var(--color-neutral-200);
+    background: var(--color-surface);
+  }
+
+  .footer-inner {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: var(--color-neutral-600);
+  }
+
+  @media (max-width: 760px) {
+    .site-main {
+      padding: 36px 16px 64px;
+    }
+
+    .hero {
+      padding: 28px 24px;
+    }
+
+    .hero-title,
+    .type-display {
+      font-size: 32px;
+    }
+
+    .section {
+      margin-bottom: 72px;
+    }
+
+    .divider {
+      margin: 56px 0;
+    }
+
+    .mastery-table {
+      grid-template-columns: 1fr;
+      row-gap: 4px;
+      margin-top: 16px;
+    }
+
+    .mastery-thead {
+      display: none;
+    }
+
+    .mastery-cell-status {
+      text-align: left;
+      padding-top: 0;
+    }
+
+    .consistency-banner {
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .pipeline {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition-duration: 0.01ms;
+    }
+
+    html {
+      scroll-behavior: auto;
+    }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">E</span>
+      <div>
+        <p class="brand-name">Edvance</p>
+        <p class="brand-descriptor">Evidence-First Assessment Intelligence</p>
+      </div>
+    </div>
+    <nav class="site-nav" aria-label="Design system sections">
+      <a href="#color">Color</a>
+      <a href="#typography">Typography</a>
+      <a href="#controls">Buttons &amp; Inputs</a>
+      <a href="#components">Components</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="site-main">
+
+  <section class="hero" aria-labelledby="hero-title">
+    <h1 class="hero-title" id="hero-title">Turning scattered course materials into an evidence-backed path toward mastery.</h1>
+    <p class="hero-lede">Edvance is an evidence-first assessment intelligence platform. It shows a learner what an assessment is testing, where the required knowledge was taught, whether the course evidence agrees, and what to study next.</p>
+    <div class="pipeline" aria-label="Evidence-first analysis flow">
+      <span class="pipeline-step"><span class="step-num" aria-hidden="true">1</span>Assessment</span>
+      <span class="pipeline-arrow" aria-hidden="true">&rarr;</span>
+      <span class="pipeline-step"><span class="step-num" aria-hidden="true">2</span>Concepts</span>
+      <span class="pipeline-arrow" aria-hidden="true">&rarr;</span>
+      <span class="pipeline-step"><span class="step-num" aria-hidden="true">3</span>Evidence</span>
+      <span class="pipeline-arrow" aria-hidden="true">&rarr;</span>
+      <span class="pipeline-step"><span class="step-num" aria-hidden="true">4</span>Consistency</span>
+      <span class="pipeline-arrow" aria-hidden="true">&rarr;</span>
+      <span class="pipeline-step"><span class="step-num" aria-hidden="true">5</span>Mastery</span>
+      <span class="pipeline-arrow" aria-hidden="true">&rarr;</span>
+      <span class="pipeline-step"><span class="step-num" aria-hidden="true">6</span>Revision</span>
+    </div>
+  </section>
+
+  <section class="section" id="color" aria-labelledby="color-title">
+    <p class="section-kicker">01 &middot; Foundation</p>
+    <h2 class="section-heading" id="color-title">Color Palette</h2>
+    <p class="section-lede">Initial tokens defined in the PRD: a calm blue primary, semantic status colors, and a slate neutral ramp. These are a starting point, not a final decision. Status tints were added so badges stay readable without relying on color alone.</p>
+
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch-block" style="background:#1D4ED8;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-primary-700</p><p class="swatch-value">#1D4ED8</p><p class="swatch-usage">Primary actions, brand mark</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#3B82F6;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-primary-500</p><p class="swatch-value">#3B82F6</p><p class="swatch-usage">Highlights, hover borders, focus rings</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#059669;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-success-600</p><p class="swatch-value">#059669</p><p class="swatch-usage">Mastered, consistent</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#047857;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-success-700</p><p class="swatch-value">#047857</p><p class="swatch-usage">Status text on tinted surfaces</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#F59E0B;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-warning-500</p><p class="swatch-value">#F59E0B</p><p class="swatch-usage">Developing, caution accent</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#92400E;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-warning-700</p><p class="swatch-value">#92400E</p><p class="swatch-usage">Inconsistency text</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#DC2626;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-error-600</p><p class="swatch-value">#DC2626</p><p class="swatch-usage">Weak, conflict accent</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#B91C1C;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-error-700</p><p class="swatch-value">#B91C1C</p><p class="swatch-usage">Status text on tinted surfaces</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#0F172A;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-neutral-950</p><p class="swatch-value">#0F172A</p><p class="swatch-usage">Main text, headings</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#475569;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-neutral-600</p><p class="swatch-value">#475569</p><p class="swatch-usage">Secondary text</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#CBD5E1;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-neutral-300</p><p class="swatch-value">#CBD5E1</p><p class="swatch-usage">Decorative strokes, arrows</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#E2E8F0;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-neutral-200</p><p class="swatch-value">#E2E8F0</p><p class="swatch-usage">Borders</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#F8FAFC;"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-neutral-50</p><p class="swatch-value">#F8FAFC</p><p class="swatch-usage">Page background</p></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#FFFFFF; border-bottom:1px solid var(--color-neutral-200);"></div>
+        <div class="swatch-meta"><p class="swatch-token">--color-surface</p><p class="swatch-value">#FFFFFF</p><p class="swatch-usage">Cards and panels</p></div>
+      </div>
+    </div>
+
+    <div class="usage-row">
+      <div class="usage-demo">
+        <span class="concept-dot" style="background:var(--color-success-600);" aria-hidden="true"></span>
+        <span class="note"><strong>Mastered</strong> / <strong>Consistent</strong> status uses green</span>
+      </div>
+      <div class="usage-demo">
+        <span class="concept-dot" style="background:var(--color-warning-500);" aria-hidden="true"></span>
+        <span class="note"><strong>Developing</strong> / <strong>Caution</strong> status uses amber</span>
+      </div>
+      <div class="usage-demo">
+        <span class="concept-dot" style="background:var(--color-error-600);" aria-hidden="true"></span>
+        <span class="note"><strong>Weak</strong> / <strong>Inconsistency</strong> status uses red</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <section class="section" id="typography" aria-labelledby="type-title">
+    <p class="section-kicker">02 &middot; Voice</p>
+    <h2 class="section-heading" id="type-title">Typography Hierarchy</h2>
+    <p class="section-lede">Inter, system-ui, sans-serif. One page title, one level of section heading, and clearly subordinate body and labels.</p>
+
+    <div class="type-scale">
+      <div class="type-item">
+        <p class="type-spec">Page title / Display &middot; 800 &middot; 40px</p>
+        <p class="type-display">What is being tested? Where was it taught?</p>
+      </div>
+      <div class="type-item">
+        <p class="type-spec">Heading 1 &middot; 800 &middot; 32px</p>
+        <p class="type-h1">Assessment Intelligence</p>
+      </div>
+      <div class="type-item">
+        <p class="type-spec">Heading 2 &middot; 700 &middot; 24px</p>
+        <p class="type-h2">Supporting course evidence</p>
+      </div>
+      <div class="type-item">
+        <p class="type-spec">Heading 3 &middot; 700 &middot; 18px</p>
+        <p class="type-h3">Recommended revision action</p>
+      </div>
+      <div class="type-item">
+        <p class="type-spec">Body &middot; 400 &middot; 16px</p>
+        <p class="type-body">The assessment asks for <strong>five components</strong>, while the lecture evidence consistently presents <strong>six</strong>. Review the source before relying on either answer.</p>
+      </div>
+      <div class="type-item">
+        <p class="type-spec">Caption &middot; 400 &middot; 14px</p>
+        <p class="type-small">Prompt Engineering lecture &middot; 38:20&ndash;44:10 &middot; Source: Qubators AI Foundry</p>
+      </div>
+      <div class="type-item">
+        <p class="type-spec">Label &middot; 700 &middot; 12px uppercase</p>
+        <p class="type-label">Assessment question</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <section class="section" id="controls" aria-labelledby="controls-title">
+    <p class="section-kicker">03 &middot; Interaction</p>
+    <h2 class="section-heading" id="controls-title">Buttons &amp; Inputs</h2>
+    <p class="section-lede">One clearly dominant primary action per context, with inputs that read as interactive at rest and unmistakable when focused.</p>
+
+    <div class="controls-grid">
+      <div class="card">
+        <p class="component-label">Buttons</p>
+        <div class="badge-row">
+          <button type="button" class="btn btn-primary">Analyze assessment</button>
+          <button type="button" class="btn btn-secondary">View course map</button>
+        </div>
+        <p class="type-small" style="margin-top:20px;">The primary button carries elevation and a full-weight label so it reads as the main action without becoming loud. Secondary stays flat and outlined.</p>
+      </div>
+
+      <div class="card">
+        <p class="component-label">Text input</p>
+        <div class="field">
+          <label class="field-label" for="sample-question">Assessment question</label>
+          <input class="text-input" id="sample-question" type="text" placeholder="What are the five components of the PROMPT framework?" value="What are the five components of the PROMPT framework?">
+          <span class="field-hint">Paste or type the assessment question to analyze.</span>
+        </div>
+        <p class="type-small" style="margin-top:18px;">2px neutral-500 border at rest; primary-700 border with a 4px ring on focus.</p>
+      </div>
+
+      <div class="card">
+        <p class="component-label">Textarea</p>
+        <div class="field">
+          <label class="field-label" for="sample-notes">Learner notes</label>
+          <textarea class="text-area" id="sample-notes" placeholder="Add context about the question or what you are unsure about."></textarea>
+          <span class="field-hint">Optional context used during analysis.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <section class="section" id="components" aria-labelledby="components-title">
+    <p class="section-kicker">04 &middot; Signature experience</p>
+    <h2 class="section-heading" id="components-title">Edvance Components</h2>
+    <p class="section-lede">The pieces that make up the Assessment Intelligence experience: evidence, status, and next action.</p>
+
+    <div class="components-stack">
+
+      <div class="consistency-card">
+        <p class="component-label">Consistency status</p>
+        <div class="consistency-banner">
+          <div class="badge badge-warning" style="flex-shrink:0;"><span class="badge-dot" style="background:var(--color-warning-500);" aria-hidden="true"></span>Possible inconsistency</div>
+          <div class="consistency-banner-copy">
+            <p class="consistency-title">The assessment and the lecture evidence disagree.</p>
+            <p class="consistency-text">The assessment asks for <strong>five components</strong> of the PROMPT framework, while the supplied lecture consistently presents <strong>six</strong>. The conflict is shown here instead of silently choosing a version.</p>
+            <p class="consistency-source">Source: Prompt Engineering lesson &middot; Qubators AI Foundry</p>
+          </div>
+        </div>
+        <p class="variant-note">All possible states:</p>
+        <div class="badge-row mt">
+          <span class="badge badge-success"><span class="badge-dot" style="background:var(--color-success-600);" aria-hidden="true"></span>Consistent</span>
+          <span class="badge badge-warning"><span class="badge-dot" style="background:var(--color-warning-500);" aria-hidden="true"></span>Possible inconsistency</span>
+          <span class="badge badge-error"><span class="badge-dot" style="background:var(--color-error-600);" aria-hidden="true"></span>Conflict</span>
+          <span class="badge badge-neutral"><span class="badge-dot" style="background:var(--color-neutral-600);" aria-hidden="true"></span>Insufficient evidence</span>
+        </div>
+      </div>
+
+      <div class="components-grid">
+
+        <div class="evidence-card">
+          <div class="evidence-card-header">
+            <p class="evidence-kicker">Evidence</p>
+            <span class="source-pill">Lecture transcript</span>
+          </div>
+          <blockquote class="evidence-quote">"The PROMPT framework is broken into six components that together define how the model behaves."</blockquote>
+          <div class="evidence-meta">
+            <span>Prompt Engineering lesson &middot; 38:20&ndash;44:10</span>
+            <a href="#components">View source</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="component-label">Concept chips</p>
+          <div class="chips">
+            <span class="concept-chip"><span class="concept-dot" style="background:var(--color-success-600);" aria-hidden="true"></span>Purpose</span>
+            <span class="concept-chip"><span class="concept-dot" style="background:var(--color-success-600);" aria-hidden="true"></span>Role</span>
+            <span class="concept-chip"><span class="concept-dot" style="background:var(--color-warning-500);" aria-hidden="true"></span>Objective</span>
+            <span class="concept-chip"><span class="concept-dot" style="background:var(--color-success-600);" aria-hidden="true"></span>Method</span>
+            <span class="concept-chip"><span class="concept-dot" style="background:var(--color-error-600);" aria-hidden="true"></span>Parameters</span>
+            <span class="concept-chip"><span class="concept-dot" style="background:var(--color-error-600);" aria-hidden="true"></span>Target Output</span>
+          </div>
+          <p class="type-small" style="margin-top:18px;">Each dot pairs mastery state with the concept name, so status is readable without color.</p>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <p class="component-label">Mastery indicators</p>
+        <div class="mastery-summary">
+          <span class="badge badge-success"><span class="badge-dot" style="background:var(--color-success-600);" aria-hidden="true"></span>3 Mastered</span>
+          <span class="badge badge-warning"><span class="badge-dot" style="background:var(--color-warning-500);" aria-hidden="true"></span>1 Developing</span>
+          <span class="badge badge-error"><span class="badge-dot" style="background:var(--color-error-600);" aria-hidden="true"></span>2 Weak</span>
+          <span class="badge badge-neutral"><span class="badge-dot" style="background:var(--color-neutral-600);" aria-hidden="true"></span>1 Untested</span>
+        </div>
+        <div class="mastery-table" role="table" aria-label="Concept mastery status">
+          <span class="mastery-thead" role="columnheader">Concept</span>
+          <span class="mastery-thead" role="columnheader">Progress</span>
+          <span class="mastery-thead" role="columnheader" style="text-align:right;">Status</span>
+
+          <span role="row" class="mastery-row">
+            <span class="mastery-cell-name" role="cell">Purpose</span>
+            <span class="mastery-cell-track" role="cell"><span class="mastery-track"><span class="mastery-fill" style="width:90%; background:var(--color-success-600);" aria-hidden="true"></span></span></span>
+            <span class="mastery-cell-status" role="cell"><span class="badge badge-success"><span class="badge-dot" style="background:var(--color-success-600);" aria-hidden="true"></span>Mastered</span></span>
+          </span>
+
+          <span role="row" class="mastery-row">
+            <span class="mastery-cell-name" role="cell">Role</span>
+            <span class="mastery-cell-track" role="cell"><span class="mastery-track"><span class="mastery-fill" style="width:85%; background:var(--color-success-600);" aria-hidden="true"></span></span></span>
+            <span class="mastery-cell-status" role="cell"><span class="badge badge-success"><span class="badge-dot" style="background:var(--color-success-600);" aria-hidden="true"></span>Mastered</span></span>
+          </span>
+
+          <span role="row" class="mastery-row">
+            <span class="mastery-cell-name" role="cell">Objective</span>
+            <span class="mastery-cell-track" role="cell"><span class="mastery-track"><span class="mastery-fill" style="width:55%; background:var(--color-warning-500);" aria-hidden="true"></span></span></span>
+            <span class="mastery-cell-status" role="cell"><span class="badge badge-warning"><span class="badge-dot" style="background:var(--color-warning-500);" aria-hidden="true"></span>Developing</span></span>
+          </span>
+
+          <span role="row" class="mastery-row">
+            <span class="mastery-cell-name" role="cell">Method</span>
+            <span class="mastery-cell-track" role="cell"><span class="mastery-track"><span class="mastery-fill" style="width:80%; background:var(--color-success-600);" aria-hidden="true"></span></span></span>
+            <span class="mastery-cell-status" role="cell"><span class="badge badge-success"><span class="badge-dot" style="background:var(--color-success-600);" aria-hidden="true"></span>Mastered</span></span>
+          </span>
+
+          <span role="row" class="mastery-row">
+            <span class="mastery-cell-name" role="cell">Parameters</span>
+            <span class="mastery-cell-track" role="cell"><span class="mastery-track"><span class="mastery-fill" style="width:30%; background:var(--color-error-600);" aria-hidden="true"></span></span></span>
+            <span class="mastery-cell-status" role="cell"><span class="badge badge-error"><span class="badge-dot" style="background:var(--color-error-600);" aria-hidden="true"></span>Weak</span></span>
+          </span>
+
+          <span role="row" class="mastery-row">
+            <span class="mastery-cell-name" role="cell">Target Output</span>
+            <span class="mastery-cell-track" role="cell"><span class="mastery-track"><span class="mastery-fill" style="width:25%; background:var(--color-error-600);" aria-hidden="true"></span></span></span>
+            <span class="mastery-cell-status" role="cell"><span class="badge badge-error"><span class="badge-dot" style="background:var(--color-error-600);" aria-hidden="true"></span>Weak</span></span>
+          </span>
+
+          <span role="row" class="mastery-row">
+            <span class="mastery-cell-name" role="cell">Prompt Flow</span>
+            <span class="mastery-cell-track" role="cell"><span class="mastery-track"><span class="mastery-fill" style="width:0%; background:var(--color-neutral-200);" aria-hidden="true"></span></span></span>
+            <span class="mastery-cell-status" role="cell"><span class="badge badge-neutral"><span class="badge-dot" style="background:var(--color-neutral-600);" aria-hidden="true"></span>Untested</span></span>
+          </span>
+        </div>
+        <p class="type-small" style="margin-top:18px;">Column-aligned rows with a summary bar and labelled status badges make the whole set scannable at a glance.</p>
+      </div>
+
+      <div class="revision-card">
+        <p class="component-label">Revision recommendation</p>
+        <h3 class="revision-title">Review Parameters and Target Output</h3>
+        <p class="revision-text">These two concepts are rated <strong>weak</strong> and are directly tested by this question. Revisit the lesson evidence before attempting the assessment.</p>
+        <p class="revision-meta">Source: Prompt Engineering lesson &middot; Qubators AI Foundry</p>
+        <button type="button" class="btn btn-primary">Open relevant lesson</button>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span>Edvance &middot; Design System Preview</span>
+    <span>Evidence-First Assessment Intelligence &middot; CSS tokens from PRD v2.0</span>
+  </div>
+</footer>
+</body>
+</html>

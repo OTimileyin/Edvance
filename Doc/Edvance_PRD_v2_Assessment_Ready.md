@@ -5,7 +5,7 @@
 **Category:** Impact & Innovation  
 **Document Type:** Product Requirements Document (PRD) / Product Bible  
 **Version:** 2.0  
-**Status:** Planning / Lesson 6 Prototype  
+**Status:** Phase 1 Complete — Assessment Intelligence Prototype (Lesson 6)  
 **Owner:** Oluwatimileyin Oyelabi  
 **Platform:** Web Application  
 
@@ -373,6 +373,30 @@ No secrets should be committed to the public repository.
 
 ## 16. Implementation Plan
 
+### 16.1 Current Status
+
+**Current Phase:** Phase 1 — Design System & Assessment Intelligence Prototype (complete).
+
+**Completed (2026-09-27):**
+- Implementation plan created.
+- Architecture reviewed and steering decisions logged (Appendix A, Decision 1).
+- Local PostgreSQL selected for later data integration.
+- `design.html` created.
+- Design refinements completed and applied to `design.html` (Appendix A, Change 2).
+- Initial Assessment Intelligence page built (`assessment-intelligence.html`).
+- Local prototype tested in the browser with mock data only.
+
+**Not yet implemented:**
+- Better Auth (accounts & authentication).
+- PostgreSQL application integration.
+- Cloudflare R2 file storage.
+- Real course ingestion.
+- Live AI APIs.
+- Source-processing pipeline.
+- Production deployment.
+
+**Next Phase:** Phase 2 — Core Application Structure (course workspace, navigation, and Courses / Sources / Assessments / Mastery sections).
+
 ### Phase 0 — Project Foundation
 **Goal:** Establish the project environment and documentation.
 
@@ -400,15 +424,15 @@ No secrets should be committed to the public repository.
 - Mock/test data only
 
 **Acceptance Criteria:**
-- [ ] `design.html` opens locally
-- [ ] Color palette is visible
-- [ ] Typography examples are visible
-- [ ] Styled primary button is visible
-- [ ] Styled sample input is visible
-- [ ] At least one Edvance-specific component is visible
-- [ ] Initial app page opens locally
-- [ ] App page is separate from `design.html`
-- [ ] Mock/test data only is used
+- [x] `design.html` opens locally
+- [x] Color palette is visible
+- [x] Typography examples are visible
+- [x] Styled primary button is visible
+- [x] Styled sample input is visible
+- [x] At least one Edvance-specific component is visible
+- [x] Initial app page opens locally
+- [x] App page is separate from `design.html`
+- [x] Mock/test data only is used
 
 ### Phase 2 — Core Application Structure
 **Goal:** Build the learner experience around courses and course evidence.
@@ -627,65 +651,93 @@ The full MVP is successful when a learner can:
 
 **Date:** 2026-09-27  
 **Requested by:** Product Owner  
-**Status:** Current Architecture Decision
+**Status:** Confirmed by Product Owner — Active Architecture Decision
 
 ### Steering Question
-Ask the AI builder to compare a hosted backend/database option such as Supabase with running PostgreSQL locally for the current Edvance development stage.
+Before implementation began, the Product Owner asked the AI builder to compare two approaches for Edvance's database/backend at the current development stage:
 
-The comparison should consider:
-- Cost
-- Complexity
-- Control
-- Local development workflow
-- Later migration/deployment
+- **Option A (hosted):** Use a hosted service such as Supabase for the database/backend.
+- **Option B (local):** Run PostgreSQL locally during development and move to hosted infrastructure later.
+
+The comparison covered: cost, development complexity, control, local development workflow, vendor dependency, future scalability, migration/deployment later, and the requirements of the current Lesson 6 assessment.
+
+### Alternatives Considered
+- **Option A — Supabase (hosted):** Managed database, auth, storage, and realtime out of the box; a free tier exists. It adds a hosted dependency before the concept is proven, carries free-tier limits and potential pricing changes, and its auth/storage abstractions would conflict with the PRD-specified Better Auth and Cloudflare R2 stack. Lesson 6 requires no real database tests, so it offers no benefit at this stage.
+- **Option B — Local PostgreSQL:** No external dependency and near-zero cost, keeps the Lesson 6 deliverable strictly local, provides full control over schema and migrations, and leaves a clear path to any managed Postgres host later.
 
 ### Decision
-Use **PostgreSQL locally** during the current development stage.
+Use **PostgreSQL locally** during the current Edvance development stage.
 
 ### Reason
-- The application is still being built and tested locally.
-- The assessment does not require public deployment.
-- Local PostgreSQL avoids an unnecessary hosted dependency at this stage.
-- PostgreSQL remains suitable for later production deployment.
+- The application is currently being built and tested locally.
+- The Lesson 6 assessment does not require public deployment.
+- We do not want an unnecessary hosted dependency during the prototype stage.
+- PostgreSQL gives a solid relational foundation that can later be deployed to cloud infrastructure.
+- The architecture should remain migration-friendly.
+
+### Impact on Implementation Plan
+- `docs/IMPLEMENTATION_PLAN.md` names PostgreSQL as the database.
+- PostgreSQL is documented as running locally for now; cloud database deployment is deferred (Phase 4+).
+- Phase 1 (Lesson 6 prototype) requires no hosted database and no real database tests.
+- Keep schema and migrations portable (DB-agnostic ORM, standard SQL) so a later phase can select any managed Postgres provider (e.g., Neon, RDS, Supabase) without redesign.
+- Phase 1 will use `design.html` and a separate Assessment Intelligence page with mock/test data only. No PostgreSQL functionality is implemented in this phase.
 
 ### Verification
-- [ ] Implementation plan names PostgreSQL
-- [ ] PRD states app and database run locally
-- [ ] Phase 1 prototype does not require a hosted database
+- [x] Implementation plan names PostgreSQL
+- [x] PRD states app and database run locally
+- [x] Phase 1 prototype does not require a hosted database
 
 ---
 
 ## Change 2 — Design Refinement
 
-**Date:** Complete after reviewing the first `design.html`  
+**Date:** 2026-09-27  
 **Requested by:** Product Owner  
-**Status:** Pending Review
+**Status:** Completed — Implemented in `design.html`
 
 ### Initial Observation
-Record what is weak in the first generated design.
+The first design preview was a sound starting point, but the Product Owner identified that:
+- Hierarchy between the page title, section headings, and body text was not distinct enough.
+- The primary action button did not stand out from surrounding content.
+- Input borders and focus states were too subtle to notice quickly.
+- Spacing between evidence cards and major sections felt compressed.
+- The consistency status was presented only as small pills and was not immediately noticeable.
+- The mastery list was harder to scan across several concepts than it should be.
+- Some status colours used as text on plain backgrounds had borderline contrast.
+- The page risked reading as a generic AI dashboard rather than an evidence product.
 
 ### Requested Refinement
-Record the exact design changes requested from the AI builder.
-
-Potential areas:
-- Heading hierarchy
-- Text contrast
-- Primary button prominence
-- Input borders
-- Focus states
-- Card spacing
-- Evidence readability
-- Mastery indicator clarity
+The Product Owner asked the AI builder to:
+1. Make the hierarchy between page titles, section headings, and body text clearer.
+2. Increase the visual prominence of the primary action button without making the interface loud.
+3. Make input borders and focus states easier to identify.
+4. Improve spacing between evidence cards and major sections.
+5. Make the consistency-status component easier to notice immediately.
+6. Make the mastery indicators easier to scan across several concepts.
+7. Improve contrast where necessary for readability.
+8. Keep the overall design calm, modern, professional, and evidence-focused.
+9. Avoid excessive gradients or decorative effects.
+10. Make the page feel like an intelligent learning/evidence product, not a generic AI dashboard.
 
 ### Changes Made in `design.html`
-Record only changes that were actually implemented.
+- **Hierarchy:** The hero page title is now the Display style (800, 40px); section headings set to 24px and joined with numbered uppercase kickers ("01 &middot; Foundation", etc.); lede and caption text sit clearly below headings. Body headings force `neutral-950`, with secondary text on `neutral-600`.
+- **Primary button:** Now font-weight 700 with larger padding and an elevated, subtle cake-layered shadow (inset highlight + drop shadow tinted primary), plus a gentle hover lift. Secondary button remains flat/outlined so the primary clearly dominates without adding loudness.
+- **Inputs:** Borders thickened to `2px` using a `--color-neutral-500` border at rest, hover shifts to `primary-500`, and focus uses a `primary-700` border with a 4px translucent ring. Placeholder text is full-strength `neutral-600` (no opacity reduction).
+- **Spacing:** Section bottom margins increased to 96px; divider margins to 80px; component grid gap widened to 32px; evidence cards and cards gained larger padding.
+- **Consistency status:** Added a full-width consistency banner — tinted warning surface, left accent border, prominent "Possible inconsistency" badge with the title, explanation, and source line — displayed above the four compact badge states.
+- **Mastery indicators:** Converted to a column-aligned table (Concept / Progress / Status) with a header row, a summary bar ("3 Mastered · 1 Developing · 2 Weak · 1 Untested"), and labelled status badges instead of colour-only text. Rows remain readable on mobile where columns stack.
+- **Contrast:** Added `--color-success-700` and `--color-error-700` tokens; status text now renders on tinted badges (`success-50`, etc.) rather than on plain white, raising effective contrast. Removed reliance on coloured dots alone — every status pairs a tinted badge with a text label.
+- **Evidence focus:** Added an Assessment → Concepts → Evidence → Consistency → Mastery → Revision pipeline strip to the hero to reinforce the evidence-first product framing. No gradients or decorative effects were introduced; the design stays flat, calm, and token-based.
 
 ### Impact on Design System
-Explain how the refinement improved clarity, accessibility, or the Edvance experience.
+- The system now has a clearer type ramp (page title > section heading > body > caption > label) that will apply consistently to the app pages.
+- Status communication is no longer color-only: badges carry text labels on tinted surfaces, improving accessibility and information density.
+- The primary-button and input-focus patterns define reusable interaction tokens for the Assessment Intelligence page.
+- The consistency banner and mastery table establish the visual language for the signature experience and can be lifted directly into Phase 1.
 
 ### Verification
-- [ ] Refinement is documented here
-- [ ] Updated `design.html` visibly reflects it
+- [x] Refinement is documented here
+- [x] Updated `design.html` visibly reflects it
 
 ---
 
@@ -710,38 +762,61 @@ The first working page focuses only on the **Assessment Intelligence** experienc
 
 ---
 
+## Change 4 — Phase 1 Completion & Status Documentation
+
+**Date:** 2026-09-27  
+**Requested by:** Product Owner  
+**Status:** Completed in Phase 1
+
+### Reason
+Phase 1 work is complete. The project documentation must accurately reflect the current phase and must not imply that deferred functionality already works.
+
+### Decision
+Document the current project state:
+- **Current phase:** Phase 1 — Design System & Assessment Intelligence Prototype.
+- **Completed:** implementation plan created; architecture reviewed (Decision 1); local PostgreSQL selected for later data integration; `design.html` created; design refinements completed (Change 2); initial Assessment Intelligence page built (`assessment-intelligence.html`); local prototype tested with mock data.
+- **Not yet implemented:** Better Auth; PostgreSQL application integration; Cloudflare R2; real course ingestion; live AI APIs; source-processing pipeline; production deployment.
+- **Next phase:** Phase 2 — Core Application Structure.
+
+`README.md` now includes simple instructions for running the local prototype.
+
+### Impact on this document
+Added §16.1 Current Status; updated the document status header; updated appendix checklists. No functionality claims beyond what is implemented.
+
+---
+
 # Appendix B — Lesson 6 Verification Checklist
 
 ## Task 1 — Implementation Plan
-- [ ] AI builder has read this PRD
-- [ ] Ordered implementation phases exist
-- [ ] Framework named: Next.js + TypeScript
-- [ ] Database named: PostgreSQL
-- [ ] Authentication named: Better Auth
-- [ ] File storage named: Cloudflare R2
-- [ ] App explicitly runs locally for now
-- [ ] PostgreSQL explicitly runs locally for now
-- [ ] At least one architecture choice was questioned and documented
+- [x] AI builder has read this PRD
+- [x] Ordered implementation phases exist
+- [x] Framework named: Next.js + TypeScript
+- [x] Database named: PostgreSQL
+- [x] Authentication named: Better Auth
+- [x] File storage named: Cloudflare R2
+- [x] App explicitly runs locally for now
+- [x] PostgreSQL explicitly runs locally for now
+- [x] At least one architecture choice was questioned and documented
 
 ## Task 2 — Design Preview
-- [ ] `design.html` exists
-- [ ] Colors are visible
-- [ ] Typography is visible
-- [ ] Styled button is visible
-- [ ] Sample input is visible
-- [ ] Edvance-specific component is visible
-- [ ] Real design refinement was requested
-- [ ] Refinement is visible in `design.html`
-- [ ] Refinement is documented in Appendix A
+- [x] `design.html` exists
+- [x] Colors are visible
+- [x] Typography is visible
+- [x] Styled button is visible
+- [x] Sample input is visible
+- [x] Edvance-specific component is visible
+- [x] Real design refinement was requested
+- [x] Refinement is visible in `design.html`
+- [x] Refinement is documented in Appendix A
 
 ## Task 3 — Prototype & Demo
-- [ ] Initial application page opens locally
-- [ ] App page is separate from `design.html`
-- [ ] Mock/test data only is used
-- [ ] Current phase is accurately documented
-- [ ] Next phase is identified
+- [x] Initial application page opens locally
+- [x] App page is separate from `design.html`
+- [x] Mock/test data only is used
+- [x] Current phase is accurately documented
+- [x] Next phase is identified
 - [ ] Code is pushed to the public GitHub repository
-- [ ] No secrets are committed
+- [x] No secrets are committed
 - [ ] Demo video is recorded
 - [ ] Demo link is ready
 
