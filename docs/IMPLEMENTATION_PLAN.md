@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** In progress — Phase 1 complete (2026-09-27)
+**Status:** In progress — Phase 2 complete (2026-09-27)
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -81,17 +81,27 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 ### Current Status
 
-**Current phase:** Phase 1 — Design System & Assessment Intelligence Prototype (complete).
+**Current phase:** Phase 2 — Core Application Structure (complete), plus steering additions: landing page and demo sign-in (see `Doc/PRD.md` Appendix A, Change 6) and the "Field Guide" visual redesign (Change 7).
 
 **Completed:**
-- Implementation plan created.
-- Architecture reviewed; local PostgreSQL selected for later data integration (PRD Appendix A, Decision 1).
-- `design.html` created; design refinements completed and applied (PRD Appendix A, Change 2).
-- Initial Assessment Intelligence page built (`assessment-intelligence.html`).
-- Local prototype tested in the browser with mock data only.
+- Phase 1 — Design System & Assessment Intelligence Prototype (static local pages, mock data; `design.html`, `assessment-intelligence.html`).
+- Phase 2 — Core Application Structure.
+  - Next.js + TypeScript app (App Router); `npm run dev` serves it at `http://localhost:3000`.
+  - Course workspace with create/open; created workspaces persist via `localStorage`.
+  - Navigation between Courses, Sources, Assessments, and Mastery.
+  - Sources, Assessments (list + add), and Mastery sections rendering from mock data.
+  - Responsive, accessible layout using the approved design system.
+- Landing page and demo sign-in (steering addition).
+  - Landing page at `/` (hero, questions, features, how-it-works, demo status).
+  - Sign-in/sign-up create a local demo session (`localStorage`) and enter `/courses`.
+  - App routes gated behind the demo session; header shows user + Sign out.
+  - This is a demo UX only — real Better Auth remains Phase 3, never conflated with it.
+- "Field Guide" visual redesign (steering addition, Change 7).
+  - Design system rebuilt around forest/paper/coral palette, Fraunces display serif + Inter body, glassmorphism panels, stamp badges, and tinted journey tiles, fused from three Product Owner reference designs.
+  - Applied across the landing page, split-screen sign-in/sign-up, workspace surfaces, header/footer, and `design.html`.
 
 **Not yet implemented:**
-- Better Auth.
+- Better Auth (real accounts & authentication).
 - PostgreSQL application integration.
 - Cloudflare R2.
 - Real course ingestion.
@@ -99,7 +109,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 - Source-processing pipeline.
 - Production deployment.
 
-**Next phase:** Phase 2 — Core Application Structure (course workspace, navigation, Courses / Sources / Assessments / Mastery sections, responsive layout).
+**Next phase:** Phase 3 — Accounts & Authentication (Better Auth).
 
 ---
 
@@ -167,7 +177,7 @@ This is the **Lesson 6 deliverable**.
 - [x] App page is separate from `design.html`.
 - [x] Mock/test data only is used.
 - [x] Design refinement requested by the Product Owner is documented in PRD Appendix A and visibly reflected in `design.html`.
-- [ ] Code is pushed to the public GitHub repository. *(Pending — Phase 1 files are not yet committed/pushed.)*
+- [x] Code is pushed to the public GitHub repository.
 - [x] No secrets are committed.
 
 ---
@@ -185,11 +195,11 @@ This is the **Lesson 6 deliverable**.
 - Basic responsive layout.
 
 **Acceptance Criteria:**
-- [ ] App runs locally.
-- [ ] A course workspace can be created and opened.
-- [ ] Navigation moves between the main sections.
-- [ ] Sections render from mock data (no backend yet).
-- [ ] Layout works on mobile and desktop within practical limits.
+- [x] App runs locally.
+- [x] A course workspace can be created and opened.
+- [x] Navigation moves between the main sections.
+- [x] Sections render from mock data (no backend yet).
+- [x] Layout works on mobile and desktop within practical limits.
 
 ---
 

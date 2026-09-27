@@ -375,16 +375,27 @@ No secrets should be committed to the public repository.
 
 ### 16.1 Current Status
 
-**Current Phase:** Phase 1 — Design System & Assessment Intelligence Prototype (complete).
+**Current Phase:** Phase 2 — Core Application Structure (complete), plus landing page and demo sign-in (steering addition, Appendix A, Change 6) and the "Field Guide" visual redesign (steering addition, Appendix A, Change 7). Next phase: Phase 3 — Accounts & Authentication (Better Auth).
 
 **Completed (2026-09-27):**
-- Implementation plan created.
-- Architecture reviewed and steering decisions logged (Appendix A, Decision 1).
-- Local PostgreSQL selected for later data integration.
-- `design.html` created.
-- Design refinements completed and applied to `design.html` (Appendix A, Change 2).
-- Initial Assessment Intelligence page built (`assessment-intelligence.html`).
-- Local prototype tested in the browser with mock data only.
+- Phase 1 — Design System & Assessment Intelligence Prototype.
+  - Implementation plan created; architecture reviewed and steering decisions logged (Appendix A, Decision 1).
+  - Local PostgreSQL selected for later data integration.
+  - `design.html` created; design refinements applied (Appendix A, Change 2).
+  - Initial Assessment Intelligence page built (`assessment-intelligence.html`); tested locally with mock data.
+- Phase 2 — Core Application Structure (Next.js + TypeScript app that runs locally).
+  - Course workspace: create and open courses (created workspaces persist in the browser via `localStorage`).
+  - Navigation between Courses, Sources, Assessments, and Mastery.
+  - Sources section (course evidence list), Assessments section (list and add questions), Mastery section (per-concept status), responsive layout.
+  - All sections render from mock data — no backend yet.
+- Landing page and demo sign-in (steering addition, Appendix A, Change 6).
+  - Marketing landing page at `/` with hero, the four questions, features, how-it-works, and demo-status sections.
+  - Sign-in (`/signin`) and sign-up (`/signup`) create a **local demo session** (`localStorage`), then enter the app at `/courses`.
+  - App routes (`/courses` and below) redirect to `/signin` when no session exists; header shows the demo user and a Sign out action.
+  - This is a demo UX only — **not** Better Auth; real accounts and persistence remain Phase 3.
+- "Field Guide" visual redesign (steering addition, Appendix A, Change 7).
+  - Design system rebuilt from three Product Owner reference designs: deep forest-green structure, warm paper surfaces, coral flag accents; Fraunces serif display over Inter body; glassmorphism panels on atmospheric gradients; stamp badges and tinted journey tiles.
+  - Applied across the landing page (glass evidence hero card, forest feature band, oak journey band, stamp demo section), split-screen sign-in/sign-up, workspace surfaces, and the standalone `design.html` preview.
 
 **Not yet implemented:**
 - Better Auth (accounts & authentication).
@@ -395,7 +406,7 @@ No secrets should be committed to the public repository.
 - Source-processing pipeline.
 - Production deployment.
 
-**Next Phase:** Phase 2 — Core Application Structure (course workspace, navigation, and Courses / Sources / Assessments / Mastery sections).
+**Next Phase:** Phase 3 — Accounts & Authentication (Better Auth).
 
 ### Phase 0 — Project Foundation
 **Goal:** Establish the project environment and documentation.
@@ -785,6 +796,82 @@ Added §16.1 Current Status; updated the document status header; updated appendi
 
 ---
 
+## Change 5 — Phase 2 Core Application Structure
+
+**Date:** 2026-09-27  
+**Requested by:** Product Owner ("continue" after Phase 1)  
+**Status:** Completed in Phase 2
+
+### Reason
+A single Assessment Intelligence page is not enough to explore a course. The learner needs a structured workspace around a course and its evidence.
+
+### Decision
+Build Phase 2 as a Next.js + TypeScript app (App Router) that runs locally:
+- Course workspace with create/open (created workspaces persist in the browser via `localStorage`).
+- Navigation between Courses, Sources, Assessments, and Mastery.
+- Sources section, Assessments section (list and add questions), and Mastery section, all rendering from mock data.
+- Responsive, accessible layout using the approved design-system tokens.
+- No authentication, no database, no live AI, no deployment.
+
+### Verification
+`npm run build` passes type-checking and compilation. `npm start` (or `npm run dev`) serves the app at `http://localhost:3000`; routes `/`, `/courses`, and each `/courses/[courseId]` section return 200.
+
+### Impact on this document
+§16.1 updated to Phase 2 complete; next phase identified as Phase 3. No functionality claims beyond what is implemented.
+
+---
+
+## Change 6 — Landing Page and Demo Sign-In
+
+**Date:** 2026-09-27  
+**Requested by:** Product Owner (wanted the product to open on a landing page with hero content and a sign-in/sign-up flow into the app)  
+**Status:** Completed as a Phase 2 steering addition
+
+### Reason
+The Product Owner expected the product to begin on a landing page with hero and supporting sections, followed by sign-in/sign-up that leads into the application — not a direct entry into the course workspace. The existing `/` redirected straight to `/courses`, which did not match that expectation.
+
+### Decision
+Build the entry experience as a demo-flow addition on top of the Phase 2 app:
+- Landing page at `/` with hero, the four central questions, feature highlights, how-it-works steps, and an honest demo-status section.
+- Sign-in (`/signin`) and sign-up (`/signup`) pages that create a **local demo session** in `localStorage` and enter the app at `/courses`.
+- Gated app routes: `/courses` and workspace pages redirect to `/signin` when no session exists, then return via the `next` query parameter.
+- Header reflects session state (user name + Sign out, or Sign in).
+- Explicitly **not** Better Auth — no real identity, no database, no secrets. Real accounts and persistence remain Phase 3 (and PostgreSQL integration Phase 4).
+
+### Verification
+`npm run typecheck` and `npm run build` pass. Routes `/`, `/signin`, `/signup`, and `/courses` return 200 on the dev server.
+
+### Impact on this document
+§16.1 updated to describe the landing page and demo sign-in; README run instructions updated. No functionality claims beyond what is implemented.
+
+---
+
+## Change 7 — "Field Guide" Visual Redesign
+
+**Date:** 2026-09-27  
+**Requested by:** Product Owner (provided three reference designs to elevate the product's visual identity)  
+**Status:** Completed as a Phase 2 steering addition (design only — no functionality claims change)
+
+### Reason
+The Product Owner supplied three reference designs — a glassmorphism welcome screen, a deep-green feature band with earthy tinted tiles, and a warm artisan editorial page with serif display type and stamp badges — and asked that their elements be fused to elevate the project's design.
+
+### Decision
+Fuse the three references into one coherent system, named **"Field Guide"**:
+- **Palette:** deep forest green (structure, primary actions, dark bands), warm paper/cream (study surfaces), coral (the flag colour for inconsistencies and calls to act), gold and oak (support tones).
+- **Type:** Fraunces (soft display serif with SOFT/WONK axes) for display and headings, Inter for body and UI — self-hosted via `next/font`.
+- **Atmosphere:** glassmorphism panels (frosted evidence card, glass sidebar, glass quote card on the auth screen) over radial-gradient tints with subtle film-grain texture.
+- **Signature components:** glass evidence card with numbered pipeline (Question → Concept → Evidence → Consistency → Mastery → Revision), dashed "Evidence checked" stamp badge, tinted journey tiles, seal brand mark, split-screen forest/paper auth layout, forest footer.
+- Applied to: landing page, sign-in/sign-up, courses directory, course workspace (overview, sources, assessments, mastery), header/footer, and the standalone `design.html` preview.
+- Also fixed during verification: the header now re-reads the demo session on client-side route changes, so signing in from `/signin` immediately shows the user and Sign out in the header.
+
+### Verification
+`npm run typecheck` and `npm run build` pass. Routes `/`, `/signin`, `/signup`, `/courses`, and the `ai-foundry` workspace pages return 200. Landing, sign-in, courses, and mastery screens reviewed in the browser at 1440px.
+
+### Impact on this document
+§16.1 updated to record the redesign. Scope remains the same: demo data, demo sessions, no backend. No functionality claims beyond what is implemented.
+
+---
+
 # Appendix B — Lesson 6 Verification Checklist
 
 ## Task 1 — Implementation Plan
@@ -815,7 +902,7 @@ Added §16.1 Current Status; updated the document status header; updated appendi
 - [x] Mock/test data only is used
 - [x] Current phase is accurately documented
 - [x] Next phase is identified
-- [ ] Code is pushed to the public GitHub repository
+- [x] Code is pushed to the public GitHub repository
 - [x] No secrets are committed
 - [ ] Demo video is recorded
 - [ ] Demo link is ready

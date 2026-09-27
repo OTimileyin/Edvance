@@ -63,18 +63,30 @@ The core problem is lack of alignment between learning materials, assessment exp
 
 ## Project Status
 
-Phase 1 — Design System & Assessment Intelligence Prototype is complete. The product requirements are defined in `Doc/PRD.md` (source of truth), with the plan in `docs/IMPLEMENTATION_PLAN.md`. The current deliverable is a local Assessment Intelligence prototype page that runs in the browser on mock data only. Later capabilities (Better Auth, PostgreSQL integration, Cloudflare R2, real course ingestion, live AI APIs, source processing, and production deployment) are not yet implemented.
+Phase 1 — Design System & Assessment Intelligence Prototype and Phase 2 — Core Application Structure are complete, plus a landing page with demo sign-in and the "Field Guide" visual redesign (forest green, warm paper, coral flags, Fraunces serif display, glassmorphism panels — see `Doc/PRD.md` Appendix A, Change 7). The product requirements are defined in `Doc/PRD.md` (source of truth), with the plan in `docs/IMPLEMENTATION_PLAN.md`. The current deliverable is a Next.js learning workspace that runs locally: it opens on a marketing landing page, sign-in/sign-up create a local **demo session** (not a real account), and the course workspace uses mock data only. Later capabilities (Better Auth + a real database, Cloudflare R2, real course ingestion, live AI APIs, source processing, and production deployment) are not yet implemented.
 
 ## Running the Local Prototype
 
-Phase 1 is plain HTML/CSS — there is no build tooling and no install step.
+### Main app (Phase 2 + landing/demo sign-in)
+The app is a Next.js + TypeScript project and runs locally with Node.js:
 
-1. Open `design.html` to view the design-system preview (colors, typography, buttons, inputs, Edvance components).
-2. Open `assessment-intelligence.html` to view the Assessment Intelligence app page (question, concepts, evidence, consistency, mastery, revision).
+```
+npm install
+npm run dev
+```
 
-Both files load directly in any modern browser (double-click them). The app page uses mock/test data only — no server, database, or live AI APIs are involved. The Inter font is loaded from Google Fonts, so the pages look their best with an internet connection but still render without it.
+Open `http://localhost:3000` in a browser. The app opens on the landing page; picking **Get started** (sign-up) or **Sign in** creates a local demo session and enters the course workspace at `/courses` (any email/password is accepted — nothing leaves the browser). Every route after sign-in renders mock data, and workspaces or questions you create are stored in your browser's local storage — demo only, no backend.
+
+### Static previews (Phase 1)
+Phase 1 pages are plain HTML/CSS with no build tooling. Open them directly in a browser (double-click the files):
+
+1. `design.html` — design-system preview (colors, typography, buttons, inputs, Edvance components).
+2. `assessment-intelligence.html` — the Assessment Intelligence signature experience.
+
+The static previews load Fraunces and Inter from Google Fonts, so they look their best with an internet connection but still render without it. (The Next.js app self-hosts both fonts via `next/font`.)
 
 ## Documentation
 
 - [Product Requirements Document](Doc/PRD.md) — the full product specification, persona, MVP scope, and success metrics.
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) — ordered phases with outputs, acceptance criteria, and current status.
+- [Conversation Record](conversation.md) — every Product Owner prompt and the detailed builder response for the whole Edvance build, phase by phase.
