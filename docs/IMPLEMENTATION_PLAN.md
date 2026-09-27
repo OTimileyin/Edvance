@@ -1,7 +1,7 @@
 # Edvance — Implementation Plan
 
 **Status:** In progress — Phase 1 complete (2026-09-27)
-**Source of truth:** `Doc/Edvance_PRD_v2_Assessment_Ready.md` (PRD v2.0)
+**Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
 ---
@@ -118,7 +118,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 **Acceptance Criteria:**
 - [ ] Project opens locally (`npm install`, `npm run dev`).
 - [ ] Repository is public.
-- [ ] PRD exists (`Doc/Edvance_PRD_v2_Assessment_Ready.md`).
+- [ ] PRD exists (`Doc/PRD.md`).
 - [ ] No secrets are committed.
 
 ---

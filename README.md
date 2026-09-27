@@ -63,7 +63,7 @@ The core problem is lack of alignment between learning materials, assessment exp
 
 ## Project Status
 
-Phase 1 — Design System & Assessment Intelligence Prototype is complete. The product requirements are defined in `Doc/Edvance_PRD_v2_Assessment_Ready.md` (source of truth), with the plan in `docs/IMPLEMENTATION_PLAN.md`. The current deliverable is a local Assessment Intelligence prototype page that runs in the browser on mock data only. Later capabilities (Better Auth, PostgreSQL integration, Cloudflare R2, real course ingestion, live AI APIs, source processing, and production deployment) are not yet implemented.
+Phase 1 — Design System & Assessment Intelligence Prototype is complete. The product requirements are defined in `Doc/PRD.md` (source of truth), with the plan in `docs/IMPLEMENTATION_PLAN.md`. The current deliverable is a local Assessment Intelligence prototype page that runs in the browser on mock data only. Later capabilities (Better Auth, PostgreSQL integration, Cloudflare R2, real course ingestion, live AI APIs, source processing, and production deployment) are not yet implemented.
 
 ## Running the Local Prototype
 
@@ -76,5 +76,5 @@ Both files load directly in any modern browser (double-click them). The app page
 
 ## Documentation
 
-- [Product Requirements Document](Doc/Edvance_PRD_v2_Assessment_Ready.md) — the full product specification, persona, MVP scope, and success metrics.
+- [Product Requirements Document](Doc/PRD.md) — the full product specification, persona, MVP scope, and success metrics.
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) — ordered phases with outputs, acceptance criteria, and current status.
