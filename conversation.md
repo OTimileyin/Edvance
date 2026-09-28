@@ -345,6 +345,7 @@ Exactly once: the Windows elevation prompt to install PostgreSQL (requested via 
 5. **Kept the honesty notes per screen** — what is real (accounts, sessions, per-user workspaces) versus what is seeded demo data — and demoted the logo/palette/controls reference to a final section rendered with the application's own classes rather than private duplicates.
 6. **Verified by measuring, not by looking** (screenshots are still non-compositing in this environment): body background `rgb(251,246,234)`; hero title 72px italic Fraunces with the `SOFT`/`WONK`/`opsz` axis settings applied; medallion discs 148px with 76×76 icons; poster grid `1.04fr .96fr` with the evidence card docked inside the illustration panel; footer cream `rgb(246,239,221)`; workspace nav-active `rgb(34,84,90)`; weak mastery bar `rgb(220,99,56)`; section order `poster-hero → band--ink → band--cream → band--sand → band--ink`; 7 frames with 7 headers and 7 footers and no leftover template slots; no clipped text; no horizontal overflow anywhere; no decorative SVG under 8px. The values match the live app because the CSS is the same bytes.
 7. **Docs:** PRD **Change 10** + §16.1 + §17 reworded, plan status block, README (Brand table row, static-preview description, status paragraph), this episode.
+8. **Committed and pushed.** The sheet work landed as `f89fdfc` (5 files, +3610/−461) and was pushed to `origin/main` at the Product Owner's request. That push also carried the three commits that had been sitting local-only since `9090f45` — Phase 2 + Field Guide (`2af22eb`), Phase 3 Better Auth (`bfe0e4c`), and Press Room + logo (`b092460`). The push moved `9090f45..f89fdfc`; this log entry is the commit immediately after it.
 
 ### Notes / limits
 - `design.html` is a **point-in-time snapshot**, deliberately. If `app/globals.css` changes, the sheet must be re-copied between the markers — that is now a visible manual step rather than silent drift. A script could automate the copy; not built yet.
@@ -359,16 +360,16 @@ Exactly once: the Windows elevation prompt to install PostgreSQL (requested via 
 
 ## Current state (2026-09-28)
 
-- **Committed & pushed:** Phase 1 (`cd4bcdb`, `9090f45`), Phase 2 + Field Guide redesign (`2af22eb`). `origin/main` last synced at `9090f45`; `2af22eb`, Phase 3, and Press Room (`b092460`) are local-only until the Product Owner asks for a push.
+- **Committed & pushed:** the interface sheet is commit `f89fdfc`, and it and everything before it are on `origin/main`. The push moved `9090f45..f89fdfc`, carrying four commits that had accumulated locally: Phase 2 + Field Guide (`2af22eb`), Phase 3 Better Auth (`bfe0e4c`), Press Room + logo (`b092460`), interface sheet (`f89fdfc`). This log entry follows as the next commit, so a fresh `git status` will show it ahead until it is pushed too.
 - **Phase 3 (Episode 14):** Better Auth over local PostgreSQL (service `postgresql-edvance`, db `edvance`); server-side guard on `/courses`; per-user workspaces; Phase 3 docs committed separately.
 - **Press Room redesign + logo (Episode 15, committed `b092460`):** teal/cream/rust/sage palette with legacy aliases; Edvance seal monogram shipped as React components, favicon, and a shareable SVG; landing page, header, and footer rebuilt. Presentation only — no behaviour changed.
-- **Interface sheet (Episode 16):** `design.html` now renders the seven shipped screens from the real markup against a verbatim snapshot of `app/globals.css`, labelled by route, with per-screen notes on real versus mock data. Point-in-time by design; re-copy between the `APP-CSS` markers when the stylesheet changes.
-- **Running:** dev server on http://localhost:3000 (started detached; log `/tmp/edvance-dev.log`); PostgreSQL service running.
+- **Interface sheet (Episode 16, committed `f89fdfc`):** `design.html` now renders the seven shipped screens from the real markup against a verbatim snapshot of `app/globals.css`, labelled by route, with per-screen notes on real versus mock data. Point-in-time by design; re-copy between the `APP-CSS` markers when the stylesheet changes.
+- **Running:** dev server restarted after the editor restart and answering on http://localhost:3000 (`/` → 200, `/courses` → 307 to sign-in when unauthenticated); started detached, log at `/tmp/edvance-dev.log`. PostgreSQL service `postgresql-edvance` listening on 5432.
+- **Untracked:** `.freebuff/` (editor tooling metadata) is still untracked and was deliberately not committed — it predates this work and is not in `.gitignore`.
 - **Verified:** typecheck ✓ · build ✓ · auth flows (sign-up, session, guard 307/200) ✓ · browser sign-up + scoped workspace ✓.
 
 ## Suggested next steps
 1. Product Owner reviews the live app at http://localhost:3000 — the landing page, the logo, and the workspace — and the interface sheet at `design.html` (nothing has been seen by eye yet: screenshots are non-compositing in this environment).
-2. Push `origin/main` when the Product Owner asks (three local commits ahead).
-3. Phase 4 — Course Data & PostgreSQL: move courses/concepts/assessments from browser storage into the database with a proper schema and data-access layer.
-4. Phase 5+ — Cloudflare R2 ingestion, intelligence phases (per `docs/IMPLEMENTATION_PLAN.md`).
-5. Optional polish: a small script that regenerates the inlined stylesheet snapshot in `design.html` so the sheet can never silently drift; a light/dark theme pass; a social/OG image from the poster scene and logo lockup; printing styles for the sheet.
+2. Phase 4 — Course Data & PostgreSQL: move courses/concepts/assessments from browser storage into the database with a proper schema and data-access layer. This is the first phase where the product stops relying on mock data.
+3. Phase 5+ — Cloudflare R2 ingestion, intelligence phases (per `docs/IMPLEMENTATION_PLAN.md`).
+4. Optional polish: a small script that regenerates the inlined stylesheet snapshot in `design.html` so the sheet can never silently drift; a light/dark theme pass; a social/OG image from the poster scene and logo lockup; printing styles for the sheet.
