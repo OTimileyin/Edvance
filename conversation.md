@@ -360,7 +360,7 @@ Exactly once: the Windows elevation prompt to install PostgreSQL (requested via 
 
 ## Current state (2026-09-28)
 
-- **Committed & pushed:** the interface sheet is commit `f89fdfc`, and it and everything before it are on `origin/main`. The push moved `9090f45..f89fdfc`, carrying four commits that had accumulated locally: Phase 2 + Field Guide (`2af22eb`), Phase 3 Better Auth (`bfe0e4c`), Press Room + logo (`b092460`), interface sheet (`f89fdfc`). This log entry follows as the next commit, so a fresh `git status` will show it ahead until it is pushed too.
+- **Committed & pushed:** the interface sheet is commit `f89fdfc`, and it and everything before it are on `origin/main`. The push moved `9090f45..f89fdfc`, carrying four commits that had accumulated locally: Phase 2 + Field Guide (`2af22eb`), Phase 3 Better Auth (`bfe0e4c`), Press Room + logo (`b092460`), interface sheet (`f89fdfc`). Pushing was done in the same working session.
 - **Phase 3 (Episode 14):** Better Auth over local PostgreSQL (service `postgresql-edvance`, db `edvance`); server-side guard on `/courses`; per-user workspaces; Phase 3 docs committed separately.
 - **Press Room redesign + logo (Episode 15, committed `b092460`):** teal/cream/rust/sage palette with legacy aliases; Edvance seal monogram shipped as React components, favicon, and a shareable SVG; landing page, header, and footer rebuilt. Presentation only — no behaviour changed.
 - **Interface sheet (Episode 16, committed `f89fdfc`):** `design.html` now renders the seven shipped screens from the real markup against a verbatim snapshot of `app/globals.css`, labelled by route, with per-screen notes on real versus mock data. Point-in-time by design; re-copy between the `APP-CSS` markers when the stylesheet changes.
