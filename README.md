@@ -63,7 +63,7 @@ The core problem is lack of alignment between learning materials, assessment exp
 
 ## Project Status
 
-Phase 1, Phase 2, and Phase 3 are complete, plus three steering additions (landing page/demo sign-in, Change 6; "Field Guide" visual redesign, Change 7; "Press Room" redesign and the Edvance logo, Change 9). The product requirements are defined in `Doc/PRD.md` (source of truth), with the plan in `docs/IMPLEMENTATION_PLAN.md`. The current deliverable is a Next.js learning workspace that runs locally: it opens on a marketing landing page, **sign-up/sign-in create real local accounts** (Better Auth over local PostgreSQL, HTTP-only cookie sessions), and course workspaces are per-user. Course content itself is still browser-local mock data — full PostgreSQL persistence for courses is Phase 4. Later capabilities (Cloudflare R2, real course ingestion, live AI APIs, source processing, production deployment) are not yet implemented.
+Phase 1, Phase 2, and Phase 3 are complete, plus four steering additions (landing page/demo sign-in, Change 6; "Field Guide" visual redesign, Change 7; "Press Room" redesign and the Edvance logo, Change 9; interface sheet re-pointed at the live app, Change 10). The product requirements are defined in `Doc/PRD.md` (source of truth), with the plan in `docs/IMPLEMENTATION_PLAN.md`. The current deliverable is a Next.js learning workspace that runs locally: it opens on a marketing landing page, **sign-up/sign-in create real local accounts** (Better Auth over local PostgreSQL, HTTP-only cookie sessions), and course workspaces are per-user. Course content itself is still browser-local mock data — full PostgreSQL persistence for courses is Phase 4. Later capabilities (Cloudflare R2, real course ingestion, live AI APIs, source processing, production deployment) are not yet implemented.
 
 ## Brand
 
@@ -74,7 +74,7 @@ The Edvance mark is a seal containing an "E" built from three stacked source bar
 | `components/logo.tsx` | `LogoMark` and `Logo` components used by the app (header, footer, auth) |
 | `app/icon.svg` | Favicon / app icon (Next.js file convention) |
 | `public/logo.svg` | Full lockup for sharing and docs |
-| `design.html` | Brand & interface sheet: logo rules, palette, type scale, components |
+| `design.html` | Interface sheet: the shipped screens plus logo rules, palette, and components |
 
 Palette: deep teal `#0D2327`–`#2C6E70` for structure, cream `#FBF6EA` for the page, rust `#C9502E` for flags, sage `#6B8A5E` for mastery. Tokens live in `app/globals.css`.
 
@@ -100,7 +100,7 @@ Open `http://localhost:3000` in a browser. The app opens on the landing page; **
 ### Static previews (Phase 1)
 Phase 1 pages are plain HTML/CSS with no build tooling. Open them directly in a browser (double-click the files):
 
-1. `design.html` — brand & interface sheet (logo lockups and rules, palette, type scale, buttons, medallions, poster hero, evidence card).
+1. `design.html` — interface sheet. Renders the shipped screens from the real markup against a verbatim snapshot of `app/globals.css`: the landing page, sign-in, course directory, overview, sources, assessments, and mastery, with the logo rules, palette, and controls at the end. It is self-contained (no build step, no sibling files) and links inside the frames are inert — run the app for the interactive version.
 2. `assessment-intelligence.html` — the Assessment Intelligence signature experience.
 
 The static previews load Fraunces and Inter from Google Fonts, so they look their best with an internet connection but still render without it. (The Next.js app self-hosts both fonts via `next/font`.)

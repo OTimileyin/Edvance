@@ -332,18 +332,43 @@ Exactly once: the Windows elevation prompt to install PostgreSQL (requested via 
 
 ---
 
-## Current state (2026-09-27)
+## Episode 16 — Interface sheet re-pointed at the live application
 
-- **Committed & pushed:** Phase 1 (`cd4bcdb`, `9090f45`), Phase 2 + Field Guide redesign (`2af22eb`). `origin/main` last synced at `9090f45`; `2af22eb` and Phase 3 are local-only until the Product Owner asks for a push.
+### Product Owner prompt (verbatim)
+> kindly let the design.html be updated to how the project currently looks
+
+### What the AI builder did
+1. **Diagnosed what `design.html` had actually become.** After Episodes 13–15 it was a *brand sheet*: a standalone page that restated the palette, type scale, buttons, medallions, and an evidence card **by hand**, in its own CSS, with a note telling future maintainers to "keep the two in sync". That is a second source of visual truth — it can show components the app no longer renders that way, and it described none of the screens a learner actually uses.
+2. **Decided to render the product itself rather than illustrate it.** The sheet now contains seven labelled frames — landing page (`/`), sign-in (`/signin`), course directory (`/courses`), course overview, sources, assessments, mastery — each using the **real markup, real class names, and the seeded demo content**, so it shows what the app shows.
+3. **Inlined the stylesheet as a verbatim snapshot** between `APP-CSS:BEGIN` / `APP-CSS:END` markers instead of linking `app/globals.css`. This was a measured decision, not a preference: the editor's preview server serves exactly one HTML file and returns 404 for every sibling asset (`README.md`, `package.json`, `app/page.tsx` all 404), so a *linked* sheet renders as unstyled HTML there and when opened from the filesystem under some servers. The snapshot makes it correct by construction and self-contained; refreshing it is a deliberate, visible copy step.
+4. **Stopped copy-pasting chrome.** The guest header, the signed-in header, and the footer are defined once as `<template>` elements and injected into every frame, so all seven screens show identical navigation and footer. The only edits to app styling are three sheet-scoped overrides that neutralise `position: sticky` on the header and workspace nav (stacked sections would otherwise pile up) and give the auth split a fixed height.
+5. **Kept the honesty notes per screen** — what is real (accounts, sessions, per-user workspaces) versus what is seeded demo data — and demoted the logo/palette/controls reference to a final section rendered with the application's own classes rather than private duplicates.
+6. **Verified by measuring, not by looking** (screenshots are still non-compositing in this environment): body background `rgb(251,246,234)`; hero title 72px italic Fraunces with the `SOFT`/`WONK`/`opsz` axis settings applied; medallion discs 148px with 76×76 icons; poster grid `1.04fr .96fr` with the evidence card docked inside the illustration panel; footer cream `rgb(246,239,221)`; workspace nav-active `rgb(34,84,90)`; weak mastery bar `rgb(220,99,56)`; section order `poster-hero → band--ink → band--cream → band--sand → band--ink`; 7 frames with 7 headers and 7 footers and no leftover template slots; no clipped text; no horizontal overflow anywhere; no decorative SVG under 8px. The values match the live app because the CSS is the same bytes.
+7. **Docs:** PRD **Change 10** + §16.1 + §17 reworded, plan status block, README (Brand table row, static-preview description, status paragraph), this episode.
+
+### Notes / limits
+- `design.html` is a **point-in-time snapshot**, deliberately. If `app/globals.css` changes, the sheet must be re-copied between the markers — that is now a visible manual step rather than silent drift. A script could automate the copy; not built yet.
+- The frames are renderings, not a running app: their links and buttons are inert, and the page says so. Interactive behaviour (auth, workspace writes) still requires `npm run dev`.
+- `preview_screenshot` remains broken ("webview is not being composited"), so verification is numeric.
+
+### Files changed
+- Rewritten: `design.html`
+- Docs: `Doc/PRD.md`, `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md`
+
+---
+
+## Current state (2026-09-28)
+
+- **Committed & pushed:** Phase 1 (`cd4bcdb`, `9090f45`), Phase 2 + Field Guide redesign (`2af22eb`). `origin/main` last synced at `9090f45`; `2af22eb`, Phase 3, and Press Room (`b092460`) are local-only until the Product Owner asks for a push.
 - **Phase 3 (Episode 14):** Better Auth over local PostgreSQL (service `postgresql-edvance`, db `edvance`); server-side guard on `/courses`; per-user workspaces; Phase 3 docs committed separately.
-- **Press Room redesign + logo (Episode 15):** teal/cream/rust/sage palette with legacy aliases; Edvance seal monogram shipped as React components, favicon, and a shareable SVG; landing page, header, and footer rebuilt; `design.html` is now the brand & interface sheet. Presentation only — no behaviour changed.
+- **Press Room redesign + logo (Episode 15, committed `b092460`):** teal/cream/rust/sage palette with legacy aliases; Edvance seal monogram shipped as React components, favicon, and a shareable SVG; landing page, header, and footer rebuilt. Presentation only — no behaviour changed.
+- **Interface sheet (Episode 16):** `design.html` now renders the seven shipped screens from the real markup against a verbatim snapshot of `app/globals.css`, labelled by route, with per-screen notes on real versus mock data. Point-in-time by design; re-copy between the `APP-CSS` markers when the stylesheet changes.
 - **Running:** dev server on http://localhost:3000 (started detached; log `/tmp/edvance-dev.log`); PostgreSQL service running.
 - **Verified:** typecheck ✓ · build ✓ · auth flows (sign-up, session, guard 307/200) ✓ · browser sign-up + scoped workspace ✓.
 
 ## Suggested next steps
-1. Product Owner reviews the new landing page and logo in the browser at http://localhost:3000, and the brand sheet at `design.html`.
-2. Push `origin/main` when the Product Owner asks (local commits ahead of `origin/main`).
-3. Optional polish: a light-theme/dark-theme pass on the new tokens, and a social/OG image built from the poster scene and logo lockup.
+1. Product Owner reviews the live app at http://localhost:3000 — the landing page, the logo, and the workspace — and the interface sheet at `design.html` (nothing has been seen by eye yet: screenshots are non-compositing in this environment).
+2. Push `origin/main` when the Product Owner asks (three local commits ahead).
 3. Phase 4 — Course Data & PostgreSQL: move courses/concepts/assessments from browser storage into the database with a proper schema and data-access layer.
 4. Phase 5+ — Cloudflare R2 ingestion, intelligence phases (per `docs/IMPLEMENTATION_PLAN.md`).
-5. Dark-mode variant of the Field Guide system (forest-forward, paper text) — not started, no commitment made.
+5. Optional polish: a small script that regenerates the inlined stylesheet snapshot in `design.html` so the sheet can never silently drift; a light/dark theme pass; a social/OG image from the poster scene and logo lockup; printing styles for the sheet.

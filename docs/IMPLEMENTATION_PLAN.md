@@ -81,7 +81,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 ### Current Status
 
-**Current phase:** Phase 3 — Accounts & Authentication (complete; `Doc/PRD.md` Appendix A, Change 8), on top of Phase 2 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), and the "Press Room" redesign + Edvance logo (Change 9).
+**Current phase:** Phase 3 — Accounts & Authentication (complete; `Doc/PRD.md` Appendix A, Change 8), on top of Phase 2 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
 
 **Completed:**
 - Phase 1 — Design System & Assessment Intelligence Prototype (static local pages, mock data; `design.html`, `assessment-intelligence.html`).
@@ -112,6 +112,11 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
   - Landing page restructured from the artisan-poster reference: two-panel poster hero with a hand-drawn SVG scene, dark teal band of captioned tiles, cream medallion row, sand editorial spread, dark teal status band.
   - Header (logo lockup, centred nav, circular controls) and footer (cream, accurate status copy) rebuilt.
   - Presentation only — no route, data, or auth behaviour changed.
+- Interface sheet re-pointed at the live app (steering addition, Change 10).
+  - `design.html` now renders the shipped screens — landing page, sign-in, course directory, course overview, sources, assessments, mastery — from the real markup and the seeded demo content, each labelled with its route and a note on what is real versus mock.
+  - The application stylesheet is inlined as a verbatim snapshot of `app/globals.css` between explicit markers, replacing the hand-restated palette, type scale, and components. The sheet now cannot show a design the product does not have.
+  - Self-contained with no build tooling: it opens from the filesystem, a static server, or the editor preview, and its links are inert by design.
+  - Presentation only — no app code, route, data, or auth behaviour changed.
 
 **Not yet implemented:**
 - PostgreSQL application integration for course data (auth already runs on PostgreSQL).

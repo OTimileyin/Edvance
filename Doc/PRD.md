@@ -403,11 +403,14 @@ No secrets should be committed to the public repository.
   - Course workspaces are scoped per signed-in user (keyed by email in browser storage) and new users are seeded with demo workspaces on first visit.
 - "Press Room" visual redesign and Edvance identity (steering addition, Appendix A, Change 9).
   - Design language rebuilt from the Product Owner's artisan-poster reference: deep teal structure, cream page, rust flags, sage growth; italic Fraunces display voice; hand-illustrated poster hero; circular medallions with stitched rims; captioned product tiles; cream editorial footer.
-  - **Edvance logo delivered**: a seal monogram (an "E" built from three stacked source bars, the middle one rust-highlighted) plus a wordmark lockup, app-icon favicon (`app/icon.svg`), and shareable `public/logo.svg`. Documented in the `design.html` brand sheet.
+  - **Edvance logo delivered**: a seal monogram (an "E" built from three stacked source bars, the middle one rust-highlighted) plus a wordmark lockup, app-icon favicon (`app/icon.svg`), and shareable `public/logo.svg`. Documented in the `design.html` interface sheet.
   - Landing page restructured to the reference's rhythm: two-panel poster hero → dark teal product band → cream medallion row → sand editorial spread → dark teal honest-status band.
   - Applied to the header (logo lockup, centred nav, circular tool buttons), footer, auth panels, and — through the token layer — every workspace surface.
   - Pure presentation change: no route, data, or authentication behaviour was altered.
   - Credentials live only in the git-ignored `.env`; `.env.example` documents the shape. Course data itself remains browser-local mock data (PostgreSQL integration is Phase 4).
+- Interface sheet re-pointed at the live application (steering addition, Appendix A, Change 10).
+  - `design.html` now renders the shipped screens themselves — landing page, sign-in, course directory, course overview, sources, assessments, and mastery — against a verbatim snapshot of `app/globals.css`, rather than a separate hand-written approximation of the design system.
+  - This removes a real risk: the previous sheet restated the palette, type, and components by hand, so it could describe a design the product no longer had. It now cannot drift without an explicit copy step, and its contents are measuring-identical to the app.
 
 **Not yet implemented:**
 - PostgreSQL application integration (course data; auth already runs on PostgreSQL).
@@ -511,7 +514,8 @@ Edvance should feel:
 ### Current Color Direction — "Press Room" (Appendix A, Change 9)
 
 An artisan-poster palette: teal for structure, cream for the page, rust for flags,
-sage for growth. Implemented in `app/globals.css`; mirrored in the `design.html` brand sheet.
+sage for growth. Implemented in `app/globals.css`; snapshotted in the `design.html`
+interface sheet, which renders the live screens against that stylesheet.
 
 | Token | Value | Usage |
 |---|---|---|
@@ -951,6 +955,31 @@ Phase 2's "Field Guide" system was a forest/paper palette with a glass evidence 
 
 ### Impact on this document
 §16.1 updated; §17 palette, typography, and brand sections rewritten to the implemented system. No route, data, or authentication behaviour changed. No functionality claims beyond what is implemented.
+
+---
+
+## Change 10 — Interface Sheet Re-pointed at the Live Application
+
+**Date:** 2026-09-28  
+**Requested by:** Product Owner — "kindly let the design.html be updated to how the project currently looks"  
+**Status:** Completed
+
+### Reason
+After Changes 7 and 9, `design.html` had become a *brand sheet*: a reasonable-looking page that restated the palette, type scale, buttons, and medallions **by hand**. That made it a second, unverified source of visual truth. It could (and did) show components the app rendered differently, and it said nothing about the screens a learner actually uses. The Product Owner asked for it to show the project as it currently is.
+
+### Decision
+- **The sheet now renders the product's own screens**: landing page (`/`), sign-in (`/signin`), course directory (`/courses`), course overview, sources, assessments, and mastery — with the real markup, the real class names, and the seeded demo content, each labelled with its route.
+- **It no longer restates CSS.** The application stylesheet is inlined as a **verbatim snapshot** of `app/globals.css` between explicit `APP-CSS:BEGIN` / `APP-CSS:END` markers, so the sheet is correct by construction and self-contained (folders are not served alongside it when it is opened or previewed). Refreshing it is a deliberate, visible copy step rather than an invisible drift.
+- **Inlined rather than linked** because the environments that open this file — the filesystem, a static server, and the Freebuff Preview tab (which serves that single HTML file and returns 404 for every sibling asset) — cannot resolve an external `app/globals.css`. A linked sheet rendered as unstyled HTML in two of the three.
+- **Header, footer, and form states are shared**, not copy-pasted per screen: the guest header, the signed-in header, and the footer are defined once as templates and injected into every frame, so all seven screens show identical chrome. Links inside the frames are inert (they are renderings, not a running app) — noted on the page itself, which points to `npm run dev` for the interactive version.
+- **The honesty note survives**: each screen carries a short note stating what is real (accounts, sessions, per-user workspaces) and what is seeded demo data, consistent with §16.1.
+- **Brand and token reference retained**, but demoted to the last section and rendered with the application's real classes instead of private duplicates.
+
+### Verification
+Rendered at 1440×980 and measured in the browser: body background `rgb(251,246,234)`; hero title 72px italic Fraunces with `SOFT`/`WONK`/`opsz` variation settings applied; the four medallion discs 148px with 76×76 icons; poster grid `1.04fr .96fr` with the evidence card docked inside the illustration panel; footer cream `rgb(246,239,221)`; workspace nav-active `rgb(34,84,90)`; weak mastery bar `rgb(220,99,56)`; section order `poster-hero → band--ink → band--cream → band--sand → band--ink`; 7 frames, 7 headers, 7 footers, no leftover template slots; no clipped text and **no horizontal overflow** at any point on the page; a sweep for decorative SVGs under 8px returns none. These are the same values the live application reports, because the stylesheet is the same bytes.
+
+### Impact on this document
+§16.1 and §17 updated to describe the sheet accurately. No app code, route, data, or authentication behaviour changed — only `design.html` and the documentation that points at it.
 
 ---
 
