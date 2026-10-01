@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/api-session";
-import { createMaterial, ownsCourse } from "@/lib/repo/courses";
+import { createMaterial, getMaterial, ownsCourse } from "@/lib/repo/courses";
+import { ingestMaterial } from "@/lib/ingestion";
 import { deleteObject, isStorageConfigured, putObject } from "@/lib/supabase-storage";
 import {
   MAX_MATERIAL_BYTES,
@@ -143,5 +144,19 @@ export async function POST(
     return NextResponse.json({ error: "Course not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ material }, { status: 201 });
+  // The upload has succeeded, so the material is recorded regardless of what
+  // extraction does next. Ingestion failures are recorded on the job and shown
+  // in the Sources UI; they never delete the learner's file or fail the upload.
+  try {
+    await ingestMaterial(user.id, materialId);
+  } catch (error) {
+    console.error(
+      `[materials] ingestion for ${materialId} could not run: ${
+        error instanceof Error ? error.message : "unknown error"
+      }`,
+    );
+  }
+
+  const refreshed = (await getMaterial(user.id, materialId)) ?? material;
+  return NextResponse.json({ material: refreshed }, { status: 201 });
 }

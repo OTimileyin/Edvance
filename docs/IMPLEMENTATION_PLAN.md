@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** In progress — Phase 5 complete and verified end to end on private Supabase Storage (2026-10-01); next phase Phase 6
+**Status:** In progress — Phase 5 (private Supabase Storage) and Phase 5.6 (text extraction & evidence chunking) complete and verified end to end (2026-10-01); next phase Phase 6
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -63,8 +63,8 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 - Working authentication (Better Auth) — Phase 3.
 - Production database integration and cloud database deployment — Phase 4 onward.
-- Real file upload pipeline and production storage (Supabase Storage) — Phase 5.
-- Real course ingestion — Phase 5.
+- Real file upload pipeline and production storage (Supabase Storage) — Phase 5 (done).
+- Real course ingestion — text extraction & evidence chunking in Phase 5.6 (done); AI-assisted course intelligence remains Phase 6.
 - Course intelligence / assessment intelligence / mastery intelligence / targeted revision (requiring live AI services) — Phases 6–9.
 - Public deployment.
 - Payment integration.
@@ -82,7 +82,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 ### Current Status
 
-**Current phase:** Phase 5 — Course Material Ingestion (Supabase Storage) — **complete and verified end to end** (`Doc/PRD.md` Appendix A, Changes 12–13). Phase 4 is complete (Change 11), on top of Phases 1–3 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
+**Current phase:** Phase 5.6 — Text Extraction & Evidence Chunking — **complete and verified end to end** (`Doc/PRD.md` Appendix A, Change 14). It builds on Phase 5 — Course Material Ingestion (Supabase Storage), complete and verified (`Doc/PRD.md` Appendix A, Changes 12–13). Phase 4 is complete (Change 11), on top of Phases 1–3 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
 
 **Completed:**
 - Phase 1 — Design System & Assessment Intelligence Prototype (static local pages, mock data; `design.html`, `assessment-intelligence.html`).
@@ -127,13 +127,21 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
   - The course workspace no longer uses `localStorage`: the hooks fetch from the API and the create/add-question forms POST to it. The dead browser-storage modules were deleted.
   - New learners are seeded with the demo workspaces server-side (idempotent, concurrency-safe); the seeded rows now live in PostgreSQL rather than the browser.
   - `source_mapping` exists in the schema and repository but is not yet surfaced in the UI — populating it is Phase 6–7 work.
+- Phase 5.6 — Text Extraction & Evidence Chunking.
+  - `db/migrations/0003_material_ingestion.sql` adds `material_ingestion_job` (status `pending|processing|completed|failed`, timestamps, safe `error_code`/`error_summary`, derived `metadata`) and `material_chunk` (ordered `ordinal`, `content`, human-readable `source_location`, structured `metadata`), both cascading from `learning_material`.
+  - `lib/extraction/` is a server-only extraction layer: PDF (`pdfjs-dist`), DOCX (`mammoth`), and PPTX (`jszip` + Open XML), plus hand-written TXT, Markdown, WebVTT, and SRT parsers, all normalised to `{ text, location }`; a deterministic chunker turns blocks into ordered, location-tagged evidence chunks without splitting sentences.
+  - `lib/ingestion.ts` runs create job → mark processing → download object → extract → chunk → store → mark completed. The upload route triggers it after the material row exists; `POST …/materials/[materialId]/ingest` retries after a failure. Failures never delete the learner's file — the job records a short code and a user-safe summary only.
+  - The Sources section shows real state — "Ready for analysis" (never "Analyzed"), "Processing…", "Extraction failed" with Retry — plus factual derived metadata only when actually derived, and a **Demo source** flag for seeded rows.
 
 **Verified in Phase 5 (2026-10-01):**
 - Supabase Storage upload, private signed retrieval, delete, and the `storageReference` on `learning_material` (`db/migrations/0002_material_storage.sql`, `lib/supabase-storage.ts`, `app/api/courses/[courseId]/materials`). Exercised against the private `edvance-materials` bucket through the real application — see `Doc/PRD.md` Appendix A, Change 13.
 
+**Verified in Phase 5.6 (2026-10-01):**
+- Real extraction and chunking for all seven formats, correct page/slide/timestamp/section/line locations, ordered chunks, ingestion jobs, ownership isolation, failed-ingestion states, and delete cascades — `scripts/test-ingestion.mjs` reports 91 passed, 0 failed. See `Doc/PRD.md` Appendix A, Change 14.
+
 **Not yet implemented:**
-- Real course ingestion / source-processing pipeline (extraction of text and structure from uploaded materials).
-- Live AI APIs.
+- Course Intelligence — AI-assisted concept extraction over the stored evidence. No AI provider is configured.
+- Live AI APIs (Gemini or otherwise).
 - Production deployment.
 
 **Next phase:** Phase 6 — Course Intelligence.
@@ -286,12 +294,40 @@ This is the **Lesson 6 deliverable**.
 - `GET /api/courses/[courseId]/materials/[materialId]/download` verifies ownership and redirects to a short-lived signed URL; `DELETE /api/courses/[courseId]/materials/[materialId]` removes the row (authoritative) and then the object.
 - `components/add-material-form.tsx` and the Sources section: an upload form with client-side validation, a "Stored" badge, file size, Download, and Remove actions. The material list already renders from PostgreSQL, so an upload appears the moment it is stored.
 
-**Processing pipeline:** not implemented. Extracting text and structure from materials (the Phase 6 input) is deliberately left to Phase 6; this phase stores and surfaces materials only.
+**Processing pipeline:** delivered in Phase 5.6 (see below) — text extraction and evidence chunking now run on upload. This phase stores and surfaces materials; AI-assisted course intelligence remains Phase 6.
 
 **Acceptance Criteria:**
 - [x] Files upload and are retrievable via private object storage. *(Verified 2026-10-01: real PDF + TXT upload → 201, signed download 307 → 200 with matching SHA-256, object present at the stored path; bucket refuses anonymous access.)*
 - [x] Uploaded materials appear in the Sources section. *(Verified: the uploaded materials appeared in the course read-back.)*
 - [x] Failed/unsupported files are handled gracefully (unsupported type → 415, oversized → 413, empty → 400, unauthenticated → 401, not the owner → 404, with messages shown in the form).
+
+---
+
+### Phase 5.6 — Text Extraction & Evidence Chunking
+
+**Technology:** `pdfjs-dist` (PDF), `mammoth` (DOCX), `jszip` (PPTX); hand-written TXT/Markdown/WebVTT/SRT parsers. Server-only.
+
+**Goal:** Turn stored materials into structured, location-aware evidence the later intelligence phases can cite.
+
+**Outputs:**
+- Server-only extraction layer for PDF, TXT, Markdown, DOCX, PPTX, WebVTT, and SRT.
+- `material_ingestion_job` and `material_chunk` tables; synchronous ingestion on upload, with retry.
+- Sources processing state ("Ready for analysis") with factual derived metadata, and clearly-labelled demo sources.
+
+**Delivered:**
+- `db/migrations/0003_material_ingestion.sql` adds `material_ingestion_job` and `material_chunk`, both cascading from `learning_material`.
+- `lib/extraction/` returns one normalised `{ text, location }` shape from every format — locations are `page`, `slide`, `timestamp`, `section`, or `line`, and the human-readable label is what a citation shows ("Page 7", "00:04:12–00:04:38", "Section: Introduction to PROMPT").
+- `lib/extraction/chunk.ts` produces deterministic, ordered chunks (≈900-character target, 1600 hard limit) that never split a sentence or cross a source location.
+- `lib/ingestion.ts` orchestrates the job lifecycle; `lib/supabase-storage.ts` gained `downloadObject`; `POST …/materials` triggers ingestion and `POST …/materials/[materialId]/ingest` retries. Failures keep the file and store only a safe code and summary.
+- The Sources page renders real state and derived metadata, with Retry on failure; seeded rows are labelled **Demo source**.
+
+**Acceptance Criteria:**
+- [x] PDF, TXT, Markdown, DOCX, PPTX, WebVTT, and SRT extract real text. *(Verified 2026-10-01.)*
+- [x] PDF page numbers, PPTX slide numbers, and transcript timestamps are preserved. *(Verified.)*
+- [x] `material_ingestion_job` and `material_chunk` work; chunk ordering is correct; ownership isolation holds; failed ingestion is recorded without deleting the file. *(Verified.)*
+- [x] Sources shows the real processing status. *(Verified.)*
+- [x] Typecheck, tests, and the secret scan pass; documentation updated.
+- [x] No AI provider, prompt, concept extraction, embeddings, or vector database was added.
 
 ---
 

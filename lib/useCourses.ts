@@ -101,6 +101,21 @@ export async function uploadMaterial(courseId: string, file: File): Promise<Sour
 }
 
 /**
+ * Re-runs text extraction for a material, returning its refreshed state. Throws
+ * with a display message on failure.
+ */
+export async function retryIngestion(courseId: string, materialId: string): Promise<SourceItem> {
+  const response = await fetch(
+    `/api/courses/${courseId}/materials/${materialId}/ingest`,
+    { method: "POST" },
+  );
+  if (!response.ok) {
+    throw new Error(await readError(response, "Could not reprocess the material."));
+  }
+  return ((await response.json()) as { material: SourceItem }).material;
+}
+
+/**
  * Removes a material from a course and cleans up its stored object. Throws with
  * a display message on failure.
  */

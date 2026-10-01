@@ -100,6 +100,20 @@ export async function deleteObject(key: string): Promise<void> {
 }
 
 /**
+ * Downloads an object's bytes for server-side processing (text extraction).
+ * The bucket stays private: nothing is exposed to the browser here.
+ */
+export async function downloadObject(key: string): Promise<Buffer> {
+  const { data, error } = await client().storage.from(bucket()).download(key);
+
+  if (error || !data) {
+    logFailure("download", key, error ?? new Error("no object returned"));
+    throw new Error("File storage is temporarily unavailable. Please try again.");
+  }
+  return Buffer.from(await data.arrayBuffer());
+}
+
+/**
  * Mints a short-lived signed URL for a private object. The bucket stays private;
  * only someone holding the signed URL for its lifetime can read the file. The
  * URL (and its token) is never logged.

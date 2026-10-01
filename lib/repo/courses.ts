@@ -7,6 +7,8 @@ import type {
   ConsistencyStatus,
   Course,
   CourseConsistency,
+  IngestionMetadata,
+  IngestionStatus,
   SourceItem,
   SourceType,
 } from "@/lib/types";
@@ -37,6 +39,11 @@ type MaterialRow = {
   storage_reference: string | null;
   mime_type: string | null;
   size_bytes: string | null;
+  job_status: string | null;
+  job_error_code: string | null;
+  job_error_summary: string | null;
+  job_metadata: IngestionMetadata | null;
+  chunk_count: string | null;
 };
 
 type ConceptRow = {
@@ -80,8 +87,35 @@ function mapMaterial(row: MaterialRow): SourceItem {
     storageReference: row.storage_reference,
     mimeType: row.mime_type,
     sizeBytes: row.size_bytes === null ? null : Number(row.size_bytes),
+    ingestion: row.job_status
+      ? {
+          status: row.job_status as IngestionStatus,
+          errorCode: row.job_error_code,
+          errorSummary: row.job_error_summary,
+          metadata: row.job_metadata ?? {},
+          chunkCount: row.chunk_count === null ? 0 : Number(row.chunk_count),
+        }
+      : null,
   };
 }
+
+/**
+ * Columns for a material plus its latest ingestion attempt and chunk count.
+ * Lives in one place so every read reports the same processing state.
+ */
+const MATERIAL_COLUMNS = `m.id, m.course_id, m.type, m.title, m.location,
+        m.storage_reference, m.mime_type, m.size_bytes,
+        j.status as job_status, j.error_code as job_error_code,
+        j.error_summary as job_error_summary, j.metadata as job_metadata,
+        (select count(*) from material_chunk ch where ch.material_id = m.id) as chunk_count`;
+
+const MATERIAL_LATEST_JOB = `left join lateral (
+          select status, error_code, error_summary, metadata
+            from material_ingestion_job
+           where material_id = m.id
+           order by created_at desc
+           limit 1
+        ) j on true`;
 
 /** Turns a course title into a stable, readable id for the seeded workspaces. */
 function slug(title: string): string {
@@ -97,11 +131,11 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
 
   const [materials, concepts, assessments, findings] = await Promise.all([
     pool.query<MaterialRow>(
-      `select id, course_id, type, title, location,
-              storage_reference, mime_type, size_bytes
-         from learning_material
-        where course_id = any($1::text[])
-        order by uploaded_at asc`,
+      `select ${MATERIAL_COLUMNS}
+         from learning_material m
+         ${MATERIAL_LATEST_JOB}
+        where m.course_id = any($1::text[])
+        order by m.uploaded_at asc`,
       [ids],
     ),
     pool.query<ConceptRow>(
@@ -350,6 +384,131 @@ export async function deleteMaterial(
     courseId,
   ]);
   return { storageReference: rows[0].storage_reference };
+}
+
+/** One material's stored object, for the ingestion pipeline to read. */
+export async function getMaterialIngestionSource(
+  userId: string,
+  materialId: string,
+): Promise<{ storageReference: string; type: string } | undefined> {
+  const { rows } = await pool.query<{ storage_reference: string | null; type: string }>(
+    `select m.storage_reference, m.type
+       from learning_material m
+       join course c on c.id = m.course_id
+      where m.id = $1 and c.user_id = $2`,
+    [materialId, userId],
+  );
+  const row = rows[0];
+  if (!row || !row.storage_reference) return undefined;
+  return { storageReference: row.storage_reference, type: row.type };
+}
+
+/** One material with its latest ingestion state, scoped to the owning learner. */
+export async function getMaterial(
+  userId: string,
+  materialId: string,
+): Promise<SourceItem | undefined> {
+  const { rows } = await pool.query<MaterialRow>(
+    `select ${MATERIAL_COLUMNS}
+       from learning_material m
+       ${MATERIAL_LATEST_JOB}
+      where m.id = $1 and m.course_id in (select id from course where user_id = $2)`,
+    [materialId, userId],
+  );
+  return rows[0] ? mapMaterial(rows[0]) : undefined;
+}
+
+/**
+ * Creates a `pending` extraction job for a material. A material may accumulate
+ * jobs over time (an upload, then retries); readers use the most recent one.
+ */
+export async function createIngestionJob(materialId: string): Promise<string> {
+  const id = newId("ingest");
+  await pool.query(
+    `insert into material_ingestion_job (id, material_id, status) values ($1, $2, 'pending')`,
+    [id, materialId],
+  );
+  return id;
+}
+
+export async function markIngestionProcessing(jobId: string): Promise<void> {
+  await pool.query(
+    `update material_ingestion_job
+        set status = 'processing', started_at = now(), updated_at = now()
+      where id = $1`,
+    [jobId],
+  );
+}
+
+export async function completeIngestion(
+  jobId: string,
+  metadata: IngestionMetadata,
+): Promise<void> {
+  await pool.query(
+    `update material_ingestion_job
+        set status = 'completed', completed_at = now(), updated_at = now(),
+            error_code = null, error_summary = null, metadata = $2::jsonb
+      where id = $1`,
+    [jobId, JSON.stringify(metadata)],
+  );
+}
+
+/** Records a safe failure reason; never stores a raw provider error. */
+export async function failIngestion(
+  jobId: string,
+  errorCode: string,
+  errorSummary: string,
+): Promise<void> {
+  await pool.query(
+    `update material_ingestion_job
+        set status = 'failed', completed_at = now(), updated_at = now(),
+            error_code = $2, error_summary = $3
+      where id = $1`,
+    [jobId, errorCode, errorSummary],
+  );
+}
+
+/** One evidence chunk as stored: its text, human-readable location and detail. */
+export type StoredChunk = {
+  content: string;
+  sourceLocation: string;
+  metadata: Record<string, unknown>;
+};
+
+/**
+ * Replaces a material's evidence chunks with a fresh, ordered set. Runs in one
+ * transaction so a re-ingestion never leaves a half-written chunk list behind.
+ */
+export async function replaceMaterialChunks(
+  materialId: string,
+  chunks: StoredChunk[],
+): Promise<void> {
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query("delete from material_chunk where material_id = $1", [materialId]);
+    for (const [ordinal, chunk] of chunks.entries()) {
+      await client.query(
+        `insert into material_chunk
+           (id, material_id, ordinal, content, source_location, metadata)
+         values ($1, $2, $3, $4, $5, $6::jsonb)`,
+        [
+          newId("chunk"),
+          materialId,
+          ordinal,
+          chunk.content,
+          chunk.sourceLocation,
+          JSON.stringify(chunk.metadata),
+        ],
+      );
+    }
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export type SourceMapping = {
