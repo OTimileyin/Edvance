@@ -4,7 +4,8 @@
 // Each migration runs inside its own transaction; a migration that throws is
 // rolled back and never recorded, so re-running is always safe.
 //
-// Usage: npm run migrate        (reads DATABASE_URL from .env)
+// Usage: npm run migrate        (DATABASE_URL is injected by Infisical;
+//                                the production pre-deploy step supplies it directly)
 
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -17,6 +18,7 @@ const migrationsDir = join(here, "..", "db", "migrations");
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   console.error("DATABASE_URL is not set. Run with: npm run migrate");
+  console.error("(this expects Infisical: infisical run --env=dev -- node scripts/migrate.mjs)");
   process.exit(1);
 }
 

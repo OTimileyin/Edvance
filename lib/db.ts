@@ -1,5 +1,7 @@
 import { Pool } from "pg";
 
+import { requiredEnv } from "./env";
+
 /**
  * Shared PostgreSQL pool for application data access.
  *
@@ -12,7 +14,8 @@ const globalForDb = globalThis as unknown as { edvancePool?: Pool };
 export const pool =
   globalForDb.edvancePool ??
   new Pool({
-    connectionString: process.env.DATABASE_URL,
+    // Required: throws a readable error at import if Infisical injection did not happen.
+    connectionString: requiredEnv("DATABASE_URL"),
   });
 
 if (process.env.NODE_ENV !== "production") {

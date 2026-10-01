@@ -4,11 +4,11 @@
   "private": true,
   "description": "Evidence-first assessment intelligence — learning workspace",
   "scripts": {
-    "dev": "next dev",
+    "dev": "infisical run --env=dev -- next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "migrate": "node --env-file=.env scripts/migrate.mjs"
+    "migrate": "infisical run --env=dev -- node scripts/migrate.mjs"
   },
   "dependencies": {
     "better-auth": "^1.7.6",
