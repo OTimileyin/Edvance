@@ -389,6 +389,67 @@ Exactly once: the Windows elevation prompt to install PostgreSQL (requested via 
 
 ---
 
+## Episode 18 — Phase 5: Course Material Ingestion (Cloudflare R2)
+
+### Product Owner prompt (verbatim)
+> Start Phase 5 — Course Material Ingestion: add a file upload flow that stores materials in Cloudflare R2 with a storageReference, surfaces them in the Sources section, and handles unsupported files gracefully. Tell me what credentials you need from me.
+
+### What the AI builder did
+1. **Surveyed the storage surface first.** `learning_material` already had a `storage_reference` column and the repository mapped it into the `Course` type, but nothing wrote to it and the Sources list was seeded rows with no bytes behind them. There was no object-storage dependency in the project.
+2. **Chose a dependency-free R2 client over an S3 SDK.** The project had already refused an ORM to stay dependency-light (Phase 4, Change 11), and only three operations are needed. `lib/r2.ts` implements AWS SigV4 over Node's `crypto`: a signed `PUT` (upload), a signed `DELETE` (cleanup), and a presigned `GET` (retrieval). R2 is S3-compatible, so this covers it with no new package.
+3. **Uploaded server-side, then recorded the row.** `POST /api/courses/[courseId]/materials` verifies the learner owns the course *before* touching storage, sends the bytes to R2 under an owner-scoped key (`<user>/<course>/<material>/<safe name>`), then inserts the `learning_material` row with that key as its `storageReference`. If the insert fails, the object is removed.
+4. **Added retrieval.** `GET …/materials/[materialId]/download` checks the material belongs to one of the learner's courses and redirects to a public object URL (when `R2_PUBLIC_BASE_URL` is set) or a short-lived presigned URL otherwise.
+5. **Made unsupported files graceful at both ends.** `lib/materials.ts` defines the accepted set (PDF; PowerPoint; Word; Markdown/plain-text notes; WebVTT/SRT transcripts) and a 25 MB limit, shared by the form and the route. The route returns a specific status and message per failure — 415 unsupported, 413 too large, 400 empty/missing, 503 storage unconfigured, 502 upload failed, 401/404 for auth/ownership — and the form shows them inline.
+6. **Surfaced materials in Sources.** `components/add-material-form.tsx` handles selection, client-side validation, upload progress, and errors; the Sources list now shows a “Stored in R2” badge, the file size, and a Download action for stored files (seeded citations keep their location text and no download). The list already renders from PostgreSQL, so an upload appears on reload.
+7. **Schema.** `db/migrations/0002_material_storage.sql` adds `mime_type` and `size_bytes` to `learning_material`; `storage_reference` was already there from Phase 4. Applied with `npm run migrate`.
+8. **Verified.** `npm run typecheck` ✓ · `npm run build` ✓ (new routes listed) · `npm run migrate` applied 0002 once ✓ · live against the dev server with a real session: unauthenticated upload → 401, `.exe` → 415, missing file field → 400, non-owned course → 404. Throwaway test account removed afterwards.
+9. **Documented honestly.** PRD **Change 12** + §16.1 (Phase 5 implemented, verification pending credentials), plan status + Phase 5 deliverables (acceptance criteria left unchecked with the reason), README status and prerequisites (the R2 variables). The source-processing pipeline is explicitly **not** claimed — it is Phase 6.
+
+### Where the user was asked to act
+None of the work was blocked beyond credentials: object storage needs an R2 account. The builder named the exact environment variables and stopped short of inventing values. **No live upload has been exercised yet.**
+
+### Files changed
+- New: `db/migrations/0002_material_storage.sql`, `lib/r2.ts`, `lib/materials.ts`, `app/api/courses/[courseId]/materials/route.ts`, `app/api/courses/[courseId]/materials/[materialId]/download/route.ts`, `components/add-material-form.tsx`
+- Changed: `lib/types.ts`, `lib/repo/courses.ts`, `lib/useCourses.ts`, `app/courses/[courseId]/sources/page.tsx`, `app/globals.css`, `.env.example`
+- Docs: `Doc/PRD.md`, `docs/IMPLEMENTATION_PLAN.md`, `README.md`, this episode
+
+---
+
+## Episode 19 — Phase 5.5: Storage migrated to Supabase Storage (verified end to end)
+
+### Product Owner prompt (verbatim, abridged)
+> I have decided to use Supabase Storage instead of Cloudflare R2 for Edvance's course-material storage. … Do NOT replace our existing PostgreSQL database. Do NOT migrate Better Auth to Supabase Auth. Do NOT use Supabase as our application database. … Supabase is being introduced ONLY for private file/object storage. … The browser must never receive the Supabase secret key. … Never print, echo, log, display, or expose secret values. You may only report environment variable NAMES and whether they are PRESENT or MISSING. [Then a nine-step procedure: verify configuration; record the decision in PRD Appendix A and the plan; review the R2 implementation; implement `lib/supabase-storage.ts`; run real end-to-end tests A–E; sanitize errors; typecheck; document verified results; secret-scan and commit.]
+
+### What the AI builder did
+1. **Verified the configuration first, names only.** `infisical export --env=dev --format=dotenv | cut -d= -f1` listed exactly `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET`. All three Supabase names were **PRESENT**; no value was ever read into the transcript.
+2. **Recorded the steering decision before changing code.** PRD **Appendix A, Change 13** states plainly that R2 had been selected and implemented but **never successfully connected or tested**, that the Product Owner chose Supabase Storage using their existing account, and that this is storage only — PostgreSQL stays the database, Better Auth stays authentication, Infisical stays the secrets manager. §14, §16.1, and §16.2 and the implementation plan were re-pointed to Supabase Storage; the historical R2 record was kept.
+3. **Reviewed, then replaced — did not rebuild.** The good behaviour was preserved untouched: Better Auth session check, course-ownership check, extension validation, empty-file and 25 MB checks, server-derived MIME type, upload-then-insert with rollback, the Sources UI, and the delete support added just before. Only the storage layer changed.
+4. **Added the official Supabase server client.** `npm install @supabase/supabase-js` (the only new dependency, +8 packages, 0 vulnerabilities) and a new server-only `lib/supabase-storage.ts`: the client disables session persistence, and it exposes `putObject`, `createDownloadUrl` (300-second signed URL), `deleteObject`, and `isStorageConfigured`. The secret key is only ever read from Infisical into the server process.
+5. **Owner-scoped object keys.** The stored path is now `users/{userId}/courses/{courseId}/materials/{materialId}/{safe filename}` — the client-supplied filename is sanitised and is only ever the final segment, so a learner cannot steer the path, and a listing cannot cross learners.
+6. **Rewired the three routes.** Upload stores to the private bucket then inserts the row (removing the object if the insert fails); download verifies ownership and redirects to a short-lived signed URL; delete removes the row (authoritative) then the object (best-effort, orphans logged). The raw-provider-error leak was closed: provider bodies stay in the server log and the browser sees only "File storage is temporarily unavailable."
+7. **Removed the superseded R2 code.** `lib/r2.ts` deleted; no `R2_*` reference remains in `app`, `lib`, or `components`; README, `.env.example`, and the plan no longer ask for R2 credentials. Git history keeps the old implementation.
+8. **Ran the real tests against the private bucket** (dev server on port 3250 via `infisical run`; see results below).
+9. **Cleaned up after itself.** Every uploaded object was deleted through the app, the throwaway accounts were removed, the bucket was confirmed **empty**, and the database returned to baseline (`user` 3, `course` 4, `learning_material` 20, `session` 8). The test server was stopped and the fixture directory removed.
+
+### Real end-to-end results (2026-10-01)
+- **Upload (A):** a real PDF → HTTP 201; the `learning_material` row carried `application/pdf`, size 218, and the owner-scoped `storageReference`; the object was confirmed present at that exact path with the service key. A real TXT (C) uploaded the same way to `…/sample.txt` as `text/plain`.
+- **Download (B):** `GET …/download` → 307 → signed URL → 200; **SHA-256 matched** the uploaded file for both the PDF and the TXT.
+- **Delete (D):** `DELETE` → 200; the row disappeared, the object was confirmed **absent** in the bucket, and a later download returned 404. Deleting one material left the others' objects untouched.
+- **Privacy:** anonymous requests to the public, authenticated, and bare object URLs all returned **HTTP 400** — the bucket is not public.
+- **Security/validation (E):** unauthenticated upload/download/delete → **401**; a second learner downloading, deleting, or uploading to the first learner's course → **404** (and the first learner's file survived); `.exe` → **415**; zero-byte → **400**; 26 MB → **413**; a PDF sent with a fake `text/html` content type was still stored as **`application/pdf`**.
+- **Typecheck:** `npx tsc --noEmit` exit 0.
+
+### Where the user was asked to act
+Only the credentials were the user's to provide; they were already in Infisical. Nothing else blocked, and no placeholder value was invented.
+
+### Files changed
+- New: `lib/supabase-storage.ts`
+- Changed: `app/api/courses/[courseId]/materials/route.ts`, `app/api/courses/[courseId]/materials/[materialId]/route.ts`, `app/api/courses/[courseId]/materials/[materialId]/download/route.ts`, `lib/materials.ts`, `lib/repo/courses.ts`, `lib/useCourses.ts`, `components/add-material-form.tsx`, `app/courses/[courseId]/sources/page.tsx`, `package.json`, `package-lock.json`
+- Deleted: `lib/r2.ts`
+- Docs: `Doc/PRD.md`, `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `.env.example`, this episode
+
+---
+
 ## Current state (2026-10-01)
 
 - **Committed & pushed:** the interface sheet is commit `f89fdfc`, and it and everything before it are on `origin/main`. The push moved `9090f45..f89fdfc`, carrying four commits that had accumulated locally: Phase 2 + Field Guide (`2af22eb`), Phase 3 Better Auth (`bfe0e4c`), Press Room + logo (`b092460`), interface sheet (`f89fdfc`). Pushing was done in the same working session.
@@ -400,8 +461,9 @@ Exactly once: the Windows elevation prompt to install PostgreSQL (requested via 
 - **Verified:** typecheck ✓ · build ✓ (all routes incl. the three new `/api/courses…`) · migrations apply once and re-run clean ✓ · full API flow with real sessions (seed → read → create → add assessment → read back) ✓ · 401 unauthenticated ✓ · per-learner isolation ✓ · `source_mapping` schema round-trip ✓.
 - **Phase 4 (Episode 17):** course/learner data now lives in PostgreSQL. Schema + migration (`db/migrations/0001_course_data.sql`), migration runner (`npm run migrate`), repository layer (`lib/repo/courses.ts`), three route handlers, and the workspace moved off `localStorage`. `source_mapping` is schema/repository only until Phases 6–7.
 - **Committed and pushed:** Phase 4 is commit `7a84394` on `main` (`feat: persist course and learner records in PostgreSQL`, 22 files, +938/−252) and is on `origin/main` — the push moved `96e3702..7a84394`, leaving local and remote identical. `.freebuff/` remains untracked and was deliberately excluded.
+- **Phase 5 (Episodes 18–19):** course materials upload to private **Supabase Storage** (bucket `edvance-materials`). Episode 18 built the upload/download flow and the `mime_type`/`size_bytes` migration against Cloudflare R2; Episode 19 replaced R2 with the official Supabase server client (`lib/supabase-storage.ts`), added delete, and **verified the whole path end to end** — real PDF + TXT upload, private signed download with matching checksums, real delete, anonymous access refused, and the full validation/security matrix. Supabase is used for storage only: PostgreSQL remains the database and Better Auth the authentication.
 
 ## Suggested next steps
 1. Product Owner reviews the Phase 4 workspace at http://localhost:3000 — the course directory and a course's assessments now read and write PostgreSQL (screenshots remain non-compositing in this environment, so nothing has been seen by eye).
-2. Phase 5 — Course Material Ingestion: file upload flow into Cloudflare R2 with a stored `storageReference` on `LearningMaterial`, replacing the demo seeder and making the Sources section real. Requires R2 credentials, so it is a point where the Product Owner's decision is needed.
+2. Phase 6 — Course Intelligence: extract concepts, terminology, and source-grounded structure from the uploaded materials (the storage pipeline is now verified and ready to feed it).
 3. Optional polish: a script that regenerates the inlined stylesheet snapshot in `design.html` so the sheet cannot silently drift; a root `PRD.md` pointer so `/PRD.md` resolves on GitHub; a light/dark theme pass; a social/OG image from the poster scene and logo lockup.

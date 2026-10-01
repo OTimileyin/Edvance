@@ -286,9 +286,9 @@ Current development decision:
 Authentication is planned for a later implementation phase. Working sign-in is not required for Lesson 6.
 
 ### File Storage
-**Cloudflare R2**
+**Supabase Storage**
 
-Planned for larger course files such as PDFs, images, documents, audio, and video. Production file storage is not required for Lesson 6.
+Private object storage (bucket `edvance-materials`) for course files such as PDFs, slide decks, notes, and transcripts. Supabase is used **only** for object/file storage: PostgreSQL remains the Edvance database, Better Auth remains authentication, and Infisical remains the secrets manager. Cloudflare R2 was previously selected and implemented but never connected; it was replaced in Change 13 (Appendix A).
 
 ### Local Development
 - The application runs locally.
@@ -375,7 +375,7 @@ No secrets should be committed to the public repository.
 
 ### 16.1 Current Status
 
-**Current Phase:** Phase 4 — Course Data & PostgreSQL (complete 2026-10-01; Appendix A, Change 11), on top of Phase 3 accounts (Change 8), Phase 2, the landing page/demo sign-in steering addition (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance identity (Change 9), and the interface sheet re-pointed at the live app (Change 10). Next phase: Phase 5 — Course Material Ingestion (Cloudflare R2).
+**Current Phase:** Phase 5 — Course Material Ingestion is **complete and verified end to end** on 2026-10-01 against private **Supabase Storage** (Appendix A, Changes 12–13). Phase 4 course data (Change 11), Phase 3 accounts (Change 8), Phase 2, the landing page/demo sign-in steering addition (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance identity (Change 9), and the interface sheet re-pointed at the live app (Change 10) are all delivered. Next phase: Phase 6 — Course Intelligence.
 
 **Completed (2026-09-27 – 2026-10-01):**
 - Phase 1 — Design System & Assessment Intelligence Prototype.
@@ -419,15 +419,20 @@ No secrets should be committed to the public repository.
   - The course workspace **no longer uses `localStorage`**: the hooks fetch from the API and the create/add-question forms POST to it. The browser-storage modules (`lib/store.ts`, `lib/session.ts`, `lib/demo-data.ts`) and the client-side seeder were deleted.
   - New learners are seeded with the demo workspaces **server-side** (idempotent, concurrency-safe); the seeded rows now live in PostgreSQL rather than in a browser profile.
   - `source_mapping` is implemented in the schema and the repository but is not yet surfaced in the UI — populating it is Phase 6–7 work.
+- Phase 5 — Course Material Ingestion (Supabase Storage; Appendix A, Changes 12–13).
+  - `db/migrations/0002_material_storage.sql` adds `mime_type` and `size_bytes` to `learning_material`; the `storage_reference` object key already existed from Phase 4.
+  - **Server-only Supabase Storage client** (`lib/supabase-storage.ts`) built on the official `@supabase/supabase-js`, with session persistence disabled. It uploads, mints short-lived signed URLs, and deletes objects in the private `edvance-materials` bucket. The secret key never reaches the browser.
+  - `POST /api/courses/[courseId]/materials` stores an uploaded file in the private bucket under an owner-scoped key (`users/{userId}/courses/{courseId}/materials/{materialId}/{safe filename}`) and records it on the course with its `storageReference`; `GET …/materials/[materialId]/download` verifies ownership and redirects to a short-lived signed URL; `DELETE …/materials/[materialId]` removes the row and then the object.
+  - The **Sources section has a real upload flow** (`components/add-material-form.tsx`) for PDFs, slide decks, Word documents, Markdown/plain-text notes, and WebVTT/SRT transcripts, with a 25 MB limit, plus a Remove action.
+  - **Unsupported files are handled gracefully** end to end: type and size are validated in the form and again in the route, and the route returns a specific status and message for every failure (415 unsupported, 413 too large, 400 empty/missing, 503 storage unconfigured, 502 upload failed; 401/404 when unauthenticated or not the owner).
+  - **Verified end to end (Change 13):** a real PDF and a real TXT upload, a private signed download whose bytes matched the upload checksum, a delete that removed both the row and the object, and the full validation/security matrix. **Not claimed:** the source-processing pipeline (text/structure extraction) is not implemented — it belongs to Phase 6.
 
 **Not yet implemented:**
-- Cloudflare R2 file storage.
-- Real course ingestion.
+- Course ingestion / source-processing pipeline (extraction from uploaded materials).
 - Live AI APIs.
-- Source-processing pipeline.
 - Production deployment.
 
-**Next Phase:** Phase 5 — Course Material Ingestion (Cloudflare R2).
+**Next Phase:** Phase 6 — Course Intelligence.
 
 ### Phase 0 — Project Foundation
 **Goal:** Establish the project environment and documentation.
@@ -490,7 +495,7 @@ No secrets should be committed to the public repository.
 ### Phase 5 — Course Material Ingestion
 **Goal:** Allow real course material into the evidence pipeline.
 
-**Planned Storage:** Cloudflare R2
+**Planned Storage:** Supabase Storage (private bucket)
 
 ### Phase 6 — Course Intelligence
 **Goal:** Extract structured knowledge while preserving instructor terminology and source evidence.
@@ -1017,6 +1022,81 @@ The approved plan places persistent course and learner records in Phase 4, and t
 
 ### Impact on this document
 §16.1 updated to Phase 4 complete; next phase Phase 5. The data model in §15 is now implemented rather than planned. No live AI, file storage, or ingestion is claimed.
+
+---
+
+## Change 12 — Phase 5: Course Material Ingestion (Cloudflare R2)
+
+**Date:** 2026-10-01  
+**Requested by:** Product Owner ("Start Phase 5 — Course Material Ingestion: add a file upload flow that stores materials in Cloudflare R2 with a storageReference, surfaces them in the Sources section, and handles unsupported files gracefully.")  
+**Status:** Implemented — end-to-end verification pending R2 credentials
+
+### Reason
+Phases 2–4 built the workspace and its database, but course materials were still seeded demo rows with no bytes behind them. Until real files can be stored and cited, the evidence-first pipeline (assessment-to-source mapping, inconsistency detection, mastery) has nothing authentic to reason over. Phase 5 gives `learning_material` a stored object and a `storageReference`, and puts a working upload in front of the learner.
+
+### Alternatives Considered
+- **An S3 SDK (`@aws-sdk/client-s3`):** the conventional route, with built-in SigV4. Rejected: it is a large dependency for three operations (put, delete, presigned get), and this project deliberately carries no ORM and few dependencies. R2 is S3-compatible, and SigV4 over Node's `crypto` is small and testable.
+- **Presigned browser-to-R2 uploads:** avoids streaming file bytes through the server. Deferred: it needs per-bucket CORS configuration and a second "finalise" request, which is more moving parts than a self-contained upload for documents of this size. Server-side upload keeps the flow to one request and one place that enforces validation.
+- **An in-memory or filesystem-only store:** rejected — it would not be Cloudflare R2 and would not survive a deploy, contradicting the plan.
+
+### Decision
+- **Store in R2, then write the row.** Ownership is checked first, the bytes are sent to R2, and only then is the `learning_material` row inserted with the object key as `storage_reference`. A failed insert removes the just-written object.
+- **Object keys are owner-scoped:** `<user id>/<course id>/<material id>/<safe filename>`, so a bucket listing cannot cross learners, and download authorisation is a join back to the owning course.
+- **Validation is duplicated on purpose:** the form gives immediate feedback; the route is authoritative. Both share one definition in `lib/materials.ts`.
+- **The upload fails honestly when unconfigured.** With no R2 environment variables the route returns 503 with the exact variable names, and the form shows it — rather than writing a half-broken row or pretending to succeed.
+
+### Verification
+`npm run typecheck` and `npm run build` pass; the build lists the two new routes `POST /api/courses/[courseId]/materials` and `GET /api/courses/[courseId]/materials/[materialId]/download`. `npm run migrate` applied `0002_material_storage.sql` once (0001 skipped as already applied). Live, against the running dev server with a real session: unauthenticated `POST …/materials` → 401; `.exe` upload → 415; multipart body with no `file` field → 400; upload against a course the learner does not own → 404. The throwaway test account was removed afterwards. **Not yet verified:** a real file upload and download through R2, which requires credentials; the route reports this state (503) until they are set.
+
+### Impact on this document
+§16.1 updated to Phase 5 implemented (verification pending credentials); next phase Phase 6. "Cloudflare R2 file storage" moved out of *not yet implemented*; the source-processing pipeline remains explicitly unimplemented and is not claimed.
+
+---
+
+## Change 13 — Storage replaced: Cloudflare R2 → Supabase Storage
+
+**Date:** 2026-10-01  
+**Requested by:** Product Owner (stering decision: use Supabase Storage for course materials, keeping PostgreSQL, Better Auth, and Infisical unchanged)  
+**Status:** Implemented and verified end to end
+
+### Reason
+**Cloudflare R2 had previously been selected** (Decision 1, Change 12). The R2 implementation was written — a dependency-free SigV4 client — but it was **never successfully connected or tested**: no R2 credentials were ever configured, so no file was ever uploaded or downloaded through it. The Product Owner already had a Supabase account and free development setup available, so Storage could be exercised for real immediately. R2 was therefore replaced with Supabase Storage.
+
+This is **storage only**. It does **not** mean Edvance migrated its database or its authentication to Supabase:
+
+- **PostgreSQL remains the database.** Supabase's Postgres is not used; the app still talks to the local `edvance` database through `pg` and `lib/repo/courses.ts`.
+- **Better Auth remains the authentication system.** Supabase Auth is not used and no Supabase session is created.
+- **Infisical remains the secrets manager.** `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and `SUPABASE_STORAGE_BUCKET` live in the Infisical `dev` environment beside the existing secrets.
+
+### Alternatives Considered
+- **Keep and finally configure Cloudflare R2:** viable, but it required the Product Owner to create and wire R2 credentials before any of Phase 5 could be verified, and verification — not features — was the blocker.
+- **A local filesystem or in-memory store:** rejected — it would not survive a deploy and would not prove the real storage path.
+- **Supabase for the database and auth too:** explicitly rejected — it would discard the PostgreSQL repository and the Better Auth integration that Phases 3–4 built and verified, for no benefit to the storage problem.
+
+### Decision
+- **Supabase Storage becomes the active file-storage provider**, in a **private** bucket (`edvance-materials`). The bucket is never made public.
+- **Server-only access.** `lib/supabase-storage.ts` creates the client with `SUPABASE_URL` and `SUPABASE_SECRET_KEY`, disables session persistence, and is imported only by route handlers. The browser never receives the secret key; downloads are authorised by Edvance and then handed a short-lived **signed URL** (300 seconds).
+- **Ownership-safe object key:** `users/{userId}/courses/{courseId}/materials/{materialId}/{safe filename}`. The filename is sanitised and is only ever the final path segment; the path cannot be steered by client input.
+- **The database stays authoritative for deletes:** the `learning_material` row is removed first, then the object is cleaned up on a best-effort basis; a cleanup failure is logged as an orphan rather than failing a delete that already did its job.
+- **Errors are sanitised.** Provider bodies are kept in the server log; the browser sees messages such as "File storage is temporarily unavailable." No secret key, authorisation header, or signed-URL token is logged or returned.
+- **Superseded R2 code was removed** (`lib/r2.ts`, the `R2_*` requirements and wording). The historical record of R2 in this appendix is kept deliberately; Git history preserves the implementation.
+
+### Verification
+Verified live against the private Supabase bucket through the real application (dev server on port 3250, started via `infisical run`, throwaway accounts), then the throwaway data was deleted and the database returned to baseline (`user` 3, `course` 4, `learning_material` 20, `session` 8; zero objects left in the bucket):
+
+- **Configuration:** `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET` all PRESENT in Infisical `dev` (names only; no value was read into the transcript).
+- **Upload:** a real PDF uploaded → HTTP 201; the `learning_material` row carried the server-derived `application/pdf` MIME, the correct byte size, and the owner-scoped `storageReference`; the object was confirmed present at that exact path with the service key.
+- **Download:** `GET …/download` → HTTP 307 → signed URL → HTTP 200; SHA-256 of the downloaded bytes **matched** the uploaded file. A real TXT upload and download matched the same way.
+- **Delete:** `DELETE …/materials/{id}` → HTTP 200; the row disappeared, the object was confirmed **absent** in the bucket, and a subsequent download returned 404. Deleting one material left the others' objects untouched.
+- **Privacy:** anonymous requests to the public, authenticated, and bare object URLs all returned HTTP 400 — the bucket is not public.
+- **Security/validation:** unauthenticated upload/download/delete → 401; a second learner downloading, deleting, or uploading to the first learner's course → 404 (and the first learner's file survived); `.exe` → 415; zero-byte → 400; 26 MB → 413; a PDF sent with a fake `text/html` content type was still stored as `application/pdf`.
+- **Typecheck:** `npx tsc --noEmit` exit 0.
+
+### Impact on this document
+- §14 File Storage names Supabase Storage; §16.2 Phase 5 names Supabase Storage.
+- §16.1: Phase 5 is **complete and verified**; next phase Phase 6.
+- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, and `conversation.md` updated to match.
+- **Not claimed:** the source-processing pipeline (text/structure extraction) remains unimplemented — it is Phase 6.
 
 ---
 

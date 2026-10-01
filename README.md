@@ -63,7 +63,7 @@ The core problem is lack of alignment between learning materials, assessment exp
 
 ## Project Status
 
-Phases 1–4 are complete, plus four steering additions (landing page/demo sign-in, Change 6; "Field Guide" visual redesign, Change 7; "Press Room" redesign and the Edvance logo, Change 9; interface sheet re-pointed at the live app, Change 10). The product requirements are defined in `Doc/PRD.md` (source of truth), with the plan in `docs/IMPLEMENTATION_PLAN.md`. The current deliverable is a Next.js learning workspace that runs locally: it opens on a marketing landing page, **sign-up/sign-in create real local accounts** (Better Auth over local PostgreSQL, HTTP-only cookie sessions), and **courses, materials, concepts, assessment questions, consistency findings, and mastery states are stored in PostgreSQL** through a repository layer. Course content is still seeded demo data — a real ingestion pipeline is Phase 5. Later capabilities (Cloudflare R2, real course ingestion, live AI APIs, source processing, production deployment) are not yet implemented.
+Phases 1–5 are complete, plus four steering additions (landing page/demo sign-in, Change 6; "Field Guide" visual redesign, Change 7; "Press Room" redesign and the Edvance logo, Change 9; interface sheet re-pointed at the live app, Change 10). Phase 5 (course material upload) is **complete and verified end to end** against private **Supabase Storage**. The product requirements are defined in `Doc/PRD.md` (source of truth), with the plan in `docs/IMPLEMENTATION_PLAN.md`. The current deliverable is a Next.js learning workspace that runs locally: it opens on a marketing landing page, **sign-up/sign-in create real local accounts** (Better Auth over local PostgreSQL, HTTP-only cookie sessions), and **courses, materials, concepts, assessment questions, consistency findings, and mastery states are stored in PostgreSQL** through a repository layer. **Sources accepts real file uploads** (PDF, PowerPoint, Word, Markdown/plain text, WebVTT/SRT) which are stored in a **private Supabase Storage bucket** and recorded against the course with a `storageReference`; downloads go through the app to a short-lived signed URL, and materials can be deleted. Supabase is used **only** for object storage — PostgreSQL is still the database, Better Auth is still authentication, and Infisical is still the secrets manager. Course intelligence, a source-processing pipeline, live AI APIs, and production deployment are not yet implemented.
 
 ## Brand
 
@@ -81,7 +81,9 @@ Palette: deep teal `#0D2327`–`#2C6E70` for structure, cream `#FBF6EA` for the 
 ### Prerequisites (local)
 - Node.js + npm
 - PostgreSQL running locally. This repo expects a server on `127.0.0.1:5432` with a database named `edvance` (the dev machine runs it as the Windows service `postgresql-edvance`).
-- A `.env` file in the repo root (copy `.env.example`) with `DATABASE_URL`, `BETTER_AUTH_SECRET` (32+ chars), and `BETTER_AUTH_URL`.
+- The **Infisical CLI**, authenticated, with this directory linked to the Edvance Infisical project. Secrets are injected through `infisical run`, which `npm run dev` and `npm run migrate` already wrap, so a local `.env` is no longer required. See [Secrets (Infisical)](#secrets-infisical).
+- Optional offline fallback: a `.env` file in the repo root (copy `.env.example`) with `DATABASE_URL`, `BETTER_AUTH_SECRET` (32+ chars), and `BETTER_AUTH_URL` — only needed if you run the app outside `infisical run`.
+- For material uploads (Phase 5): Supabase Storage credentials in the Infisical `dev` environment — `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (a server-side secret key, **never** prefixed with `NEXT_PUBLIC_`), and `SUPABASE_STORAGE_BUCKET` (the private bucket, `edvance-materials`). Without these, the Sources upload form reports that object storage is not configured; everything else works as before.
 
 First auth run creates the Better Auth tables with `npx auth migrate` (already applied on the dev machine). The application's own tables are created by the migration runner:
 
@@ -89,16 +91,82 @@ First auth run creates the Better Auth tables with `npx auth migrate` (already a
 npm run migrate
 ```
 
-This applies every pending file in `db/migrations/` once, in order, in a transaction (tracked in `schema_migrations`); re-running it is a no-op. If you are starting from a fresh database, run `npx auth migrate` first, then `npm run migrate`.
+This applies every pending file in `db/migrations/` once, in order, in a transaction (tracked in `schema_migrations`); re-running it is a no-op. If you are starting from a fresh database, run `npx auth migrate` first, then `npm run migrate`. `npm run migrate` goes through `infisical run` so `DATABASE_URL` comes from Infisical; the production pre-deploy step invokes `node scripts/migrate.mjs` directly with the deployed database's URL.
+
+## Secrets (Infisical)
+
+Edvance reads its configuration from environment variables (`process.env`), the same as any Next.js app. Those values now live centrally in [Infisical](https://infisical.com) instead of a local `.env` file, so nobody has to keep secrets on disk or pass them around out of band.
+
+One-time setup (per machine):
+
+1. Create an account at <https://app.infisical.com> and a project named `edvance`. New projects start with the `dev`, `staging`, and `prod` environments.
+2. Import the existing secrets. Either open the project's Secrets Overview for the `dev` environment and drag-and-drop the old `.env` file onto the page, or do the same thing from a terminal (values stay masked):
+
+   ```
+   infisical secrets set --file=.env --env=dev
+   ```
+
+   The keys the app reads are `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and — for material uploads — `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and `SUPABASE_STORAGE_BUCKET`.
+3. Install the CLI — `winget install infisical` on Windows, or `brew install infisical/get-cli/infisical` on macOS (see the [CLI install docs](https://infisical.com/docs/cli/overview)).
+4. Log in. In WSL 2, a remote SSH session, or Codespaces there is no browser, so use the interactive login: `infisical login -i`. Otherwise `infisical login`.
+5. Link this directory to the project once: `infisical init` and pick the `edvance` project. This writes `.infisical.json`, which holds local project settings only — no secret values — and is safe to commit. It is interactive and needs a real terminal; there is no flag that selects a project for you.
+
+On Windows, open a **new** terminal after `winget install` so the updated PATH is picked up — otherwise `npm run dev` fails with `'infisical' is not recognized as an internal or external command`.
+
+Day to day, the checked-in scripts already wrap the CLI, so teammates use the injected command by default:
+
+```
+npm run dev        # runs: infisical run --env=dev -- next dev
+npm run migrate    # runs: infisical run --env=dev -- node scripts/migrate.mjs
+```
+
+`infisical run` fetches the secrets you are allowed to see and injects them into the child process, so application code is unchanged. To confirm a secret resolves without printing its value:
+
+```
+infisical run --env=dev -- node -e "console.log('DATABASE_URL length', process.env.DATABASE_URL.length)"
+```
+
+Never commit a real `.env`; `.env` and `.env.*` are already in `.gitignore`. Scan the repository for leaked secrets with `infisical scan` (see the [secret scanning docs](https://infisical.com/docs/cli/scanning-overview)). Install the pre-commit hook once per clone to catch this automatically:
+
+```
+infisical scan install --pre-commit-hook
+```
+
+It runs `infisical scan git-changes --staged` before each commit and blocks the commit when a recognizable secret is staged (`git config hooks.infisical-scan false` disables it). It only covers secrets gitleaks can recognise, so a `.env` that is already tracked still has to be removed by hand.
+
+### Rotating a secret
+
+Secrets are updated in place; nothing on disk needs editing.
+
+```
+infisical secrets set BETTER_AUTH_SECRET=<new value> --env=dev
+```
+
+`infisical run` picks up the new value on the next start, so restart `npm run dev` afterwards. Rotating `BETTER_AUTH_SECRET` invalidates existing sessions and anyone signed in has to sign in again. Rotating the password inside `DATABASE_URL` also changes the PostgreSQL role's password.
+
+The app checks its required variables on startup and stops with a message naming the missing one ("Missing required environment variable …"), which is what you see if `next dev` is started without `infisical run`.
+
+### Non-interactive and deployed environments
+
+Do not put a person's credentials on a server. Create a **Machine Identity** in the project (Infisical dashboard → Access Control → Machine Identities), give it **Universal Auth**, and grant it read access to the environment it serves — `prod` on a server, `dev` on a shared dev box. Machine identities are not tied to a person, survive someone leaving, and can be scoped to a single project.
+
+The runner logs in as that identity instead of a user, and every command above then behaves the same:
+
+```
+infisical login --method=universal-auth --client-id=<id> --client-secret=<secret>
+infisical run --env=prod -- next start
+```
+
+Or hand the process a machine-identity access token directly, with no login step at all: `infisical run --token=<token> --env=prod -- next start`. Either way the child process sees the same variable names, so nothing in the application changes.
 
 ## Running the Local Prototype
 
 ### Main app (Phase 2 + landing/demo sign-in)
-The app is a Next.js + TypeScript project and runs locally with Node.js:
+The app is a Next.js + TypeScript project and runs locally with Node.js. `npm run dev` is wrapped with `infisical run`, so it needs the one-time Infisical setup above; secrets arrive as environment variables exactly as before.
 
 ```
 npm install
-npm run dev
+npm run dev        # infisical run --env=dev -- next dev
 ```
 
 Open `http://localhost:3000` in a browser. The app opens on the landing page; **Get started** (sign-up) or **Sign in** creates/uses a real local account (password must be 8+ characters) and enters the course workspace at `/courses`. Workspaces are scoped to the signed-in user in PostgreSQL — every query is keyed by the account id, and a new account is seeded with demo workspaces on first visit so it is never empty. **Continue with a demo account** provisions and signs in a local `demo@edvance.app` account. Unauthenticated visits to `/courses` (and below) redirect to the sign-in page server-side.

@@ -34,6 +34,9 @@ type MaterialRow = {
   type: string;
   title: string;
   location: string;
+  storage_reference: string | null;
+  mime_type: string | null;
+  size_bytes: string | null;
 };
 
 type ConceptRow = {
@@ -68,6 +71,18 @@ function newId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
 }
 
+function mapMaterial(row: MaterialRow): SourceItem {
+  return {
+    id: row.id,
+    type: row.type as SourceType,
+    title: row.title,
+    location: row.location,
+    storageReference: row.storage_reference,
+    mimeType: row.mime_type,
+    sizeBytes: row.size_bytes === null ? null : Number(row.size_bytes),
+  };
+}
+
 /** Turns a course title into a stable, readable id for the seeded workspaces. */
 function slug(title: string): string {
   return title
@@ -82,7 +97,8 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
 
   const [materials, concepts, assessments, findings] = await Promise.all([
     pool.query<MaterialRow>(
-      `select id, course_id, type, title, location
+      `select id, course_id, type, title, location,
+              storage_reference, mime_type, size_bytes
          from learning_material
         where course_id = any($1::text[])
         order by uploaded_at asc`,
@@ -116,7 +132,7 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
   const sourcesByCourse = new Map<string, SourceItem[]>();
   for (const row of materials.rows) {
     const list = sourcesByCourse.get(row.course_id) ?? [];
-    list.push({ id: row.id, type: row.type as SourceType, title: row.title, location: row.location });
+    list.push(mapMaterial(row));
     sourcesByCourse.set(row.course_id, list);
   }
 
@@ -228,6 +244,112 @@ export async function addAssessment(
     [newId("question"), courseId, lesson.trim() || "Lesson 1", question.trim()],
   );
   return getCourse(userId, courseId).then((updated) => updated ?? course);
+}
+
+/** Whether the learner owns this course. Used to authorise uploads before storing anything. */
+export async function ownsCourse(userId: string, courseId: string): Promise<boolean> {
+  const { rowCount } = await pool.query("select 1 from course where id = $1 and user_id = $2", [
+    courseId,
+    userId,
+  ]);
+  return (rowCount ?? 0) > 0;
+}
+
+export type NewMaterial = {
+  id: string;
+  type: SourceType;
+  title: string;
+  location: string;
+  storageReference: string;
+  mimeType: string | null;
+  sizeBytes: number | null;
+};
+
+/**
+ * Records an uploaded material in the learner's course. The bytes are already
+ * in object storage by the time this is called; `storageReference` is the
+ * object key. Returns undefined when the learner does not own the course.
+ */
+export async function createMaterial(
+  userId: string,
+  courseId: string,
+  input: NewMaterial,
+): Promise<SourceItem | undefined> {
+  if (!(await ownsCourse(userId, courseId))) return undefined;
+
+  const { rows } = await pool.query<MaterialRow>(
+    `insert into learning_material
+       (id, course_id, type, title, location, storage_reference, mime_type, size_bytes)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)
+     returning id, course_id, type, title, location,
+               storage_reference, mime_type, size_bytes`,
+    [
+      input.id,
+      courseId,
+      input.type,
+      input.title,
+      input.location,
+      input.storageReference,
+      input.mimeType,
+      input.sizeBytes,
+    ],
+  );
+  return mapMaterial(rows[0]);
+}
+
+/** The stored object behind one material, scoped to the owning learner. */
+export async function getMaterialStorage(
+  userId: string,
+  materialId: string,
+): Promise<{ storageReference: string; title: string; mimeType: string | null } | undefined> {
+  const { rows } = await pool.query<{
+    storage_reference: string | null;
+    title: string;
+    mime_type: string | null;
+  }>(
+    `select m.storage_reference, m.title, m.mime_type
+       from learning_material m
+       join course c on c.id = m.course_id
+      where m.id = $1 and c.user_id = $2`,
+    [materialId, userId],
+  );
+  const row = rows[0];
+  if (!row || !row.storage_reference) return undefined;
+  return {
+    storageReference: row.storage_reference,
+    title: row.title,
+    mimeType: row.mime_type,
+  };
+}
+
+/**
+ * Removes a material from one of the learner's courses and reports the object
+ * key it was stored under, so the caller can clean up object storage.
+ *
+ * Returns undefined when the learner does not own the material. The database
+ * row is removed first and is authoritative: an object left behind in the
+ * bucket is invisible to the learner, whereas a row pointing at a deleted
+ * object would be a broken record they can see.
+ */
+export async function deleteMaterial(
+  userId: string,
+  courseId: string,
+  materialId: string,
+): Promise<{ storageReference: string | null } | undefined> {
+  const { rows } = await pool.query<{ storage_reference: string | null }>(
+    `select m.storage_reference
+       from learning_material m
+       join course c on c.id = m.course_id
+      where m.id = $1 and m.course_id = $2 and c.user_id = $3`,
+    [materialId, courseId, userId],
+  );
+  if (rows.length === 0) return undefined;
+
+  await pool.query("delete from learning_material where id = $1 and course_id = $2", [
+    materialId,
+    courseId,
+  ]);
+  return { storageReference: rows[0].storage_reference };
 }
 
 export type SourceMapping = {

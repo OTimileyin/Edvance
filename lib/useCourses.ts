@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { authClient } from "./auth-client";
-import type { Course } from "./types";
+import type { Course, SourceItem } from "./types";
 
 /**
  * Course reads and writes now go through the `/api/courses` route handlers,
@@ -79,6 +79,38 @@ export async function createCourse(input: {
     throw new Error(await readError(response, "Could not create the course workspace."));
   }
   return ((await response.json()) as { course: Course }).course;
+}
+
+/**
+ * Uploads a file to a course's Sources. Goes through the route handler, which
+ * stores the bytes in private object storage and records the material. Throws
+ * with a display message on failure (unsupported type, too large, storage down).
+ */
+export async function uploadMaterial(courseId: string, file: File): Promise<SourceItem> {
+  const body = new FormData();
+  body.append("file", file);
+
+  const response = await fetch(`/api/courses/${courseId}/materials`, {
+    method: "POST",
+    body,
+  });
+  if (!response.ok) {
+    throw new Error(await readError(response, "Could not upload the material."));
+  }
+  return ((await response.json()) as { material: SourceItem }).material;
+}
+
+/**
+ * Removes a material from a course and cleans up its stored object. Throws with
+ * a display message on failure.
+ */
+export async function removeMaterial(courseId: string, materialId: string): Promise<void> {
+  const response = await fetch(`/api/courses/${courseId}/materials/${materialId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new Error(await readError(response, "Could not remove the material."));
+  }
 }
 
 /** Adds an assessment question to a course. Throws with a display message on failure. */

@@ -11,6 +11,7 @@
     "migrate": "infisical run --env=dev -- node scripts/migrate.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "better-auth": "^1.7.6",
     "next": "^16.3.6",
     "pg": "^8.23.0",

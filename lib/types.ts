@@ -9,6 +9,10 @@ export interface SourceItem {
   type: SourceType;
   title: string;
   location: string;
+  /** The R2 object key for uploaded materials; absent for seeded/cited sources. */
+  storageReference?: string | null;
+  mimeType?: string | null;
+  sizeBytes?: number | null;
 }
 
 export interface AssessmentItem {

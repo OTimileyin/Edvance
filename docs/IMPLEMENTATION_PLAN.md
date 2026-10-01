@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** In progress — Phase 4 complete (2026-10-01)
+**Status:** In progress — Phase 5 complete and verified end to end on private Supabase Storage (2026-10-01); next phase Phase 6
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -13,7 +13,7 @@
 | Framework | **Next.js with TypeScript** |
 | Database | **PostgreSQL** (local only for now) |
 | Authentication | **Better Auth** (later phase, not Lesson 6) |
-| File storage | **Cloudflare R2** (later phase, not Lesson 6) |
+| File storage | **Supabase Storage** (private bucket; later phase, not Lesson 6) |
 | Local tooling | **Docker** (may run local services such as PostgreSQL); **Caddy** (reverse proxy, later if useful) |
 | Future external services | AI model APIs, email services, transcription services, file-processing services |
 
@@ -63,7 +63,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 - Working authentication (Better Auth) — Phase 3.
 - Production database integration and cloud database deployment — Phase 4 onward.
-- Real file upload pipeline and production storage (Cloudflare R2) — Phase 5.
+- Real file upload pipeline and production storage (Supabase Storage) — Phase 5.
 - Real course ingestion — Phase 5.
 - Course intelligence / assessment intelligence / mastery intelligence / targeted revision (requiring live AI services) — Phases 6–9.
 - Public deployment.
@@ -82,7 +82,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 ### Current Status
 
-**Current phase:** Phase 4 — Course Data & PostgreSQL (complete; `Doc/PRD.md` Appendix A, Change 11), on top of Phases 1–3 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
+**Current phase:** Phase 5 — Course Material Ingestion (Supabase Storage) — **complete and verified end to end** (`Doc/PRD.md` Appendix A, Changes 12–13). Phase 4 is complete (Change 11), on top of Phases 1–3 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
 
 **Completed:**
 - Phase 1 — Design System & Assessment Intelligence Prototype (static local pages, mock data; `design.html`, `assessment-intelligence.html`).
@@ -128,14 +128,15 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
   - New learners are seeded with the demo workspaces server-side (idempotent, concurrency-safe); the seeded rows now live in PostgreSQL rather than the browser.
   - `source_mapping` exists in the schema and repository but is not yet surfaced in the UI — populating it is Phase 6–7 work.
 
+**Verified in Phase 5 (2026-10-01):**
+- Supabase Storage upload, private signed retrieval, delete, and the `storageReference` on `learning_material` (`db/migrations/0002_material_storage.sql`, `lib/supabase-storage.ts`, `app/api/courses/[courseId]/materials`). Exercised against the private `edvance-materials` bucket through the real application — see `Doc/PRD.md` Appendix A, Change 13.
+
 **Not yet implemented:**
-- Cloudflare R2.
-- Real course ingestion.
+- Real course ingestion / source-processing pipeline (extraction of text and structure from uploaded materials).
 - Live AI APIs.
-- Source-processing pipeline.
 - Production deployment.
 
-**Next phase:** Phase 5 — Course Material Ingestion (Cloudflare R2).
+**Next phase:** Phase 6 — Course Intelligence.
 
 ---
 
@@ -268,19 +269,29 @@ This is the **Lesson 6 deliverable**.
 
 ### Phase 5 — Course Material Ingestion
 
-**Planned storage:** Cloudflare R2
+**Storage:** Supabase Storage (private bucket `edvance-materials`)
 
 **Goal:** Allow real course material into the evidence pipeline.
 
 **Outputs:**
-- File upload flow for PDFs, text, transcripts, notes, and documents.
-- Storage in Cloudflare R2 with a stored `storageReference` on `LearningMaterial`.
+- File upload flow for PDFs, slide decks, notes, and transcripts.
+- Storage in Supabase Storage with a stored `storageReference` on `LearningMaterial`.
 - Processing pipeline to prepare materials for course intelligence.
 
+**Delivered:**
+- `db/migrations/0002_material_storage.sql` adds `mime_type` and `size_bytes` to `learning_material` (the `storage_reference` object key already existed from Phase 4).
+- `lib/supabase-storage.ts` is a server-only client over the official `@supabase/supabase-js` (session persistence disabled): it uploads with the server-derived content type, mints short-lived signed URLs, and deletes objects. `SUPABASE_SECRET_KEY` is server-only and never reaches the browser.
+- `lib/materials.ts` defines the accepted material types (PDF, PowerPoint, Word, Markdown/plain text, WebVTT/SRT) and the 25 MB per-file limit, shared by the form and the route.
+- `POST /api/courses/[courseId]/materials` validates ownership, type, and size; uploads under an owner-scoped key (`users/{userId}/courses/{courseId}/materials/{materialId}/{safe filename}`); records the material with its `storageReference`; and returns specific errors for each failure (401 / 404 / 400 / 415 / 413 / 503 / 502).
+- `GET /api/courses/[courseId]/materials/[materialId]/download` verifies ownership and redirects to a short-lived signed URL; `DELETE /api/courses/[courseId]/materials/[materialId]` removes the row (authoritative) and then the object.
+- `components/add-material-form.tsx` and the Sources section: an upload form with client-side validation, a "Stored" badge, file size, Download, and Remove actions. The material list already renders from PostgreSQL, so an upload appears the moment it is stored.
+
+**Processing pipeline:** not implemented. Extracting text and structure from materials (the Phase 6 input) is deliberately left to Phase 6; this phase stores and surfaces materials only.
+
 **Acceptance Criteria:**
-- [ ] Files upload and are retrievable via R2.
-- [ ] Uploaded materials appear in the Sources section.
-- [ ] Failed/unsupported files are handled gracefully.
+- [x] Files upload and are retrievable via private object storage. *(Verified 2026-10-01: real PDF + TXT upload → 201, signed download 307 → 200 with matching SHA-256, object present at the stored path; bucket refuses anonymous access.)*
+- [x] Uploaded materials appear in the Sources section. *(Verified: the uploaded materials appeared in the course read-back.)*
+- [x] Failed/unsupported files are handled gracefully (unsupported type → 415, oversized → 413, empty → 400, unauthenticated → 401, not the owner → 404, with messages shown in the form).
 
 ---
 
