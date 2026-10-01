@@ -11,6 +11,14 @@ import type { SourceType } from "@/lib/types";
 
 export const MAX_MATERIAL_BYTES = 25 * 1024 * 1024; // 25 MB
 
+/**
+ * Per-course quotas. Storage is a shared, finite, free-tier resource, so a
+ * single workspace cannot grow without bound: the number of materials and their
+ * total size are both capped, and the learner is told which limit they hit.
+ */
+export const MAX_MATERIALS_PER_COURSE = 50;
+export const MAX_COURSE_BYTES = 200 * 1024 * 1024; // 200 MB across a course
+
 export type MaterialKind = {
   /** The Edvance source type this file is ingested as. */
   type: SourceType;

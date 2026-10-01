@@ -1804,6 +1804,14 @@ tr:last-child td {
   gap: var(--space-2);
 }
 
+.footer-links {
+  font-size: var(--text-sm);
+}
+
+.footer-links a {
+  font-weight: 600;
+}
+
 /* ---------- Logo ---------- */
 
 .logo-lockup {

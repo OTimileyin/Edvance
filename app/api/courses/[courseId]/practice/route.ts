@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/api-session";
+import { rateLimit } from "@/lib/api-rate-limit";
+import { RATE_LIMITS } from "@/lib/rate-limit";
 import { recordPractice } from "@/lib/repo/courses";
 
 /**
@@ -23,6 +25,9 @@ export async function POST(
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const limited = rateLimit("practice", user.id, RATE_LIMITS.practice);
+  if (limited) return limited;
 
   let body: unknown;
   try {

@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** In progress — Phases 5, 5.6, 6 (Course Intelligence), 7 (Assessment Intelligence), 8 (Mastery Intelligence) and 9 (Targeted Revision) complete and verified end to end (2026-10-02), including a verified live Google Gemini call; next phase Phase 10
+**Status:** In progress — Phases 5, 5.6, 6 (Course Intelligence), 7 (Assessment Intelligence), 8 (Mastery Intelligence), 9 (Targeted Revision) and 10 (Product Completion & Hardening) complete and verified end to end (2026-10-02), including a verified live Google Gemini call and a production build; next phase Phase 11
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -153,10 +153,9 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 - Real extraction and chunking for all seven formats, correct page/slide/timestamp/section/line locations, ordered chunks, ingestion jobs, ownership isolation, failed-ingestion states, and delete cascades — `scripts/test-ingestion.mjs` reports 91 passed, 0 failed. See `Doc/PRD.md` Appendix A, Change 14.
 
 **Not yet implemented:**
-- Product Completion & Hardening (Phase 10) and everything after it.
-- Production deployment.
+- Deployment (Phase 11) and Submission Readiness (Phase 12).
 
-**Next phase:** Phase 10 — Product Completion & Hardening.
+**Next phase:** Phase 11 — Deployment.
 
 ---
 
@@ -438,6 +437,39 @@ This is the **Lesson 6 deliverable**.
 - A new **Revision** tab shows the next action, the focus with its evidence, the generation state and the targeted practice, and records an attempt per question through the Phase 8 practice endpoint.
 - Verified with `scripts/test-targeted-revision.mjs` — **72 passed, 0 failed** — covering the deterministic recommendation, targeted generation, cost control, mastery-driven re-targeting, the nothing-to-revise boundary, four rejection paths, insufficient evidence, the analysis gate, isolation and demo honesty.
 - Phase 8 (**48**), Phase 7 (**76**), Phase 6 (**59**) and Phase 5.6 (**91**) regressions still pass; typecheck, secret scan and baseline restored.
+
+---
+
+### Phase 10 — Product Completion & Hardening
+
+**Goal:** Make the product complete and operable, and prove it holds under a real build.
+
+**Outputs:**
+- Edit and delete for courses, materials, and assessment questions.
+- An account lifecycle: profile, password change, account deletion.
+- Security headers and CSP, rate limiting, and per-course upload quotas.
+- `error.tsx`, `not-found.tsx`, and a health endpoint.
+- Privacy and terms pages.
+- A dependency-free unit-test layer alongside the end-to-end suites.
+- A passing production build.
+
+**Acceptance Criteria:**
+- [x] Courses, materials, and questions can be edited and deleted, with storage cleaned up.
+- [x] An account can be managed and deleted, with all owned data and files removed.
+- [x] Security headers, a CSP, rate limiting, and upload quotas are enforced.
+- [x] Error, not-found, and health routes exist and behave honestly.
+- [x] Privacy and terms pages are shipped and linked.
+- [x] `next build` completes a production build.
+
+**Delivered:**
+- **Edit/delete.** `PATCH`/`DELETE` on `/api/courses/[courseId]` rename or delete a course (the delete cascades in the database and removes its stored files), and on `/api/courses/[courseId]/assessments/[assessmentId]` edit or delete a question. Editing a question discards its stale check so it must be checked again against the evidence. The overview and Assessments tabs expose all of it, and destroying actions require the word DELETE typed.
+- **Account lifecycle.** An `/account` page shows who is signed in, changes the password (revoking other sessions), and deletes the account — which cascades away every course, material, concept, attempt and plan, and removes the stored files. A confirmation email is sent through **Resend** when `RESEND_API_KEY` is configured, and Edvance reports honestly that it did not send one when it is not.
+- **Hardening.** Security headers and a strict Content-Security-Policy (relaxed only in development) are set in `next.config.ts`; an in-memory fixed-window rate limiter (`lib/rate-limit.ts`) guards model calls, uploads, practice and account actions per learner; and a course is capped at `MAX_MATERIALS_PER_COURSE` materials and `MAX_COURSE_BYTES` of stored content.
+- **Routes.** `app/error.tsx`, `app/global-error.tsx`, `app/not-found.tsx` render honest failures without exposing internals, and `GET /api/health` reports the database as the one hard dependency plus each optional integration as configured or not.
+- **Legal.** `/privacy` and `/terms` describe what is stored, how content is used, and what the product is and is not, and are linked from the footer.
+- **Unit tests.** `npm run test:unit` runs a dependency-free `node:test` suite over the pure modules — mastery rules, the rate limiter, and material format/quota helpers — alongside the existing end-to-end suites.
+- **Production build.** `next build` compiles, type-checks, and prerenders every route successfully.
+- Verified with `scripts/test-product-hardening.mjs` — **43 passed, 0 failed** — covering the health probe, security headers, the 404 page, course and question edit/delete (including storage cleanup and check invalidation), and the account lifecycle. Unit suite **24 passed, 0 failed**; Phases 9/8/7/6/5.6 regressions **72 / 48 / 76 / 59 / 91** all pass; typecheck, secret scan and baseline restored.
 
 ---
 

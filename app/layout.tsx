@@ -44,6 +44,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               — stored in local PostgreSQL. Course analysis still runs on mock
               data until live AI processing lands.
             </p>
+            <nav className="footer-links" aria-label="Legal">
+              <Link href="/privacy">Privacy</Link>
+              <span aria-hidden="true"> · </span>
+              <Link href="/terms">Terms</Link>
+              <span aria-hidden="true"> · </span>
+              <Link href="/account">Account</Link>
+            </nav>
             <div className="footer-tools">
               <Link
                 className="icon-btn icon-btn--quiet"

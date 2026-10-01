@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/api-session";
-import { createMaterial, getMaterial, ownsCourse } from "@/lib/repo/courses";
+import { rateLimit } from "@/lib/api-rate-limit";
+import { RATE_LIMITS } from "@/lib/rate-limit";
+import { createMaterial, getCourseMaterialQuota, getMaterial, ownsCourse } from "@/lib/repo/courses";
 import { ingestMaterial } from "@/lib/ingestion";
 import { deleteObject, isStorageConfigured, putObject } from "@/lib/supabase-storage";
 import {
+  MAX_COURSE_BYTES,
   MAX_MATERIAL_BYTES,
+  MAX_MATERIALS_PER_COURSE,
   acceptedKindLabels,
   formatBytes,
   materialKindFor,
@@ -43,6 +47,9 @@ export async function POST(
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const limited = rateLimit("upload", user.id, RATE_LIMITS.upload);
+  if (limited) return limited;
 
   const { courseId } = await params;
   if (!(await ownsCourse(user.id, courseId))) {
@@ -96,6 +103,30 @@ export async function POST(
       },
       { status: 503 },
     );
+  }
+
+  // Per-course quotas: storage is a shared, finite, free-tier resource. The
+  // learner is told which limit they would exceed rather than failing vaguely.
+  const quota = await getCourseMaterialQuota(user.id, courseId);
+  if (quota) {
+    if (quota.count >= MAX_MATERIALS_PER_COURSE) {
+      return NextResponse.json(
+        {
+          error: `This course already has ${MAX_MATERIALS_PER_COURSE} materials. Remove one before adding another.`,
+        },
+        { status: 409 },
+      );
+    }
+    if (quota.bytes + file.size > MAX_COURSE_BYTES) {
+      return NextResponse.json(
+        {
+          error: `Adding this file would take the course past ${formatBytes(
+            MAX_COURSE_BYTES,
+          )} of stored materials. Remove a file first.`,
+        },
+        { status: 413 },
+      );
+    }
   }
 
   const materialId = `material-${crypto.randomUUID()}`;

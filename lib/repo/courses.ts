@@ -866,6 +866,178 @@ export async function addAssessment(
   return getCourse(userId, courseId).then((updated) => updated ?? course);
 }
 
+/**
+ * Renames / re-labels a course. Only the presenter fields change; evidence,
+ * concepts and mastery are untouched. Returns the refreshed course, or
+ * `undefined` when the learner does not own it.
+ */
+export async function updateCourse(
+  userId: string,
+  courseId: string,
+  input: { name?: string; institution?: string; lesson?: string },
+): Promise<Course | undefined> {
+  const fields: string[] = [];
+  const values: unknown[] = [userId, courseId];
+  if (input.name !== undefined && input.name.trim()) {
+    values.push(input.name.trim());
+    fields.push(`title = $${values.length}`);
+  }
+  if (input.institution !== undefined) {
+    values.push(input.institution.trim());
+    fields.push(`institution = $${values.length}`);
+  }
+  if (input.lesson !== undefined) {
+    values.push(input.lesson.trim());
+    fields.push(`lesson = $${values.length}`);
+  }
+  if (fields.length === 0) return getCourse(userId, courseId);
+
+  const result = await pool.query(
+    `update course set ${fields.join(", ")} where id = $2 and user_id = $1`,
+    values,
+  );
+  if (result.rowCount === 0) return undefined;
+  return getCourse(userId, courseId);
+}
+
+/**
+ * Deletes a course and everything that cascades from it (materials, chunks,
+ * concepts, evidence, assessments, findings, practice, plans). Returns the
+ * stored object keys that the caller must also remove from object storage, or
+ * `undefined` when the learner does not own the course.
+ */
+export async function deleteCourse(
+  userId: string,
+  courseId: string,
+): Promise<{ storageReferences: string[] } | undefined> {
+  const owned = await pool.query<{ storage_reference: string | null }>(
+    `select m.storage_reference
+       from learning_material m
+       join course c on c.id = m.course_id
+      where c.id = $1 and c.user_id = $2 and m.storage_reference is not null`,
+    [courseId, userId],
+  );
+  const result = await pool.query("delete from course where id = $1 and user_id = $2", [
+    courseId,
+    userId,
+  ]);
+  if (result.rowCount === 0) return undefined;
+  return {
+    storageReferences: owned.rows
+      .map((row) => row.storage_reference)
+      .filter((key): key is string => Boolean(key)),
+  };
+}
+
+/**
+ * Edits an assessment question. Because the stored signature judged the old
+ * wording, editing the question invalidates its analysis: the per-question
+ * findings, source mappings and signature are removed so it must be checked
+ * again against the evidence. Returns the refreshed course, or `undefined`.
+ */
+export async function updateAssessment(
+  userId: string,
+  courseId: string,
+  assessmentId: string,
+  input: { question?: string; lesson?: string },
+): Promise<Course | undefined> {
+  const course = await getCourse(userId, courseId);
+  if (!course) return undefined;
+  const existing = course.assessments.find((item) => item.id === assessmentId);
+  if (!existing) return undefined;
+
+  const question = input.question?.trim() || existing.question;
+  const lesson = input.lesson !== undefined ? input.lesson.trim() : existing.lesson;
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      "update assessment_question set question_text = $3, lesson = $4 where id = $1 and course_id = $2",
+      [assessmentId, courseId, question, lesson],
+    );
+    // The old verdict was about the old wording; discard it rather than let it
+    // imply a judgement the learner never asked for.
+    await client.query("delete from source_mapping where assessment_question_id = $1", [assessmentId]);
+    await client.query("delete from consistency_finding where assessment_question_id = $1", [assessmentId]);
+    await client.query("delete from assessment_analysis where assessment_question_id = $1", [assessmentId]);
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  return getCourse(userId, courseId);
+}
+
+/** Deletes one assessment question and its analysis. Returns the refreshed course. */
+export async function deleteAssessment(
+  userId: string,
+  courseId: string,
+  assessmentId: string,
+): Promise<Course | undefined> {
+  const owns = await pool.query("select 1 from course where id = $1 and user_id = $2", [
+    courseId,
+    userId,
+  ]);
+  if (owns.rowCount === 0) return undefined;
+  await pool.query("delete from assessment_question where id = $1 and course_id = $2", [
+    assessmentId,
+    courseId,
+  ]);
+  return getCourse(userId, courseId);
+}
+
+/** Material count and total stored bytes for a course, for quota checks. */
+export async function getCourseMaterialQuota(
+  userId: string,
+  courseId: string,
+): Promise<{ count: number; bytes: number } | undefined> {
+  const { rows } = await pool.query<{ count: string; bytes: string | null }>(
+    `select count(*)::text as count, coalesce(sum(m.size_bytes), 0)::text as bytes
+       from learning_material m
+       join course c on c.id = m.course_id
+      where c.id = $1 and c.user_id = $2`,
+    [courseId, userId],
+  );
+  const row = rows[0];
+  if (!row) return undefined;
+  return { count: Number(row.count), bytes: Number(row.bytes ?? 0) };
+}
+
+/**
+ * Deletes a learner's account and everything it owns. Because every course,
+ * material, concept, attempt and plan references the user (or a course) with
+ * `on delete cascade`, a single delete removes all of it. Returns the email
+ * (for a confirmation message) and the stored object keys the caller must also
+ * remove, or `undefined` when the account does not exist.
+ */
+export async function deleteAccount(
+  userId: string,
+): Promise<{ email: string | null; storageReferences: string[] } | undefined> {
+  const owned = await pool.query<{ storage_reference: string | null }>(
+    `select m.storage_reference
+       from learning_material m
+       join course c on c.id = m.course_id
+      where c.user_id = $1 and m.storage_reference is not null`,
+    [userId],
+  );
+  const account = await pool.query<{ email: string }>(
+    'select email from "user" where id = $1',
+    [userId],
+  );
+  const result = await pool.query('delete from "user" where id = $1', [userId]);
+  if (result.rowCount === 0) return undefined;
+  return {
+    email: account.rows[0]?.email ?? null,
+    storageReferences: owned.rows
+      .map((row) => row.storage_reference)
+      .filter((key): key is string => Boolean(key)),
+  };
+}
+
 /** What a practice request asked to record. */
 export interface PracticeInput {
   /** An assessment question to practise; its tested concepts get the attempt. */

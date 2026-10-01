@@ -8,12 +8,15 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "test:unit": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/unit/*.test.mjs",
+    "check": "npm run typecheck && npm run test:unit",
     "migrate": "infisical run --env=dev -- node scripts/migrate.mjs",
     "test:ingestion": "infisical run --env=dev -- node scripts/test-ingestion.mjs",
     "test:intelligence": "infisical run --env=dev -- node scripts/test-course-intelligence.mjs",
     "test:assessment": "infisical run --env=dev -- node scripts/test-assessment-intelligence.mjs",
     "test:mastery": "infisical run --env=dev -- node scripts/test-mastery-intelligence.mjs",
-    "test:revision": "infisical run --env=dev -- node scripts/test-targeted-revision.mjs"
+    "test:revision": "infisical run --env=dev -- node scripts/test-targeted-revision.mjs",
+    "test:hardening": "infisical run --env=dev -- node scripts/test-product-hardening.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.25.0",

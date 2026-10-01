@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/api-session";
+import { rateLimit } from "@/lib/api-rate-limit";
+import { RATE_LIMITS } from "@/lib/rate-limit";
 import { isAiConfigured, isMockProvider } from "@/lib/ai/gemini";
 import { analyseAssessment } from "@/lib/ai/assessment-intelligence";
 import { AiProviderError, ModelOutputError } from "@/lib/ai/types";
@@ -32,6 +34,9 @@ export async function POST(
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const limited = rateLimit("assessment-analyse", user.id, RATE_LIMITS.ai);
+  if (limited) return limited;
 
   // A header can pick a mock scenario only while the deterministic test
   // provider is active, which is impossible in production.

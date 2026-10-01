@@ -33,7 +33,9 @@ export function AppHeader() {
           <span className="demo-flag">Demo · mock data</span>
           {signedIn ? (
             <>
-              <span className="nav-user">{data?.user.name || data?.user.email}</span>
+              <Link className="nav-user" href="/account">
+                {data?.user.name || data?.user.email}
+              </Link>
               <button type="button" className="nav-action" onClick={handleSignOut}>
                 Sign out
               </button>

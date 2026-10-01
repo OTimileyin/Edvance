@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { analyseAssessment, useCourse } from "@/lib/useCourses";
+import {
+  analyseAssessment,
+  deleteAssessmentQuestion,
+  updateAssessmentQuestion,
+  useCourse,
+} from "@/lib/useCourses";
 import { AddAssessmentForm } from "@/components/add-assessment-form";
 import type { AnalysisStatus, ConsistencyStatus } from "@/lib/types";
 
@@ -44,6 +49,10 @@ export default function CourseAssessments() {
   const { course, ready, reload } = useCourse(params.courseId);
   const [checkingId, setCheckingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   if (!ready) return null;
   if (!course) return null;
@@ -62,6 +71,45 @@ export default function CourseAssessments() {
       setError(caught instanceof Error ? caught.message : "Question analysis did not finish.");
     } finally {
       setCheckingId(null);
+    }
+  }
+
+  function startEdit(assessmentId: string, question: string) {
+    setEditingId(assessmentId);
+    setEditText(question);
+    setError(null);
+  }
+
+  async function handleSaveEdit(assessmentId: string) {
+    if (!course) return;
+    if (!editText.trim()) {
+      setError("A question cannot be empty.");
+      return;
+    }
+    setSavingEdit(true);
+    setError(null);
+    try {
+      await updateAssessmentQuestion(course.id, assessmentId, { question: editText });
+      setEditingId(null);
+      await reload();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not update the question.");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
+  async function handleDelete(assessmentId: string) {
+    if (!course) return;
+    setDeletingId(assessmentId);
+    setError(null);
+    try {
+      await deleteAssessmentQuestion(course.id, assessmentId);
+      await reload();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not delete the question.");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -170,7 +218,7 @@ export default function CourseAssessments() {
                     </p>
                   )}
 
-                  <p style={{ marginTop: 12 }}>
+                  <div className="chip-row" style={{ marginTop: 12 }}>
                     <button
                       type="button"
                       className="btn btn-secondary"
@@ -184,7 +232,57 @@ export default function CourseAssessments() {
                           ? "Re-check this question"
                           : "Check this question"}
                     </button>
-                  </p>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => startEdit(assessment.id, assessment.question)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => void handleDelete(assessment.id)}
+                      disabled={deletingId === assessment.id}
+                    >
+                      {deletingId === assessment.id ? "Deleting…" : "Delete"}
+                    </button>
+                  </div>
+
+                  {editingId === assessment.id && (
+                    <div className="field" style={{ marginTop: 12 }}>
+                      <label className="field-label" htmlFor={`edit-${assessment.id}`}>
+                        Edit this question
+                      </label>
+                      <textarea
+                        id={`edit-${assessment.id}`}
+                        className="textarea"
+                        value={editText}
+                        onChange={(event) => setEditText(event.target.value)}
+                      />
+                      <p className="form-hint">
+                        Editing the wording clears this question&apos;s check — it must be checked
+                        again against the evidence.
+                      </p>
+                      <div className="chip-row">
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          onClick={() => void handleSaveEdit(assessment.id)}
+                          disabled={savingEdit}
+                        >
+                          {savingEdit ? "Saving…" : "Save question"}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => setEditingId(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </article>
               );
             })}

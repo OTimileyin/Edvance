@@ -195,6 +195,76 @@ export async function generateRevision(courseId: string): Promise<Course> {
   return ((await response.json()) as { course: Course }).course;
 }
 
+/** Renames / re-labels a course. Throws with a display message on failure. */
+export async function updateCourse(
+  courseId: string,
+  input: { name?: string; institution?: string; lesson?: string },
+): Promise<Course> {
+  const response = await fetch(`/api/courses/${courseId}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    throw new Error(await readError(response, "Could not update the course."));
+  }
+  return ((await response.json()) as { course: Course }).course;
+}
+
+/** Deletes a course and everything it owns. Throws with a display message on failure. */
+export async function deleteCourse(courseId: string): Promise<void> {
+  const response = await fetch(`/api/courses/${courseId}`, { method: "DELETE" });
+  if (!response.ok) {
+    throw new Error(await readError(response, "Could not delete the course."));
+  }
+}
+
+/**
+ * Edits an assessment question. The stored check is discarded, so the question
+ * must be checked again. Throws with a display message on failure.
+ */
+export async function updateAssessmentQuestion(
+  courseId: string,
+  assessmentId: string,
+  input: { question?: string; lesson?: string },
+): Promise<Course> {
+  const response = await fetch(`/api/courses/${courseId}/assessments/${assessmentId}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    throw new Error(await readError(response, "Could not update the question."));
+  }
+  return ((await response.json()) as { course: Course }).course;
+}
+
+/** Deletes an assessment question. Throws with a display message on failure. */
+export async function deleteAssessmentQuestion(
+  courseId: string,
+  assessmentId: string,
+): Promise<Course> {
+  const response = await fetch(`/api/courses/${courseId}/assessments/${assessmentId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new Error(await readError(response, "Could not delete the question."));
+  }
+  return ((await response.json()) as { course: Course }).course;
+}
+
+/**
+ * Deletes the signed-in learner's account and everything it owns. Throws with a
+ * display message on failure.
+ */
+export async function deleteAccount(): Promise<{ emailSent: boolean }> {
+  const response = await fetch("/api/account", { method: "DELETE" });
+  if (!response.ok) {
+    throw new Error(await readError(response, "Could not delete your account."));
+  }
+  return (await response.json()) as { emailSent: boolean };
+}
+
 /** Adds an assessment question to a course. Throws with a display message on failure. */
 export async function addAssessmentQuestion(
   courseId: string,

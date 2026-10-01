@@ -1358,6 +1358,52 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. `s
 
 ---
 
+## Change 19 — Phase 10: Product Completion & Hardening
+
+**Date:** 2026-10-02  
+**Requested by:** Product Owner (autonomous completion directive, §16)  
+**Status:** Implemented and verified end to end, including a production build
+
+### Reason
+Phases 5–9 built a working, evidence-first pipeline, but a product a real learner can rely on also needs the unglamorous parts: being able to fix and remove what you created, to leave, and to trust that the service is defended. Phase 10 completes those and proves the whole thing survives a production build rather than only a dev server.
+
+### Alternatives Considered
+- **Delete-only, no edit:** rejected. A typo in an assessment question should not force deletion, and editing is cheap once the invalidation rule is right.
+- **Editing a checked question while keeping its verdict:** rejected outright. The stored signature judged the *old* wording; keeping it would present a judgement the learner never asked for. Editing discards the check so it must be run again.
+- **A distributed rate limiter (Redis) or a third-party one:** rejected as scope and dependency creep. Edvance runs as a single process, so an in-memory fixed-window limiter is honest; the call sites do not change if the store later moves.
+- **Faking email delivery when Resend is unconfigured:** rejected. Edvance reports that email is not configured rather than claiming a message was sent.
+- **Reformatting the whole repository to add a linter/formatter:** rejected for now. It would rewrite unrelated, deliberately untouched files and obscure this phase's diff; static guarantees come from `tsc --noEmit`, the unit suite and the end-to-end suites, and ESLint/Prettier are noted as a deliberate gap.
+- **Avoiding a production build until deployment:** rejected. The build is the only check that catches server/client boundary and prerender problems, so it is run now.
+
+### Decision
+- **Edit and delete.** `PATCH`/`DELETE` on `/api/courses/[courseId]` rename or remove a course; the delete cascades in PostgreSQL and its stored files are removed best-effort afterwards. `PATCH`/`DELETE` on `/api/courses/[courseId]/assessments/[assessmentId]` edit or remove a question. Editing a question deletes its `source_mapping`, per-question `consistency_finding` and `assessment_analysis`, returning it to `not-analyzed`. Destructive actions require the word DELETE typed.
+- **Account lifecycle.** An `/account` page shows the signed-in identity, changes the password (revoking other sessions through Better Auth), and deletes the account. Deletion removes the `user` row, from which every course, material, chunk, concept, evidence, assessment, finding, attempt, practice question and plan cascades, then removes the stored objects.
+- **Transactional email.** `lib/email.ts` sends through Resend's HTTPS API using `RESEND_API_KEY`, never logging the key, and returns a not-configured outcome rather than throwing. It is used for the account-deletion confirmation; the API reports `emailSent` truthfully.
+- **Security headers and CSP.** `next.config.ts` sets `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, HSTS and a strict Content-Security-Policy (`default-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`), relaxed only in development for Next's tooling. `poweredByHeader` is disabled.
+- **Rate limiting.** `lib/rate-limit.ts` is a pure, dependency-free fixed-window limiter; `lib/api-rate-limit.ts` applies it per learner to model calls, uploads, practice and account actions. It is bypassed only under the deterministic test provider, which makes no external calls and is refused in production.
+- **Upload quotas.** A course is capped at `MAX_MATERIALS_PER_COURSE` (50) materials and `MAX_COURSE_BYTES` (200 MB) of stored content, checked before anything is written to object storage.
+- **Honest failure surfaces.** `app/error.tsx` and `app/global-error.tsx` never show the raw error (only a reference), `app/not-found.tsx` explains a 404, and `GET /api/health` reports the database as the one hard dependency and each optional integration as configured or not, without secrets.
+- **Legal pages.** `/privacy` and `/terms` describe storage, use, deletion, responsibilities and the product's limits, and are linked from the footer.
+- **Unit test layer.** `npm run test:unit` runs a `node:test` suite (no new dependencies) over the pure modules; `npm run check` runs the typecheck and the unit suite together.
+
+### Verification
+Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. Unit suite **24 passed, 0 failed**. `scripts/test-product-hardening.mjs` reports **43 passed, 0 failed** against a dev server (port 3260) with the deterministic provider; Phases 9/8/7/6/5.6 report **72 / 48 / 76 / 59 / 91** passed, 0 failed. `next build` completes a production build (TypeScript checked, 13 static pages generated, every route compiled). The secret scan is clean, and the database and bucket were returned to baseline (`practice_attempt`/`practice_question`/`revision_plan` 0; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments / 20 mastery rows; bucket 0 objects).
+
+- **Health PASS:** `/api/health` returned 200 with `database: ok`, reported each integration's configured state, and leaked no key or secret.
+- **Headers PASS:** the CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` were present and `X-Powered-By` was absent.
+- **Not-found PASS:** an unknown route returned 404 with an explanatory page.
+- **Course edit/delete PASS:** renaming updated the course, an empty name was refused (400), an unknown course returned 404, and deleting a course removed its row, its stored object, and returned 404 afterwards.
+- **Question edit/delete PASS:** editing a checked question updated the wording, discarded the stale check (`not-analyzed`) and cleared its source mappings; an empty question was refused; deleting removed the question and its row.
+- **Account lifecycle PASS:** unauthenticated deletion was refused (401); deleting an account removed the user, cascaded away its courses, deleted its stored object, reported `emailSent: false` honestly, and killed the session (subsequent request 401).
+- **Not claimed:** ESLint and Prettier are not yet configured, and rate limiting is per-process rather than distributed. Both are documented limitations, not silent gaps.
+
+### Impact on this document
+- §14/§16.4: security headers, rate limiting, quotas, error/not-found/health routes, and the account lifecycle are implemented.
+- §16.1: Phase 10 is complete and verified end to end, including a production build.
+- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+
+---
+
 # Appendix B — Lesson 6 Verification Checklist
 
 ## Task 1 — Implementation Plan
