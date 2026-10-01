@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createCourse, getCourses } from "@/lib/store";
-import { useCourses } from "@/lib/useCourses";
+import { createCourse, useCourses } from "@/lib/useCourses";
 import { authClient } from "@/lib/auth-client";
 import { ConsistencyBadge } from "./badges";
 
@@ -17,19 +16,27 @@ export function CourseDirectory() {
   const [institution, setInstitution] = useState("");
   const [lesson, setLesson] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  function handleCreate(event: React.FormEvent<HTMLFormElement>) {
+  async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!name.trim()) {
       setError("Give the course a name before creating a workspace.");
       return;
     }
-    const course = createCourse(ownerEmail, { name, institution, lesson });
-    setName("");
-    setInstitution("");
-    setLesson("");
-    setError(null);
-    router.push(`/courses/${course.id}`);
+    setSaving(true);
+    try {
+      const course = await createCourse({ name, institution, lesson });
+      setName("");
+      setInstitution("");
+      setLesson("");
+      setError(null);
+      router.push(`/courses/${course.id}`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not create the course workspace.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!ready) {
@@ -42,8 +49,8 @@ export function CourseDirectory() {
         <span className="kicker">Learning workspace</span>
         <h1 className="page-title">Courses</h1>
         <p className="page-lede">
-          Workspaces belong to {ownerEmail || "your account"} and live on this device in the
-          demo. Open one to explore its sources, assessments, and mastery progress.
+          Workspaces belong to {ownerEmail || "your account"} and are stored in the local
+          PostgreSQL database. Open one to explore its sources, assessments, and mastery progress.
         </p>
       </section>
 
@@ -124,11 +131,11 @@ export function CourseDirectory() {
             </p>
           )}
           <div>
-            <button type="submit" className="btn btn-primary">
-              Create workspace
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? "Creating…" : "Create workspace"}
             </button>
           </div>
-          <p className="form-hint">Created workspaces are stored locally on this device (demo data only).</p>
+          <p className="form-hint">Created workspaces are saved to the local PostgreSQL database.</p>
         </form>
       </section>
     </>

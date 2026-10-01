@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { addAssessment } from "@/lib/store";
-import { authClient } from "@/lib/auth-client";
+import { addAssessmentQuestion } from "@/lib/useCourses";
 
 export function AddAssessmentForm({
   courseId,
@@ -11,23 +10,29 @@ export function AddAssessmentForm({
   courseId: string;
   onAdded: () => void;
 }) {
-  const { data: session } = authClient.useSession();
-  const ownerEmail = session?.user.email ?? "";
   const [question, setQuestion] = useState("");
   const [lesson, setLesson] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!question.trim()) {
       setError("Enter the assessment question before adding it.");
       return;
     }
-    addAssessment(ownerEmail, courseId, lesson, question);
-    setQuestion("");
-    setLesson("");
-    setError(null);
-    onAdded();
+    setSaving(true);
+    try {
+      await addAssessmentQuestion(courseId, lesson, question);
+      setQuestion("");
+      setLesson("");
+      setError(null);
+      onAdded();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not add the question.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -63,11 +68,11 @@ export function AddAssessmentForm({
         </p>
       )}
       <div>
-        <button type="submit" className="btn btn-primary">
-          Add question
+        <button type="submit" className="btn btn-primary" disabled={saving}>
+          {saving ? "Adding…" : "Add question"}
         </button>
       </div>
-      <p className="form-hint">Added questions are stored locally on this device (demo data only).</p>
+      <p className="form-hint">Questions are saved to the local PostgreSQL database.</p>
     </form>
   );
 }

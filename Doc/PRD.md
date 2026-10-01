@@ -375,9 +375,9 @@ No secrets should be committed to the public repository.
 
 ### 16.1 Current Status
 
-**Current Phase:** Phase 3 — Accounts & Authentication (complete; Appendix A, Change 8), on top of Phase 2, the landing page/demo sign-in steering addition (Change 6), the "Field Guide" visual redesign (Change 7), and the "Press Room" redesign + Edvance identity (Change 9). Next phase: Phase 4 — Course Data & PostgreSQL.
+**Current Phase:** Phase 4 — Course Data & PostgreSQL (complete 2026-10-01; Appendix A, Change 11), on top of Phase 3 accounts (Change 8), Phase 2, the landing page/demo sign-in steering addition (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance identity (Change 9), and the interface sheet re-pointed at the live app (Change 10). Next phase: Phase 5 — Course Material Ingestion (Cloudflare R2).
 
-**Completed (2026-09-27):**
+**Completed (2026-09-27 – 2026-10-01):**
 - Phase 1 — Design System & Assessment Intelligence Prototype.
   - Implementation plan created; architecture reviewed and steering decisions logged (Appendix A, Decision 1).
   - Local PostgreSQL selected for later data integration.
@@ -407,20 +407,27 @@ No secrets should be committed to the public repository.
   - Landing page restructured to the reference's rhythm: two-panel poster hero → dark teal product band → cream medallion row → sand editorial spread → dark teal honest-status band.
   - Applied to the header (logo lockup, centred nav, circular tool buttons), footer, auth panels, and — through the token layer — every workspace surface.
   - Pure presentation change: no route, data, or authentication behaviour was altered.
-  - Credentials live only in the git-ignored `.env`; `.env.example` documents the shape. Course data itself remains browser-local mock data (PostgreSQL integration is Phase 4).
+  - Credentials live only in the git-ignored `.env`; `.env.example` documents the shape. At the time of this change, course data was still browser-local mock data.
 - Interface sheet re-pointed at the live application (steering addition, Appendix A, Change 10).
   - `design.html` now renders the shipped screens themselves — landing page, sign-in, course directory, course overview, sources, assessments, and mastery — against a verbatim snapshot of `app/globals.css`, rather than a separate hand-written approximation of the design system.
   - This removes a real risk: the previous sheet restated the palette, type, and components by hand, so it could describe a design the product no longer had. It now cannot drift without an explicit copy step, and its contents are measuring-identical to the app.
+- Phase 4 — Course Data & PostgreSQL (Appendix A, Change 11).
+  - Schema and migration for the §15 model — `course`, `learning_material`, `concept`, `assessment_question`, `source_mapping`, `consistency_finding`, `mastery_state` — plus a `schema_migrations` ledger (`db/migrations/0001_course_data.sql`).
+  - `npm run migrate` applies pending SQL files once each, in order, inside a transaction. No ORM was introduced; the runner uses the `pg` dependency already in the stack.
+  - Repository / data-access layer (`lib/repo/courses.ts`) is the only module that knows SQL. Every query is scoped by the signed-in `user.id`, so a learner cannot read or write another learner's records.
+  - Route handlers (`/api/courses`, `/api/courses/[courseId]`, `/api/courses/[courseId]/assessments`) return 401 when unauthenticated and 404 for courses the learner does not own.
+  - The course workspace **no longer uses `localStorage`**: the hooks fetch from the API and the create/add-question forms POST to it. The browser-storage modules (`lib/store.ts`, `lib/session.ts`, `lib/demo-data.ts`) and the client-side seeder were deleted.
+  - New learners are seeded with the demo workspaces **server-side** (idempotent, concurrency-safe); the seeded rows now live in PostgreSQL rather than in a browser profile.
+  - `source_mapping` is implemented in the schema and the repository but is not yet surfaced in the UI — populating it is Phase 6–7 work.
 
 **Not yet implemented:**
-- PostgreSQL application integration (course data; auth already runs on PostgreSQL).
 - Cloudflare R2 file storage.
 - Real course ingestion.
 - Live AI APIs.
 - Source-processing pipeline.
 - Production deployment.
 
-**Next Phase:** Phase 4 — Course Data & PostgreSQL.
+**Next Phase:** Phase 5 — Course Material Ingestion (Cloudflare R2).
 
 ### Phase 0 — Project Foundation
 **Goal:** Establish the project environment and documentation.
@@ -980,6 +987,36 @@ Rendered at 1440×980 and measured in the browser: body background `rgb(251,246,
 
 ### Impact on this document
 §16.1 and §17 updated to describe the sheet accurately. No app code, route, data, or authentication behaviour changed — only `design.html` and the documentation that points at it.
+
+---
+
+## Change 11 — Phase 4: Course Data & PostgreSQL
+
+**Date:** 2026-10-01  
+**Requested by:** Product Owner (standing instruction to proceed autonomously through the approved plan)  
+**Status:** Completed — Phase 4
+
+### Reason
+The approved plan places persistent course and learner records in Phase 4, and the single live gap in the Product Owner's assessment feedback was that the workspace still ran on seeded browser data rather than real storage. Until course records live in the database, Phase 5 ingestion has nowhere to write its materials, and the evidence pipeline has nothing durable to reason over.
+
+### Alternatives Considered
+- **An ORM (Drizzle or Prisma):** offers typed queries and generated migrations. Rejected for now: it adds a schema-definition layer and a generation step on top of a model the PRD already states directly in SQL terms, and the project is deliberately dependency-light. The `pg` client is already in the stack (Better Auth uses it), so plain SQL migrations plus a repository module achieve the same result with less machinery to keep in sync.
+- **Keeping `localStorage` and syncing later:** rejected. It would have left two sources of truth and made Phase 5's uploads unwritable.
+
+### Decision
+- **Plain SQL migrations, applied by a small runner.** `db/migrations/0001_course_data.sql` creates the §15 model; `scripts/migrate.mjs` (`npm run migrate`) applies each pending file once, in filename order, inside a transaction, and records it in a `schema_migrations` ledger. Re-running reports "Database already up to date."
+- **Schema faithful to the PRD, with two additions:** `course.institution` and `course.lesson` carry the fields the existing UI already collects, and `concept.ordinal` preserves the authored order of concepts (ordering by name would have scrambled the PROMPT-framework sequence). Identifiers are `text`, so seeded workspaces keep readable UUID-based ids.
+- **Repository layer is the only SQL.** `lib/repo/courses.ts` maps rows to the `Course` domain type: it bulk-loads materials, concepts (left-joined to the learner's `mastery_state`), questions, and the latest consistency finding for the courses requested, rather than issuing a query per course.
+- **Every query is owner-scoped.** The repository always takes the signed-in `user.id`; there is no code path that reads another learner's rows. Route handlers derive that id from the Better Auth session and return 401/404 otherwise.
+- **Seeding moved to the server and became concurrency-safe.** `ensureSeeded` takes a per-user advisory lock, re-checks that the learner still has no courses, and writes everything in one transaction — so two parallel first requests cannot double-seed. Real ingestion replaces it in Phase 5.
+- **`localStorage` removed from the workspace.** The hooks now fetch from `/api/courses`; the create and add-question forms POST. `lib/store.ts`, `lib/session.ts`, `lib/demo-data.ts`, and `components/user-bootstrapper.tsx` were deleted as dead code.
+- **Honesty:** the course directory and the add-question form previously said workspaces were "stored locally on this device (demo data only)". They now state the data is stored in the local PostgreSQL database. `source_mapping` is deliberately not surfaced in the UI yet — it is populated in the intelligence phases — so it is not claimed as a working feature.
+
+### Verification
+`npm run typecheck` and `npm run build` pass; the build lists the three new dynamic `/api/courses…` routes. Migration applied once and a second `npm run migrate` reported no pending files. End to end with real sessions: `POST /api/auth/sign-in/email` then `GET /api/courses` returned the seeded workspaces; `GET /api/courses/:id` returned one course; `POST /api/courses` created a course; `POST /api/courses/:id/assessments` added a question that read back on the next request; unauthenticated `GET /api/courses` returned 401; a second learner saw only their own course ids; `/courses` returned 200 with a session and 307 → `/signin?next=/courses` without one. Row counts confirmed the data reached PostgreSQL, and a `source_mapping` insert/select/delete round-tripped against the schema. The throwaway test course was removed afterwards.
+
+### Impact on this document
+§16.1 updated to Phase 4 complete; next phase Phase 5. The data model in §15 is now implemented rather than planned. No live AI, file storage, or ingestion is claimed.
 
 ---
 

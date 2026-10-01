@@ -1,6 +1,12 @@
 import type { Course } from "./types";
 
-export const MOCK_COURSES: Course[] = [
+/**
+ * Demo seed content. Phase 4 moved course storage into PostgreSQL, so this is
+ * no longer read by the UI: it is the dataset the repository inserts the first
+ * time a learner opens their workspace. Real ingestion (Phase 5) will replace
+ * it with materials the learner actually uploads.
+ */
+export const SEED_COURSES: Course[] = [
   {
     id: "ai-foundry",
     name: "Qubators AI Foundry",

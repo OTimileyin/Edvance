@@ -1,13 +1,14 @@
 {
   "name": "edvance",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Evidence-first assessment intelligence — learning workspace",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "migrate": "node --env-file=.env scripts/migrate.mjs"
   },
   "dependencies": {
     "better-auth": "^1.7.6",

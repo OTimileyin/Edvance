@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { UserBootstrapper } from "@/components/user-bootstrapper";
+import { ensureSeeded } from "@/lib/repo/courses";
 
 export default async function CoursesLayout({ children }: { children: React.ReactNode }) {
   const session = await auth.api.getSession({
@@ -12,5 +12,9 @@ export default async function CoursesLayout({ children }: { children: React.Reac
     redirect("/signin?next=/courses");
   }
 
-  return <UserBootstrapper email={session.user.email}>{children}</UserBootstrapper>;
+  // A learner's first visit gets the demo workspaces so their workspace is
+  // never empty. Idempotent, so this is a cheap no-op on every later visit.
+  await ensureSeeded(session.user.id);
+
+  return <div className="container page-pad">{children}</div>;
 }

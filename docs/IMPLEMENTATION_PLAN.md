@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** In progress — Phase 3 complete (2026-09-27)
+**Status:** In progress — Phase 4 complete (2026-10-01)
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -27,7 +27,8 @@
 - The browser is used to test the prototype.
 - Public deployment is postponed and is **not** required for Lesson 6.
 - Docker may be used to run local PostgreSQL.
-- All prototype work in Lesson 6 uses **mock/test data only**.
+- Schema migrations are plain SQL files in `db/migrations/` applied by `npm run migrate` (a small Node runner over the existing `pg` dependency, tracked in `schema_migrations`). No ORM is introduced.
+- New learners are seeded with the demo workspaces on first visit (`ensureSeeded`), so a fresh account is never empty. Real ingestion replaces this in Phase 5.
 
 ---
 
@@ -81,7 +82,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 ### Current Status
 
-**Current phase:** Phase 3 — Accounts & Authentication (complete; `Doc/PRD.md` Appendix A, Change 8), on top of Phase 2 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
+**Current phase:** Phase 4 — Course Data & PostgreSQL (complete; `Doc/PRD.md` Appendix A, Change 11), on top of Phases 1–3 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
 
 **Completed:**
 - Phase 1 — Design System & Assessment Intelligence Prototype (static local pages, mock data; `design.html`, `assessment-intelligence.html`).
@@ -118,15 +119,23 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
   - Self-contained with no build tooling: it opens from the filesystem, a static server, or the editor preview, and its links are inert by design.
   - Presentation only — no app code, route, data, or auth behaviour changed.
 
+- Phase 4 — Course Data & PostgreSQL.
+  - Schema and migration for the PRD §15 model: `course`, `learning_material`, `concept`, `assessment_question`, `source_mapping`, `consistency_finding`, `mastery_state`, plus a `schema_migrations` ledger (`db/migrations/0001_course_data.sql`).
+  - `npm run migrate` applies pending SQL files once each, in order, inside a transaction; re-running is a no-op. No ORM was added — the runner uses the `pg` dependency already in the stack.
+  - Repository / data-access layer (`lib/repo/courses.ts`) is the only module that knows SQL; the app speaks the `Course` domain type. Every query is scoped by the signed-in `user.id`, so learners cannot read or write each other's records.
+  - Route handlers (`/api/courses`, `/api/courses/[courseId]`, `/api/courses/[courseId]/assessments`) return 401 unauthenticated and 404 for courses the learner does not own.
+  - The course workspace no longer uses `localStorage`: the hooks fetch from the API and the create/add-question forms POST to it. The dead browser-storage modules were deleted.
+  - New learners are seeded with the demo workspaces server-side (idempotent, concurrency-safe); the seeded rows now live in PostgreSQL rather than the browser.
+  - `source_mapping` exists in the schema and repository but is not yet surfaced in the UI — populating it is Phase 6–7 work.
+
 **Not yet implemented:**
-- PostgreSQL application integration for course data (auth already runs on PostgreSQL).
 - Cloudflare R2.
 - Real course ingestion.
 - Live AI APIs.
 - Source-processing pipeline.
 - Production deployment.
 
-**Next phase:** Phase 4 — Course Data & PostgreSQL.
+**Next phase:** Phase 5 — Course Material Ingestion (Cloudflare R2).
 
 ---
 
@@ -251,9 +260,9 @@ This is the **Lesson 6 deliverable**.
 - Repository/data-access layer used by the app.
 
 **Acceptance Criteria:**
-- [ ] PostgreSQL runs locally and connects to the app.
-- [ ] Migrations apply cleanly.
-- [ ] Courses, materials, concepts, assessments, mappings, consistency findings, and mastery states persist and read back correctly.
+- [x] PostgreSQL runs locally and connects to the app (verified: `/api/courses` returns seeded rows from `edvance`).
+- [x] Migrations apply cleanly (`npm run migrate` applies `0001_course_data.sql` once; a second run reports "Database already up to date").
+- [x] Courses, materials, concepts, assessments, mappings, consistency findings, and mastery states persist and read back correctly (verified end to end: create course → add assessment → read back from a fresh request; `source_mapping` round-tripped directly against the schema).
 
 ---
 

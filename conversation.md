@@ -358,7 +358,38 @@ Exactly once: the Windows elevation prompt to install PostgreSQL (requested via 
 
 ---
 
-## Current state (2026-09-28)
+## Episode 17 — Phase 4: Course Data & PostgreSQL (autonomous run)
+
+### Product Owner prompt (verbatim)
+> Start Phase 4 — Course Data & PostgreSQL: design the schema and migrations for the course/learner data model, add a repository data-access layer, and move the course workspace off localStorage onto real tables.
+
+### What the AI builder did
+1. **Surveyed what was actually there.** Better Auth already ran on PostgreSQL (`user`, `session`, `account`, `verification`), but its tables had been created by `npx auth migrate` with **no migration files in the repo**, and there was no ORM, no schema, and no data-access layer. Courses lived in `localStorage` under `edvance.courses.v1.<email>`, seeded from `lib/data.ts`.
+2. **Chose plain SQL migrations over an ORM.** `pg` was already a dependency (Better Auth uses it); the PRD states the model in SQL-shaped terms already. Adding Drizzle or Prisma would have introduced a second schema definition and a generation step for no benefit at this size. The alternative is recorded in PRD Appendix A, Change 11.
+3. **Wrote the §15 schema** — `course`, `learning_material`, `concept`, `assessment_question`, `source_mapping`, `consistency_finding`, `mastery_state` — plus a `schema_migrations` ledger. Two additions beyond the PRD: `course.institution` and `course.lesson` (fields the existing UI already collects) and `concept.ordinal`, because ordering concepts by name would have scrambled the PROMPT-framework sequence the product is built around.
+4. **Added a migration runner** (`scripts/migrate.mjs`, `npm run migrate`) that applies each pending file once, in filename order, inside a transaction. Re-running reports "Database already up to date."
+5. **Built the repository layer** (`lib/repo/courses.ts`) as the only module that knows SQL. It bulk-loads materials, concepts (left-joined to the learner's `mastery_state`), questions, and the latest consistency finding for the courses requested — no per-course query loop — and maps rows to the existing `Course` domain type, so no UI component had to change shape.
+6. **Scoped every query by owner.** The repository always takes the signed-in `user.id`; the three route handlers (`/api/courses`, `/api/courses/[courseId]`, `/api/courses/[courseId]/assessments`) derive it from the Better Auth session and return 401 or 404 otherwise.
+7. **Moved off `localStorage`.** The hooks now fetch from the API and the create/add-question forms POST to it. `lib/store.ts`, `lib/session.ts`, `lib/demo-data.ts`, and `components/user-bootstrapper.tsx` were deleted as dead code, and the copy that promised "stored locally on this device (demo data only)" was corrected to say PostgreSQL.
+8. **Moved seeding to the server and made it concurrency-safe** — `ensureSeeded` takes a per-user advisory lock, re-checks the learner still has no courses, and writes everything in one transaction, so two parallel first requests cannot double-seed. Seeded rows now live in PostgreSQL with readable UUID-based ids (`qubators-ai-foundry-48abb340`).
+9. **Verified end to end with real sessions** (curl + cookie jar): sign-in → `GET /api/courses` returns seeded workspaces in authored concept order → `GET` one course → `POST` a new course → `POST` an assessment that reads back on the next request; unauthenticated `GET` → 401; a second learner sees only their own course ids; `/courses` → 200 with a session and 307 → `/signin?next=/courses` without one. `source_mapping` round-tripped against the schema (insert → select → delete). Row counts confirmed the data reached PostgreSQL. The throwaway test course was removed afterwards.
+10. **Docs:** PRD **Change 11** + §16.1 (with the Change 9 bullet corrected, since its "course data is browser-local" line is no longer true), plan status block + Phase 4 acceptance criteria, README (status paragraph, `npm run migrate` step, prerequisite wording), this episode.
+11. **Committed** at the Product Owner's request: `11be8f2` — `feat: persist course and learner records in PostgreSQL` (22 files, +937/−252). Not pushed. The pre-existing untracked `.freebuff/` was deliberately left out of the commit.
+
+### Notes / limits
+- **`source_mapping` is schema-and-repository only** — nothing populates it yet, because linking an assessment question to the concept and material that evidence it is the intelligence work of Phases 6–7. It is deliberately not claimed as a working feature.
+- **No live AI, no file storage, no ingestion.** Course content is still seeded demo data; Phase 5 replaces the seeder with real uploads to Cloudflare R2.
+- `preview_screenshot` remains non-compositing in this environment, so verification was numeric and API-level rather than visual.
+
+### Files changed
+- New: `db/migrations/0001_course_data.sql`, `scripts/migrate.mjs`, `lib/db.ts`, `lib/repo/courses.ts`, `lib/api-session.ts`, `app/api/courses/route.ts`, `app/api/courses/[courseId]/route.ts`, `app/api/courses/[courseId]/assessments/route.ts`
+- Changed: `package.json` (migrate script), `lib/data.ts` (`MOCK_COURSES` → `SEED_COURSES`), `lib/useCourses.ts`, `components/course-directory.tsx`, `components/add-assessment-form.tsx`, `app/courses/layout.tsx`
+- Deleted: `lib/store.ts`, `lib/session.ts`, `lib/demo-data.ts`, `components/user-bootstrapper.tsx`
+- Docs: `Doc/PRD.md`, `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md`
+
+---
+
+## Current state (2026-10-01)
 
 - **Committed & pushed:** the interface sheet is commit `f89fdfc`, and it and everything before it are on `origin/main`. The push moved `9090f45..f89fdfc`, carrying four commits that had accumulated locally: Phase 2 + Field Guide (`2af22eb`), Phase 3 Better Auth (`bfe0e4c`), Press Room + logo (`b092460`), interface sheet (`f89fdfc`). Pushing was done in the same working session.
 - **Phase 3 (Episode 14):** Better Auth over local PostgreSQL (service `postgresql-edvance`, db `edvance`); server-side guard on `/courses`; per-user workspaces; Phase 3 docs committed separately.
@@ -366,10 +397,11 @@ Exactly once: the Windows elevation prompt to install PostgreSQL (requested via 
 - **Interface sheet (Episode 16, committed `f89fdfc`):** `design.html` now renders the seven shipped screens from the real markup against a verbatim snapshot of `app/globals.css`, labelled by route, with per-screen notes on real versus mock data. Point-in-time by design; re-copy between the `APP-CSS` markers when the stylesheet changes.
 - **Running:** dev server restarted after the editor restart and answering on http://localhost:3000 (`/` → 200, `/courses` → 307 to sign-in when unauthenticated); started detached, log at `/tmp/edvance-dev.log`. PostgreSQL service `postgresql-edvance` listening on 5432.
 - **Untracked:** `.freebuff/` (editor tooling metadata) is still untracked and was deliberately not committed — it predates this work and is not in `.gitignore`.
-- **Verified:** typecheck ✓ · build ✓ · auth flows (sign-up, session, guard 307/200) ✓ · browser sign-up + scoped workspace ✓.
+- **Verified:** typecheck ✓ · build ✓ (all routes incl. the three new `/api/courses…`) · migrations apply once and re-run clean ✓ · full API flow with real sessions (seed → read → create → add assessment → read back) ✓ · 401 unauthenticated ✓ · per-learner isolation ✓ · `source_mapping` schema round-trip ✓.
+- **Phase 4 (Episode 17):** course/learner data now lives in PostgreSQL. Schema + migration (`db/migrations/0001_course_data.sql`), migration runner (`npm run migrate`), repository layer (`lib/repo/courses.ts`), three route handlers, and the workspace moved off `localStorage`. `source_mapping` is schema/repository only until Phases 6–7.
+- **Committed, not pushed:** Phase 4 is commit `11be8f2` on `main` (`feat: persist course and learner records in PostgreSQL`, 22 files, +937/−252). It has not been pushed to `origin/main`, which still sits at `96e3702`. `.freebuff/` remains untracked and was deliberately excluded.
 
 ## Suggested next steps
-1. Product Owner reviews the live app at http://localhost:3000 — the landing page, the logo, and the workspace — and the interface sheet at `design.html` (nothing has been seen by eye yet: screenshots are non-compositing in this environment).
-2. Phase 4 — Course Data & PostgreSQL: move courses/concepts/assessments from browser storage into the database with a proper schema and data-access layer. This is the first phase where the product stops relying on mock data.
-3. Phase 5+ — Cloudflare R2 ingestion, intelligence phases (per `docs/IMPLEMENTATION_PLAN.md`).
-4. Optional polish: a small script that regenerates the inlined stylesheet snapshot in `design.html` so the sheet can never silently drift; a light/dark theme pass; a social/OG image from the poster scene and logo lockup; printing styles for the sheet.
+1. Push `11be8f2` to `origin/main` when the Product Owner wants it on GitHub.
+2. Phase 5 — Course Material Ingestion: file upload flow into Cloudflare R2 with a stored `storageReference` on `LearningMaterial`, replacing the demo seeder and making the Sources section real. Requires R2 credentials, so it is a point where the Product Owner's decision is needed.
+3. Optional polish: a script that regenerates the inlined stylesheet snapshot in `design.html` so the sheet cannot silently drift; a root `PRD.md` pointer so `/PRD.md` resolves on GitHub; a light/dark theme pass; a social/OG image from the poster scene and logo lockup.
