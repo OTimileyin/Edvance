@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** In progress — Phases 5, 5.6, 6 (Course Intelligence), 7 (Assessment Intelligence) and 8 (Mastery Intelligence) complete and verified end to end (2026-10-01), including a verified live Google Gemini call; next phase Phase 9
+**Status:** In progress — Phases 5, 5.6, 6 (Course Intelligence), 7 (Assessment Intelligence), 8 (Mastery Intelligence) and 9 (Targeted Revision) complete and verified end to end (2026-10-02), including a verified live Google Gemini call; next phase Phase 10
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -153,10 +153,10 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 - Real extraction and chunking for all seven formats, correct page/slide/timestamp/section/line locations, ordered chunks, ingestion jobs, ownership isolation, failed-ingestion states, and delete cascades — `scripts/test-ingestion.mjs` reports 91 passed, 0 failed. See `Doc/PRD.md` Appendix A, Change 14.
 
 **Not yet implemented:**
-- Targeted Revision (Phase 9) and everything after it.
+- Product Completion & Hardening (Phase 10) and everything after it.
 - Production deployment.
 
-**Next phase:** Phase 9 — Targeted Revision.
+**Next phase:** Phase 10 — Product Completion & Hardening.
 
 ---
 
@@ -427,8 +427,17 @@ This is the **Lesson 6 deliverable**.
 - Targeted practice questions generated from weak areas (not random across the course).
 
 **Acceptance Criteria:**
-- [ ] Recommendations reference the smallest useful next action.
-- [ ] Practice generation focuses on weak/untested concepts.
+- [x] Recommendations reference the smallest useful next action.
+- [x] Practice generation focuses on weak/untested concepts.
+
+**Delivered:**
+- `lib/revision.ts` derives the recommendation deterministically from mastery and evidence: the focus (Weak → Developing → Untested, Mastered excluded) and one smallest next action, naming the top concept and where the course teaches it. No model call, and it is always current.
+- `practice_question` and `revision_plan` (migration `0007`) store targeted practice and the per-course generation state, including a `generated_for` weak-area fingerprint.
+- `POST /api/courses/[courseId]/revision` authenticates, authorises by ownership, refuses an un-analysed course with 409, records `nothing-to-revise` and `insufficient-evidence` honestly (no model call), and never recomputes an up-to-date generation.
+- Generation sends only the weak concepts and the evidence that teaches them; a question naming an unsupplied concept or citing an unsupplied chunk rejects the whole response.
+- A new **Revision** tab shows the next action, the focus with its evidence, the generation state and the targeted practice, and records an attempt per question through the Phase 8 practice endpoint.
+- Verified with `scripts/test-targeted-revision.mjs` — **72 passed, 0 failed** — covering the deterministic recommendation, targeted generation, cost control, mastery-driven re-targeting, the nothing-to-revise boundary, four rejection paths, insufficient evidence, the analysis gate, isolation and demo honesty.
+- Phase 8 (**48**), Phase 7 (**76**), Phase 6 (**59**) and Phase 5.6 (**91**) regressions still pass; typecheck, secret scan and baseline restored.
 
 ---
 

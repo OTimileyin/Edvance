@@ -182,6 +182,19 @@ export async function recordPractice(
   return ((await response.json()) as { course: Course }).course;
 }
 
+/**
+ * Generates targeted practice for the learner's weakest concepts, returning the
+ * refreshed course. Like the other analyses this is an explicit learner action
+ * and never runs on a page refresh. Throws with a display message on failure.
+ */
+export async function generateRevision(courseId: string): Promise<Course> {
+  const response = await fetch(`/api/courses/${courseId}/revision`, { method: "POST" });
+  if (!response.ok) {
+    throw new Error(await readError(response, "Practice generation did not finish. Please try again."));
+  }
+  return ((await response.json()) as { course: Course }).course;
+}
+
 /** Adds an assessment question to a course. Throws with a display message on failure. */
 export async function addAssessmentQuestion(
   courseId: string,

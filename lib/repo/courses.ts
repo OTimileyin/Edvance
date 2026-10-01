@@ -1,8 +1,15 @@
 import { pool } from "@/lib/db";
 import { SEED_COURSES } from "@/lib/data";
 import { deriveMastery } from "@/lib/mastery";
+import {
+  buildRevisionFocus,
+  buildRevisionNextAction,
+  revisionFingerprint,
+  type RevisionConceptInput,
+} from "@/lib/revision";
 import type { AiUsage, EvidenceChunk } from "@/lib/ai/types";
 import type { AnalyzedConcept, AnalyzedRelationship } from "@/lib/ai/course-intelligence";
+import type { AnalyzedRevision } from "@/lib/ai/revision-intelligence";
 import type {
   AnalysisStatus,
   AssessmentItem,
@@ -20,7 +27,10 @@ import type {
   IngestionMetadata,
   IngestionStatus,
   PracticeAttempt,
+  PracticeQuestion,
   RelationshipKind,
+  RevisionFocus,
+  RevisionPlan,
   SourceItem,
   SourceType,
 } from "@/lib/types";
@@ -147,6 +157,29 @@ type SourceMappingRow = {
   source_location: string | null;
 };
 
+type RevisionRow = {
+  course_id: string;
+  status: string;
+  error_code: string | null;
+  error_summary: string | null;
+  generated_for: string | null;
+  question_count: number;
+  provider_metadata: { model?: string; inputTokens?: number; outputTokens?: number } | null;
+  generated_at: Date | null;
+};
+
+type PracticeQuestionRow = {
+  id: string;
+  course_id: string;
+  concept_id: string | null;
+  concept_name: string | null;
+  question_text: string;
+  rationale: string;
+  material_title: string | null;
+  source_location: string | null;
+  created_at: Date;
+};
+
 type PracticeAttemptRow = {
   id: string;
   course_id: string;
@@ -191,6 +224,18 @@ const DEFAULT_SIGNATURE: AssessmentSignature = {
   analyzedAt: null,
   provider: null,
   concepts: [],
+};
+
+/** A course whose targeted practice has never been generated. */
+const DEFAULT_REVISION: RevisionPlan = {
+  status: "not-analyzed",
+  errorCode: null,
+  errorSummary: null,
+  generatedAt: null,
+  provider: null,
+  nextAction: "Analyse the course to extract the concepts your materials teach, then record some practice.",
+  focus: [],
+  practiceQuestions: [],
 };
 
 /** Maps the stored consistency verdict onto the vocabulary the UI shows. */
@@ -280,6 +325,8 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
     questionFindings,
     mappings,
     practice,
+    revision,
+    practiceQuestions,
   ] = await Promise.all([
     pool.query<MaterialRow>(
       `select ${MATERIAL_COLUMNS}
@@ -365,6 +412,24 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
          left join assessment_question q on q.id = a.assessment_question_id
         where a.course_id = any($1::text[])
         order by a.created_at desc, a.id desc`,
+      [ids],
+    ),
+    pool.query<RevisionRow>(
+      `select course_id, status, error_code, error_summary, generated_for,
+              question_count, provider_metadata, generated_at
+         from revision_plan
+        where course_id = any($1::text[])`,
+      [ids],
+    ),
+    pool.query<PracticeQuestionRow>(
+      `select q.id, q.course_id, q.concept_id, c.name as concept_name,
+              q.question_text, q.rationale, m.title as material_title,
+              q.source_location, q.created_at
+         from practice_question q
+         left join concept c on c.id = q.concept_id
+         left join learning_material m on m.id = q.source_material_id
+        where q.course_id = any($1::text[])
+        order by q.created_at asc, q.id asc`,
       [ids],
     ),
   ]);
@@ -548,8 +613,33 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
     conceptsByQuestion.set(row.assessment_question_id, list);
   }
 
+  // --- Targeted revision (Phase 9) -------------------------------------------
+  // The recommendation is derived from mastery and evidence, so no model is
+  // needed to build it. Stored generated practice is attached, and turns stale
+  // when the learner's mastery moves.
+  const revisionRowByCourse = new Map<string, RevisionRow>();
+  for (const row of revision.rows) revisionRowByCourse.set(row.course_id, row);
+
+  const questionsByCourse = new Map<string, PracticeQuestion[]>();
+  for (const row of practiceQuestions.rows) {
+    const list = questionsByCourse.get(row.course_id) ?? [];
+    list.push({
+      id: row.id,
+      conceptId: row.concept_id,
+      conceptName: row.concept_name,
+      question: row.question_text,
+      rationale: row.rationale,
+      materialTitle: row.material_title,
+      sourceLocation: row.source_location,
+      createdAt: row.created_at.toISOString(),
+    });
+    questionsByCourse.set(row.course_id, list);
+  }
+
   return courseRows.map((row) => {
     const sources = sourcesByCourse.get(row.id) ?? [];
+    const courseConcepts = courseConceptsByCourse.get(row.id) ?? [];
+    const focus = focusForCourse(courseConcepts, conceptsByCourse.get(row.id) ?? []);
     const analysisRow = analysisByCourse.get(row.id);
     const intelligence = mapIntelligence(row.id, analysisRow, sources, {
       concepts: courseConceptsByCourse.get(row.id) ?? [],
@@ -577,8 +667,61 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
       consistency: consistencyByCourse.get(row.id) ?? DEFAULT_CONSISTENCY,
       intelligence,
       attempts: attemptsByCourse.get(row.id) ?? [],
+      revision: mapRevision(
+        revisionRowByCourse.get(row.id),
+        focus,
+        questionsByCourse.get(row.id) ?? [],
+        courseConcepts.length > 0,
+      ),
     };
   });
+}
+
+/** The concepts worth revising, weakest first, matched to the learner's mastery. */
+function focusForCourse(concepts: CourseConcept[], mastery: ConceptMastery[]): RevisionFocus[] {
+  const byName = new Map<string, ConceptMastery>();
+  for (const entry of mastery) byName.set(entry.name.trim().toLowerCase(), entry);
+  const inputs: RevisionConceptInput[] = concepts.map((concept) => ({
+    conceptId: concept.id,
+    name: concept.name,
+    evidence: concept.evidence,
+    mastery: byName.get(concept.name.trim().toLowerCase()),
+  }));
+  return buildRevisionFocus(inputs);
+}
+
+/**
+ * Builds the revision view for one course, computing staleness live: when the
+ * learner practises and mastery moves, the fingerprint changes and a stored plan
+ * becomes `needs-reanalysis` without any model call.
+ */
+function mapRevision(
+  row: RevisionRow | undefined,
+  focus: RevisionFocus[],
+  questions: PracticeQuestion[],
+  hasConcepts: boolean,
+): RevisionPlan {
+  const nextAction = buildRevisionNextAction(focus, hasConcepts);
+  if (!row) return { ...DEFAULT_REVISION, nextAction, focus };
+
+  let status = row.status as AnalysisStatus;
+  if (
+    (status === "ready" || status === "insufficient-evidence") &&
+    row.generated_for !== revisionFingerprint(focus)
+  ) {
+    status = "needs-reanalysis";
+  }
+
+  return {
+    status,
+    errorCode: row.error_code,
+    errorSummary: row.error_summary,
+    generatedAt: row.generated_at ? row.generated_at.toISOString() : null,
+    provider: row.provider_metadata ?? null,
+    nextAction,
+    focus,
+    practiceQuestions: questions,
+  };
 }
 
 /**
@@ -1224,6 +1367,171 @@ export async function getStoredAnalysis(
   const row = rows[0];
   if (!row) return undefined;
   return { status: row.status as AnalysisStatus, fingerprint: row.evidence_fingerprint };
+}
+
+/** The stored revision-generation state for one of the learner's courses. */
+export async function getStoredRevisionPlan(
+  userId: string,
+  courseId: string,
+): Promise<{ status: AnalysisStatus; generatedFor: string | null } | undefined> {
+  const { rows } = await pool.query<{ status: string; generated_for: string | null }>(
+    `select r.status, r.generated_for
+       from revision_plan r
+       join course c on c.id = r.course_id
+      where r.course_id = $1 and c.user_id = $2`,
+    [courseId, userId],
+  );
+  const row = rows[0];
+  if (!row) return undefined;
+  return { status: row.status as AnalysisStatus, generatedFor: row.generated_for };
+}
+
+/**
+ * Marks targeted-practice generation as in progress and records the weak-area
+ * fingerprint it is running for. Also acts as a light lock against a double click.
+ */
+export async function markRevisionAnalyzing(courseId: string, fingerprint: string): Promise<void> {
+  await pool.query(
+    `insert into revision_plan (id, course_id, status, generated_for, updated_at)
+     values ($1, $2, 'analyzing', $3, now())
+     on conflict (course_id) do update
+        set status = 'analyzing', generated_for = $3,
+            error_code = null, error_summary = null, updated_at = now()`,
+    [newId("revision"), courseId, fingerprint],
+  );
+}
+
+/** Records a safe failure summary for a revision generation; never raw output. */
+export async function failRevisionPlan(
+  courseId: string,
+  code: string,
+  summary: string,
+): Promise<void> {
+  await pool.query(
+    `update revision_plan
+        set status = 'failed', error_code = $2, error_summary = $3, updated_at = now()
+      where course_id = $1`,
+    [courseId, code, summary],
+  );
+}
+
+/**
+ * The evidence chunks that teach the given concepts, loaded scoped to this
+ * learner and this course. This is exactly the evidence a generation may cite,
+ * so a question can only ever be grounded in the weak areas' real material.
+ */
+export async function getConceptEvidenceChunks(
+  userId: string,
+  courseId: string,
+  conceptIds: string[],
+): Promise<EvidenceChunk[]> {
+  if (conceptIds.length === 0) return [];
+  const { rows } = await pool.query<{
+    id: string;
+    material_id: string;
+    material_title: string;
+    source_location: string;
+    content: string;
+  }>(
+    `select ch.id, ch.material_id, m.title as material_title, ch.source_location, ch.content
+       from concept_evidence e
+       join material_chunk ch on ch.id = e.chunk_id
+       join learning_material m on m.id = ch.material_id
+       join course c on c.id = m.course_id
+      where c.id = $1 and c.user_id = $2 and e.concept_id = any($3::text[])
+      order by m.uploaded_at asc, ch.ordinal asc`,
+    [courseId, userId, conceptIds],
+  );
+
+  const seen = new Set<string>();
+  const chunks: EvidenceChunk[] = [];
+  for (const row of rows) {
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    chunks.push({
+      id: row.id,
+      materialId: row.material_id,
+      materialTitle: row.material_title,
+      sourceLocation: row.source_location,
+      content: row.content,
+    });
+  }
+  return chunks;
+}
+
+/**
+ * Replaces a course's generated practice with a validated result and records the
+ * weak-area fingerprint it was written for. Replacing rather than appending keeps
+ * the plan honest: the questions always belong to the current focus.
+ */
+export async function saveTargetedPractice(
+  courseId: string,
+  fingerprint: string,
+  result: AnalyzedRevision,
+): Promise<void> {
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const chunkIds = [...new Set(result.questions.map((question) => question.chunkId))];
+    const chunkRows =
+      chunkIds.length > 0
+        ? (
+            await client.query<{ id: string; material_id: string; source_location: string }>(
+              `select id, material_id, source_location
+                 from material_chunk
+                where id = any($1::text[])`,
+              [chunkIds],
+            )
+          ).rows
+        : [];
+    const chunkById = new Map(chunkRows.map((row) => [row.id, row]));
+
+    await client.query("delete from practice_question where course_id = $1", [courseId]);
+    for (const question of result.questions) {
+      const chunk = chunkById.get(question.chunkId);
+      await client.query(
+        `insert into practice_question
+           (id, course_id, concept_id, question_text, rationale, source_material_id, source_location)
+         values ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          newId("practice"),
+          courseId,
+          question.conceptId,
+          question.question,
+          question.rationale,
+          chunk?.material_id ?? null,
+          chunk?.source_location ?? null,
+        ],
+      );
+    }
+
+    await client.query(
+      `insert into revision_plan
+         (id, course_id, status, generated_for, question_count, provider_metadata, generated_at, updated_at)
+       values ($1, $2, $3, $4, $5, $6, now(), now())
+       on conflict (course_id) do update set
+         status = $3, error_code = null, error_summary = null, generated_for = $4,
+         question_count = $5, provider_metadata = $6, generated_at = now(), updated_at = now()`,
+      [
+        newId("revision"),
+        courseId,
+        result.status,
+        fingerprint,
+        result.questions.length,
+        {
+          model: result.usage.model,
+          inputTokens: result.usage.inputTokens,
+          outputTokens: result.usage.outputTokens,
+        },
+      ],
+    );
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 /**

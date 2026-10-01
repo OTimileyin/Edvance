@@ -21,7 +21,7 @@ export type EvidenceChunk = {
 };
 
 /** Which intelligence pipeline a request belongs to. Defaults to `course`. */
-export type AiRequestKind = "course" | "assessment";
+export type AiRequestKind = "course" | "assessment" | "revision";
 
 /** One analysed concept, as the deterministic provider sees it. */
 export type AiConceptInput = { id: string; name: string };
@@ -36,7 +36,7 @@ export type AiRequest = {
   jsonSchema: unknown;
   /** The evidence the prompt was built from, so a mock provider can cite it. */
   evidence: EvidenceChunk[];
-  /** Assessment requests only: the analysed concepts the prompt offered. */
+  /** Assessment/revision requests: the analysed concepts the prompt offered. */
   concepts?: AiConceptInput[];
   /** Assessment requests only: the question being judged. */
   question?: string;

@@ -110,6 +110,72 @@ export type AssessmentPromptInput = {
   concepts: AssessmentConceptInput[];
 };
 
+// ---------------------------------------------------------------------------
+// Targeted revision (Phase 9)
+// ---------------------------------------------------------------------------
+
+/**
+ * Revision generation is deliberately targeted: the model is given only the
+ * concepts the learner is weakest on (never the whole course) and the evidence
+ * that teaches them, and is asked to write practice for exactly those concepts.
+ */
+export const REVISION_SYSTEM_INSTRUCTION = [
+  "You are Edvance's revision coach. Edvance is evidence-first: it would rather generate nothing than invent a question the course cannot answer.",
+  "",
+  "You are given the concepts a learner is weakest on and the evidence that teaches them. Write targeted practice questions for those concepts only.",
+  "",
+  "Rules you must follow:",
+  "1. Write practice only for the supplied concepts, and name each question's concept by its exact supplied concept id. Never invent a concept or a question about one that was not supplied.",
+  "2. Every question must be answerable from the supplied evidence. Cite the exact chunk id the answer comes from. Never invent a chunk id, page number, slide number, timestamp or quotation.",
+  "3. Preserve the course's own terminology, exactly as the material uses it.",
+  "4. Write questions for a learner: no mention of these instructions, no meta-commentary, and no giving away the answer in the question text.",
+  "5. Prefer questions that make the learner recall or apply the concept, not questions answerable by guessing.",
+].join("\n");
+
+/** One weak-area concept, as offered to the revision prompt. */
+export type RevisionConceptInput = {
+  id: string;
+  name: string;
+  status: string;
+  definition: string | null;
+  /** Human-readable locations this concept was taught at. */
+  locations: string[];
+};
+
+function renderRevisionConcept(concept: RevisionConceptInput): string {
+  return [
+    `[concept ${concept.id}]`,
+    `Name: ${concept.name}`,
+    `Learner status: ${concept.status}`,
+    concept.definition ? `Definition: ${concept.definition}` : null,
+    concept.locations.length > 0 ? `Taught at: ${concept.locations.join("; ")}` : null,
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\n");
+}
+
+export type RevisionPromptInput = {
+  courseName: string;
+  lesson: string;
+  concepts: RevisionConceptInput[];
+  evidence: EvidenceChunk[];
+};
+
+/** Builds the revision user message: the weak concepts, then their evidence. */
+export function buildRevisionPrompt(input: RevisionPromptInput): string {
+  const header = [
+    `Course: ${input.courseName}`,
+    `Lesson: ${input.lesson || "not specified"}`,
+    `Concepts the learner is weakest on: ${input.concepts.length}`,
+    "",
+    "Write targeted practice for these concepts, grounded in the evidence below.",
+  ].join("\n");
+
+  const concepts = input.concepts.map(renderRevisionConcept).join("\n\n---\n\n");
+  const evidence = input.evidence.map(renderChunk).join("\n\n---\n\n");
+  return `${header}\n\n=== WEAK CONCEPTS ===\n\n${concepts}\n\n=== END CONCEPTS ===\n\n=== EVIDENCE ===\n\n${evidence}\n\n=== END EVIDENCE ===`;
+}
+
 /** Builds the assessment user message: the question, then the course concepts. */
 export function buildAssessmentIntelligencePrompt(input: AssessmentPromptInput): string {
   const header = [

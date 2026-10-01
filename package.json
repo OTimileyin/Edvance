@@ -12,7 +12,8 @@
     "test:ingestion": "infisical run --env=dev -- node scripts/test-ingestion.mjs",
     "test:intelligence": "infisical run --env=dev -- node scripts/test-course-intelligence.mjs",
     "test:assessment": "infisical run --env=dev -- node scripts/test-assessment-intelligence.mjs",
-    "test:mastery": "infisical run --env=dev -- node scripts/test-mastery-intelligence.mjs"
+    "test:mastery": "infisical run --env=dev -- node scripts/test-mastery-intelligence.mjs",
+    "test:revision": "infisical run --env=dev -- node scripts/test-targeted-revision.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.25.0",

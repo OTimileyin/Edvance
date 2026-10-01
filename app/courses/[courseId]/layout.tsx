@@ -42,6 +42,7 @@ function WorkspaceShell({ children }: { children: React.ReactNode }) {
     { href: `/courses/${course.id}/intelligence`, label: "Intelligence", active: pathname.startsWith(`/courses/${course.id}/intelligence`) },
     { href: `/courses/${course.id}/assessments`, label: "Assessments", active: pathname.startsWith(`/courses/${course.id}/assessments`) },
     { href: `/courses/${course.id}/mastery`, label: "Mastery", active: pathname.startsWith(`/courses/${course.id}/mastery`) },
+    { href: `/courses/${course.id}/revision`, label: "Revision", active: pathname.startsWith(`/courses/${course.id}/revision`) },
   ];
 
   return (

@@ -146,6 +146,55 @@ export interface ConceptMastery {
   lastAttemptAt?: string | null;
 }
 
+/** Why a concept is worth revising right now, weakest evidence of mastery first. */
+export type RevisionPriority = "weak" | "developing" | "untested";
+
+/** One concept the learner should revise next, with the evidence that teaches it. */
+export interface RevisionFocus {
+  conceptId: string;
+  name: string;
+  status: ConceptStatus;
+  priority: RevisionPriority;
+  /** Why this is the next thing to revise, in plain words. */
+  reason: string;
+  /** Real recorded attempts behind the status. */
+  attempts: number;
+  /** Where the course's own evidence teaches this concept. */
+  evidence: ConceptEvidenceRef[];
+}
+
+/** Model-generated practice for a weak area, grounded in real evidence. */
+export interface PracticeQuestion {
+  id: string;
+  conceptId: string | null;
+  conceptName: string | null;
+  question: string;
+  rationale: string;
+  materialTitle: string | null;
+  sourceLocation: string | null;
+  createdAt: string;
+}
+
+/**
+ * The revision state for a course: a deterministic recommendation plus the
+ * targeted practice generated for it. The recommendation is derived from
+ * mastery and evidence; only the practice questions need a model.
+ */
+export interface RevisionPlan {
+  status: AnalysisStatus;
+  errorCode: string | null;
+  errorSummary: string | null;
+  generatedAt: string | null;
+  /** Safe provider metadata (model and token counts); never prompt contents. */
+  provider: { model?: string; inputTokens?: number; outputTokens?: number } | null;
+  /** The smallest useful next action, derived from mastery alone. */
+  nextAction: string;
+  /** Weak/untested concepts, weakest first; empty when nothing needs revising. */
+  focus: RevisionFocus[];
+  /** Generated practice for the focus areas; empty until generated. */
+  practiceQuestions: PracticeQuestion[];
+}
+
 /**
  * One thing a learner actually did: answered an assessment question, or
  * self-assessed a single concept, and judged it correct or not. Mastery is
@@ -181,4 +230,5 @@ export interface Course {
   intelligence: CourseIntelligence;
   /** The learner's recorded practice, most recent first (bounded). */
   attempts: PracticeAttempt[];
+  revision: RevisionPlan;
 }

@@ -38,6 +38,23 @@ const NO_SIGNATURE: Course["assessments"][number]["signature"] = {
   concepts: [],
 };
 
+/**
+ * A demo course has no revision recommendation: nothing has been analysed, so
+ * there are no evidence-grounded concepts to be weak on. Edvance says what to
+ * do to get there rather than inventing a focus.
+ */
+const NO_REVISION: Course["revision"] = {
+  status: "not-analyzed",
+  errorCode: null,
+  errorSummary: null,
+  generatedAt: null,
+  provider: null,
+  nextAction:
+    "Analyse the course to extract the concepts your materials teach, then record some practice.",
+  focus: [],
+  practiceQuestions: [],
+};
+
 export const SEED_COURSES: Course[] = [
   {
     id: "ai-foundry",
@@ -84,6 +101,7 @@ export const SEED_COURSES: Course[] = [
     },
     intelligence: NO_INTELLIGENCE,
     attempts: [],
+    revision: NO_REVISION,
   },
   {
     id: "storytelling-with-data",
@@ -125,5 +143,6 @@ export const SEED_COURSES: Course[] = [
     },
     intelligence: NO_INTELLIGENCE,
     attempts: [],
+    revision: NO_REVISION,
   },
 ];

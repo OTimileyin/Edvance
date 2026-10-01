@@ -234,6 +234,54 @@ function mockAssessment(request: AiRequest, scenario: string, usage: AiResponse[
   });
 }
 
+/**
+ * Deterministic revision answer: one practice question per supplied weak
+ * concept, each citing a real supplied chunk. Every id it returns was given to
+ * it, which is what the pipeline's validators then check.
+ */
+function mockRevision(request: AiRequest, scenario: string, usage: AiResponse["usage"]): AiResponse {
+  const concepts = request.concepts ?? [];
+  const evidence = request.evidence ?? [];
+  const json = (value: unknown) => ({ text: JSON.stringify(value), usage });
+
+  if (scenario === "invalid-concept-id") {
+    return json({
+      questions: [
+        {
+          conceptId: "concept-does-not-exist",
+          question: "A question about a concept that was never supplied.",
+          rationale: "Fabricated.",
+          sourceChunkId: evidence[0]?.id ?? "chunk-does-not-exist",
+        },
+      ],
+    });
+  }
+  if (scenario === "invalid-chunk-id") {
+    return json({
+      questions: [
+        {
+          conceptId: concepts[0]?.id ?? "concept-does-not-exist",
+          question: "A question citing evidence that does not exist.",
+          rationale: "Fabricated evidence.",
+          sourceChunkId: "chunk-does-not-exist",
+        },
+      ],
+    });
+  }
+  if (scenario === "insufficient" || concepts.length === 0 || evidence.length === 0) {
+    return json({ questions: [] });
+  }
+
+  return json({
+    questions: concepts.map((concept, index) => ({
+      conceptId: concept.id,
+      question: `Practice ${concept.name}: explain it in your own words.`,
+      rationale: `Exercises ${concept.name}, which you are currently working on.`,
+      sourceChunkId: evidence[index % evidence.length].id,
+    })),
+  });
+}
+
 function mockGenerate(request: AiRequest): AiResponse {
   const scenario = request.mockScenario ?? optionalEnv("EDVANCE_AI_MOCK") ?? "simple";
   const usage = { model: `mock:${scenario}`, inputTokens: 0, outputTokens: 0 };
@@ -246,6 +294,9 @@ function mockGenerate(request: AiRequest): AiResponse {
   }
   if (request.kind === "assessment") {
     return mockAssessment(request, scenario, usage);
+  }
+  if (request.kind === "revision") {
+    return mockRevision(request, scenario, usage);
   }
   if (scenario === "invalid-chunk-id") {
     const concepts = mockConceptsFor(request.evidence).slice(0, 1);

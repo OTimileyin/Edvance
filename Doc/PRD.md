@@ -1312,6 +1312,52 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. `s
 
 ---
 
+## Change 18 — Phase 9: Targeted Revision
+
+**Date:** 2026-10-02  
+**Requested by:** Product Owner (autonomous completion directive, §15)  
+**Status:** Implemented and verified end to end (deterministic provider)
+
+### Reason
+By Phase 8 the learner knows which concepts are weak, but not what to do about it. A mastery profile that stops at a status list leaves the learner to choose their own next step, which is exactly the gap Edvance exists to close. Phase 9 turns evidence and mastery into the smallest useful next action — and practice written for the weak areas, not drawn at random from the course.
+
+### Alternatives Considered
+- **Letting the model decide what to revise:** rejected. Which concepts are weak is a fact about the learner's own recorded practice, so it is derived deterministically and needs no model. Only the practice questions need one.
+- **Generating practice for the whole course:** rejected outright by the acceptance criteria. The model is given only the weak/untested concepts and the evidence that teaches them, so a question can only be written for a real gap.
+- **Recommending by lowest score only:** rejected. The ordering is by weakest evidence of mastery — **Weak** (attempted and mostly wrong) first, then **Developing** (nearest to mastery), then **Untested** (needs a first measurement) — because a failed attempt needs remediation before a fresh one needs starting. A **Mastered** concept is never recommended.
+- **Allowing a generated question with no cited evidence:** rejected. A question the course cannot answer is worthless and would be an invented citation, so the whole response is discarded.
+- **Storing generated practice beside hand-written assessment questions:** rejected. Generated practice is a distinct, disposable artefact tied to the current weak areas, so it lives in its own table and is replaced on each generation.
+
+### Decision
+- **The recommendation is deterministic.** `lib/revision.ts` builds the focus (weak → developing → untested, Mastered excluded) and the single next action from mastery and the course's evidence. It runs on every read, so the recommendation is always current and costs nothing.
+- **Schema.** Migration `0007_targeted_revision.sql` adds `practice_question` (the question, its concept, a rationale, and the real material/location it was grounded in) and `revision_plan` (per-course generation state, mirroring `course_analysis` and `assessment_analysis`, including a `generated_for` weak-area fingerprint).
+- **Only the weak areas are sent.** `getConceptEvidenceChunks` loads exactly the chunks that teach the focus concepts, scoped to this learner and course. The prompt offers only those concepts and that evidence, so the model never sees the rest of the course.
+- **Every reference is proved real.** `resolveRevisionReferences` rejects the whole response if a question names a concept that was not supplied or cites a chunk that was not supplied — the same honesty rule as Phases 6 and 7. Questions are bounded (`MAX_PRACTICE_QUESTIONS` 12).
+- **Practice feeds mastery.** A generated question can be recorded as right or wrong through the Phase 8 practice endpoint, so the mastery profile — and therefore the recommendation and the weak-area fingerprint — updates immediately.
+- **Staleness is free.** When mastery moves, the fingerprint changes and the stored plan becomes `needs-reanalysis` with no model call; the learner regenerates only when they choose to. An up-to-date generation is never recomputed. Recording an attempt never spends a model call.
+- **Honest states.** A course that has not been analysed is refused with 409; a course with no concepts records `insufficient-evidence`; a fully-mastered course records `nothing-to-revise`; a weak area with no stored evidence records `insufficient-evidence` — each without a model call.
+- **A new Revision tab** shows the next action, the focus with its evidence, the generation state, and the targeted practice with a right/wrong record per question.
+
+### Verification
+Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. `scripts/test-targeted-revision.mjs` reports **72 passed, 0 failed** against a dev server (port 3260) started with the deterministic provider; the Phase 8 suite reports **48 passed, 0 failed**, Phase 7 **76**, Phase 6 **59**, and the Phase 5.6 regression **91**. The secret scan is clean, and the database and bucket were returned to baseline afterwards (`practice_question` 0, `revision_plan` 0; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments / 20 mastery rows unchanged; bucket 0 objects).
+
+- **Recommendation PASS:** on the six-part FATHOM fixture with no practice, all six Untested concepts were in focus and the next action named the first one and its real `Section: …` evidence — with no model call and no `revision_plan` row.
+- **Targeted generation PASS:** the model produced one question per weak concept, each naming a supplied concept, citing a real `Section: …` location, and stored with the plan's weak-area fingerprint and safe provider metadata. No question ever pointed at another course's concept.
+- **Cost control PASS:** a second generation returned `up-to-date` and did not duplicate the stored questions.
+- **Re-targeting PASS:** mastering *Frame* and failing *Assemble* moved the recommendation — *Frame* left the focus, *Assemble* became the recommended first action, the stored plan became `needs-reanalysis`, and regeneration wrote five questions with none for the Mastered concept and replaced the stored set.
+- **Nothing-to-revise PASS:** with all six concepts Mastered the focus emptied and a generation recorded `nothing-to-revise` with zero questions.
+- **Rejection PASS:** an invalid concept id, an invalid chunk id, malformed output and a provider failure each produced 502, zero stored questions, a `failed` plan and a safe error summary that never echoed raw output.
+- **Insufficient evidence PASS:** a model that returned no questions recorded `insufficient-evidence` honestly with no questions invented.
+- **Gate and isolation PASS:** generation before the course is analysed is refused with 409; another learner gets 404 and an unauthenticated request 401. A seeded demo course refuses generation until it is analysed.
+
+### Impact on this document
+- §15 data model: `practice_question` and `revision_plan` are added (migration `0007`).
+- §16.1: Phase 9 is complete and verified end to end.
+- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+- **Not claimed:** the model never chooses what to revise — that is derived from recorded practice — and never writes practice for a concept outside the learner's actual weak areas, nor cites evidence that was not supplied.
+
+---
+
 # Appendix B — Lesson 6 Verification Checklist
 
 ## Task 1 — Implementation Plan

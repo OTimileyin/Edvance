@@ -290,6 +290,126 @@ export function resolveAssessmentReferences(
   }
 }
 
+/**
+ * The JSON Schema handed to Gemini for targeted revision. The model is given the
+ * learner's weak/untested concepts and the evidence that teaches them, and must
+ * write practice questions that name a supplied concept and cite a supplied
+ * chunk — never a new concept and never an invented citation.
+ */
+export const REVISION_INTELLIGENCE_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    questions: {
+      type: "array",
+      description:
+        "Targeted practice questions, one or more for each supplied concept. Return an empty array only when the supplied evidence cannot support a question.",
+      items: {
+        type: "object",
+        properties: {
+          conceptId: {
+            type: "string",
+            description: "An exact concept id from the supplied focus list.",
+          },
+          question: {
+            type: "string",
+            description:
+              "One practice question for the learner, answerable from the supplied evidence and using the course's own terminology.",
+          },
+          rationale: {
+            type: "string",
+            description: "One short sentence on which part of the concept this question exercises.",
+          },
+          sourceChunkId: {
+            type: "string",
+            description: "An exact chunk id from the supplied evidence list, where the answer is taught.",
+          },
+        },
+        required: ["conceptId", "question", "rationale", "sourceChunkId"],
+      },
+    },
+  },
+  required: ["questions"],
+} as const;
+
+export type ModelPracticeQuestion = {
+  conceptId: string;
+  question: string;
+  rationale: string;
+  sourceChunkId: string;
+};
+
+export type ModelRevisionIntelligence = { questions: ModelPracticeQuestion[] };
+
+/**
+ * Parses and validates raw targeted-practice output. Every field is required:
+ * a practice question with no concept or no cited evidence is worthless to the
+ * learner, so it is rejected rather than stored half-formed.
+ */
+export function parseRevisionIntelligence(raw: string): ModelRevisionIntelligence {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new ModelOutputError("malformed-json", "The model did not return valid JSON.");
+  }
+
+  if (!isRecord(parsed)) {
+    throw new ModelOutputError("malformed-output", "The model response was not a JSON object.");
+  }
+  const rawQuestions = parsed.questions;
+  if (!Array.isArray(rawQuestions)) {
+    throw new ModelOutputError("malformed-output", "Field questions must be an array.");
+  }
+
+  const seen = new Set<string>();
+  const questions: ModelPracticeQuestion[] = rawQuestions.map((entry, index) => {
+    if (!isRecord(entry)) {
+      throw new ModelOutputError("malformed-output", `questions[${index}] was not an object.`);
+    }
+    const conceptId = requireString(entry.conceptId, `questions[${index}].conceptId`, 200);
+    const question = requireString(entry.question, `questions[${index}].question`, 600);
+    const dedupe = `${conceptId}::${question.toLowerCase().replace(/\s+/g, " ")}`;
+    if (seen.has(dedupe)) {
+      throw new ModelOutputError("duplicate-key", "The same practice question was returned twice.");
+    }
+    seen.add(dedupe);
+    return {
+      conceptId,
+      question,
+      rationale: optionalString(entry.rationale, `questions[${index}].rationale`, 600),
+      sourceChunkId: requireString(entry.sourceChunkId, `questions[${index}].sourceChunkId`, 200),
+    };
+  });
+
+  return { questions };
+}
+
+/**
+ * Proves every reference in the generated practice is real: the concept was one
+ * of the weak areas supplied, and the cited chunk was in the supplied evidence
+ * (all of which was loaded scoped to this learner and this course).
+ */
+export function resolveRevisionReferences(
+  model: ModelRevisionIntelligence,
+  allowedConceptIds: ReadonlySet<string>,
+  allowedChunkIds: ReadonlySet<string>,
+): void {
+  for (const question of model.questions) {
+    if (!allowedConceptIds.has(question.conceptId)) {
+      throw new ModelOutputError(
+        "unknown-concept",
+        "Generated practice named a concept that was not supplied.",
+      );
+    }
+    if (!allowedChunkIds.has(question.sourceChunkId)) {
+      throw new ModelOutputError(
+        "unknown-chunk",
+        "Generated practice cited evidence that was not supplied.",
+      );
+    }
+  }
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
