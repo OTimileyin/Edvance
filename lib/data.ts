@@ -6,6 +6,22 @@ import type { Course } from "./types";
  * time a learner opens their workspace. Real ingestion (Phase 5) will replace
  * it with materials the learner actually uploads.
  */
+/**
+ * Demo workspaces have no real intelligence: nothing has been analysed, and
+ * Edvance never ships a seeded concept as if it were extracted from evidence.
+ */
+const NO_INTELLIGENCE: Course["intelligence"] = {
+  status: "not-analyzed",
+  errorCode: null,
+  errorSummary: null,
+  conceptCount: 0,
+  relationshipCount: 0,
+  analyzedAt: null,
+  provider: null,
+  concepts: [],
+  relationships: [],
+};
+
 export const SEED_COURSES: Course[] = [
   {
     id: "ai-foundry",
@@ -48,6 +64,7 @@ export const SEED_COURSES: Course[] = [
         "Assessment wording asks for five components while the supplied lesson evidence contains six (Purpose, Role, Objective, Method, Parameters, Target Output).",
       nextAction: "Review the relevant lesson evidence before attempting the assessment.",
     },
+    intelligence: NO_INTELLIGENCE,
   },
   {
     id: "storytelling-with-data",
@@ -85,5 +102,6 @@ export const SEED_COURSES: Course[] = [
       reason: "The assessment wording matches the supplied lesson evidence. No contradictions detected.",
       nextAction: "Attempt the practice set on chart selection.",
     },
+    intelligence: NO_INTELLIGENCE,
   },
 ];

@@ -14,6 +14,7 @@ export default function CourseMastery() {
   const mastered = course.concepts.filter((concept) => concept.status === "Mastered").length;
   const developing = course.concepts.filter((concept) => concept.status === "Developing").length;
   const weak = course.concepts.filter((concept) => concept.status === "Weak").length;
+  const untested = course.concepts.filter((concept) => concept.status === "Untested").length;
 
   return (
     <>
@@ -38,6 +39,7 @@ export default function CourseMastery() {
               <span className="chip">Mastered · {mastered}</span>
               <span className="chip">Developing · {developing}</span>
               <span className="chip">Weak · {weak}</span>
+              {untested > 0 && <span className="chip">Untested · {untested}</span>}
             </div>
           </section>
 
@@ -87,5 +89,8 @@ export default function CourseMastery() {
 function fillClass(status: string): string {
   if (status === "Mastered") return "progress-mastered";
   if (status === "Developing") return "progress-developing";
-  return "progress-weak";
+  if (status === "Weak") return "progress-weak";
+  // An untested concept has no recorded performance, so its bar stays empty
+  // rather than borrowing a status it has not earned.
+  return "";
 }

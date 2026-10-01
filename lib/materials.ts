@@ -20,6 +20,15 @@ export type MaterialKind = {
   mime: string;
 };
 
+/**
+ * Accepted material formats.
+ *
+ * Only formats Edvance can actually extract evidence from are accepted: a file
+ * that uploads but yields no readable text would give the learner a dead end.
+ * Legacy binary `.doc` and `.ppt` are deliberately excluded — there is no
+ * reliable text extractor for them, so learners are asked to save as `.docx` or
+ * `.pptx` instead.
+ */
 const KINDS: Record<string, MaterialKind> = {
   pdf: { type: "PDF", label: "PDF document", mime: "application/pdf" },
   pptx: {
@@ -27,13 +36,11 @@ const KINDS: Record<string, MaterialKind> = {
     label: "PowerPoint slides",
     mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   },
-  ppt: { type: "Slide", label: "PowerPoint slides", mime: "application/vnd.ms-powerpoint" },
   docx: {
     type: "Notes",
     label: "Word document",
     mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   },
-  doc: { type: "Notes", label: "Word document", mime: "application/msword" },
   txt: { type: "Notes", label: "Plain-text notes", mime: "text/plain" },
   md: { type: "Notes", label: "Markdown notes", mime: "text/markdown" },
   vtt: { type: "Transcript", label: "WebVTT transcript", mime: "text/vtt" },

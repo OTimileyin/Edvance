@@ -1,4 +1,70 @@
-export type ConceptStatus = "Mastered" | "Developing" | "Weak";
+export type ConceptStatus = "Mastered" | "Developing" | "Weak" | "Untested";
+
+/** How well the course's own evidence establishes a concept. */
+export type EvidenceStatus = "SUPPORTED" | "PARTIALLY_SUPPORTED" | "INSUFFICIENT_EVIDENCE";
+
+/** The small, justified relationship vocabulary concepts may use. */
+export type RelationshipKind = "prerequisite" | "part_of" | "related_to" | "contrasts_with";
+
+/**
+ * Where a course's intelligence stands. `needs-reanalysis` means materials
+ * changed after the last analysis; `insufficient-evidence` is a valid outcome,
+ * not a failure.
+ */
+export type AnalysisStatus =
+  | "not-analyzed"
+  | "analyzing"
+  | "ready"
+  | "failed"
+  | "insufficient-evidence"
+  | "needs-reanalysis";
+
+/** One piece of real evidence behind a concept: a chunk of a real material. */
+export interface ConceptEvidenceRef {
+  id: string;
+  materialId: string;
+  materialTitle: string;
+  /** Human-readable location, e.g. "Page 7" or "00:04:12–00:04:38". */
+  sourceLocation: string;
+  excerpt: string | null;
+}
+
+/** A concept the course's own evidence teaches, with its evidence trail. */
+export interface CourseConcept {
+  id: string;
+  name: string;
+  /** The exact term the course uses, preserved verbatim. */
+  instructorTerm: string | null;
+  definition: string | null;
+  evidenceStatus: EvidenceStatus | null;
+  confidence: number | null;
+  evidence: ConceptEvidenceRef[];
+}
+
+/** A justified relationship between two of a course's concepts. */
+export interface CourseRelationship {
+  id: string;
+  fromConceptId: string;
+  toConceptId: string;
+  fromConcept: string;
+  toConcept: string;
+  kind: RelationshipKind;
+  justification: string;
+}
+
+/** The complete intelligence state shown on a course's Intelligence page. */
+export interface CourseIntelligence {
+  status: AnalysisStatus;
+  errorCode: string | null;
+  errorSummary: string | null;
+  conceptCount: number;
+  relationshipCount: number;
+  analyzedAt: string | null;
+  /** Safe provider metadata (model and token counts); never prompt contents. */
+  provider: { model?: string; inputTokens?: number; outputTokens?: number } | null;
+  concepts: CourseConcept[];
+  relationships: CourseRelationship[];
+}
 
 export type SourceType = "Lecture" | "Slide" | "Transcript" | "Notes" | "Outline" | "PDF";
 
@@ -68,4 +134,5 @@ export interface Course {
   sources: SourceItem[];
   assessments: AssessmentItem[];
   consistency: CourseConsistency;
+  intelligence: CourseIntelligence;
 }

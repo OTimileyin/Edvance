@@ -9,9 +9,11 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "migrate": "infisical run --env=dev -- node scripts/migrate.mjs",
-    "test:ingestion": "infisical run --env=dev -- node scripts/test-ingestion.mjs"
+    "test:ingestion": "infisical run --env=dev -- node scripts/test-ingestion.mjs",
+    "test:intelligence": "infisical run --env=dev -- node scripts/test-course-intelligence.mjs"
   },
   "dependencies": {
+    "@google/genai": "^2.25.0",
     "@supabase/supabase-js": "^2.117.2",
     "better-auth": "^1.7.6",
     "jszip": "^3.10.2",

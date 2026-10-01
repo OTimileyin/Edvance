@@ -1162,6 +1162,62 @@ Verified live against the real application (dev server on port 3250 started via 
 - `docs/IMPLEMENTATION_PLAN.md`, `README.md`, and `conversation.md` updated to match.
 - **Not claimed:** no AI provider (Gemini or otherwise), prompt, concept extraction, embeddings, or vector database was added. The seeded demo sources remain demo data and are labelled as such.
 
+## Change 15 — Phase 6: Course Intelligence
+
+**Date:** 2026-10-01  
+**Requested by:** Product Owner (autonomous completion directive, §12)  
+**Status:** Implemented and verified end to end, including a real Google Gemini call
+
+### Reason
+Phase 5.6 produced trustworthy, location-tagged evidence but nothing yet reasoned over it. Edvance's product promise — what is being tested, where it was taught, whether the evidence agrees — begins with knowing what a course actually teaches and where. Phase 6 turns `material_chunk` into that structured intelligence, without ever inventing a citation.
+
+### Alternatives Considered
+- **Supporting legacy binary `.doc`/`.ppt`:** rejected for the MVP. There is no reliable server-side text extractor for the binary Office formats, so keeping them would let a learner upload a file Edvance can never read. Edvance now accepts only formats it can extract: `.pdf`, `.txt`, `.md`, `.docx`, `.pptx`, `.vtt`, `.srt`.
+- **Multiple AI providers / provider routing:** rejected by the directive and by the dependency policy. One provider (Google Gemini) keeps the surface small.
+- **A schema-only guarantee:** rejected. Structured output constrains generation but does not guarantee truth, so the response is re-validated at runtime and every citation is resolved against the real evidence.
+- **Storing raw model output for debugging:** rejected — it may contain course contents. Only a short failure code and a user-safe summary are persisted.
+- **Analysing automatically on page load:** rejected. It would spend money without the learner asking, so analysis is only ever an explicit action, and stored intelligence that is already current is not re-analysed.
+- **A vector database or embeddings:** rejected as out of scope; bounded evidence and one prompt are sufficient at this stage.
+
+### Decision
+- **One provider, server-only.** Google Gemini through the official `@google/genai` server SDK (`^2.25.0`, pinned below `3.0.0`). `lib/ai/gemini.ts` is the only module that reaches a provider; the key (`GEMINI_API_KEY`, optional `GEMINI_MODEL`) is read from Infisical, never logged and never sent to the browser.
+- **Layout.** `lib/ai/types.ts`, `schemas.ts`, `prompts.ts`, `gemini.ts`, `course-intelligence.ts`.
+- **Strict validation.** `schemas.ts` holds the structured-output JSON Schema and a runtime validator; `resolveReferences` proves every cited chunk id is one that was actually sent, all of which were loaded scoped to this learner and this course. Unknown, cross-course and cross-user ids are rejected and the whole response — never a partial one — is discarded.
+- **Evidence states.** `SUPPORTED`, `PARTIALLY_SUPPORTED`, `INSUFFICIENT_EVIDENCE`. Insufficient evidence is a valid successful outcome. `INSUFFICIENT_EVIDENCE` concepts are stored with no evidence so the gap is visible rather than hidden.
+- **Instructor terminology.** The model is instructed to return the course's own term as `instructorTerm`, stored verbatim in `concept.instructor_term`, and the UI shows it whenever it differs from the canonical name.
+- **Evidence.** `concept_evidence` links a concept to a real `material_chunk`, its material and its human-readable location, plus a verbatim excerpt. A citation is never a string the model produced on its own.
+- **Relationships.** A small justified set: `prerequisite`, `part_of`, `related_to`, `contrasts_with`. Definitions and endpoints are validated; a relationship to an undefined concept is rejected.
+- **Analysis state.** `course_analysis.status` is `not-analyzed` / `analyzing` / `ready` / `failed` / `insufficient-evidence` / `needs-reanalysis`. An `analyzing` status is a light lock. The row also stores an **evidence fingerprint** — the material ids and chunk counts, no contents — so a new, removed or changed material makes the stored intelligence `needs-reanalysis` on the next read, with no model call.
+- **Cost control.** Analysis runs only on `POST /api/courses/[courseId]/analyse`; context is bounded (`MAX_EVIDENCE_CHUNKS` 150, `MAX_EVIDENCE_CHARS` 120 000); an up-to-date course returns `outcome: "up-to-date"` without calling the model; there is no recursion or automatic re-analysis; and only safe usage metadata (model, token counts) is stored.
+- **Schema.** Migration `0004_course_intelligence.sql` adds `course_analysis`, `concept_evidence` and `concept_relationship`, and extends `concept` with `origin` (`seed`/`analysis`), `evidence_status` and `confidence`. Real analysis replaces a course's concepts, so demo concepts are never shown as if extracted. No new database.
+- **Test provider.** `EDVANCE_AI_MOCK` selects a deterministic, evidence-grounded stand-in for Gemini so the pipeline can be tested without a key or a network call. It is refused when `NODE_ENV === production`, so a mock can never answer a real learner.
+- **Provider resilience.** The SDK's retry policy is pinned explicitly (three attempts, initial 1s, capped at 8s) rather than left at its multi-minute default, so a transient capacity 503 or rate-limit 429 is retried a bounded number of times within one learner action and a non-transient error fails immediately. The live call is exercised by `scripts/verify-gemini-live.mjs`.
+
+### Verification
+Typecheck (`npx tsc --noEmit`) exit 0. `scripts/test-course-intelligence.mjs` reports **59 passed, 0 failed** against a dev server (port 3260) started with the deterministic provider; the Phase 5.6 regression (`scripts/test-ingestion.mjs`) reports **91 passed, 0 failed** on the same server. The database was returned to baseline afterwards (`concept_evidence` 0, `concept_relationship` 0, `course_analysis` 0, `material_chunk` 0, `material_ingestion_job` 0; users, courses, materials, concepts and assessments unchanged) and the bucket was emptied.
+
+- **Golden fixture PASS:** an original fictional six-part framework — the **FATHOM** framework (Frame, Assemble, Trace, Hold, Order, Move) — was uploaded as one material and all six components were extracted, each with its own evidence and a `Section: …` location. This fixture is reused in Phase 7 for the six-versus-five inconsistency.
+- **Instructor terminology PASS:** every concept's `instructorTerm` matched the course's own wording exactly.
+- **Evidence resolution PASS:** every cited chunk resolved to a stored `material_chunk`; a fabricated chunk id was rejected with 502 and stored nothing.
+- **Multi-source PASS:** one concept taught in two materials stored evidence from both.
+- **Insufficient evidence PASS:** an empty course and a model-returned `INSUFFICIENT_EVIDENCE` both recorded that state honestly, with no concepts invented.
+- **Validation and failure PASS:** malformed structured output, an invalid chunk id and a provider failure each produced 502, zero persisted concepts, and a safe `error_summary` that never echoed the raw output.
+- **Staleness PASS:** adding a material after a successful analysis changed the state to `needs-reanalysis` on the next read.
+- **Cost control PASS:** re-analysing an up-to-date course returned `up-to-date` without a model call.
+- **Duplicate handling PASS:** two model concepts for the same idea merged into one with combined evidence.
+- **Ownership isolation PASS:** another learner could not analyse the course (404); an unauthenticated request was refused (401); a demo-only workspace was recorded as `insufficient-evidence` rather than fabricated.
+- **Upload cleanup PASS:** `.doc` and `.ppt` uploads are rejected with 415; the seven supported formats still pass.
+
+- **Live Google Gemini PASS:** the one gate that a deterministic provider cannot prove is now closed. With `GEMINI_API_KEY` present in Infisical, `scripts/verify-gemini-live.mjs` ran against the live API (model `gemini-3.5-flash`) and reported **26 passed, 0 failed**: all six FATHOM components extracted with exact instructor terminology, every citation resolved to a real `Section: …` chunk whose excerpt is a verbatim substring of the uploaded material, one justified `prerequisite` relationship between real concepts, cost control holding, and staleness working. The stored analysis recorded safe provider metadata only (model, 737 input / 718 output tokens). The `dev` environment pins `GEMINI_MODEL=gemini-3.5-flash` because the `gemini-flash-latest` alias was intermittently capacity-limited during verification; the code default remains the maintained `-latest` alias, protected by the bounded retry.
+
+The live provider was reached through the running app's `POST /api/courses/[courseId]/analyse` — never directly from a client — so the call also proves the authentication, ownership and persistence path against a real model.
+
+### Impact on this document
+- §15 data model gains `course_analysis`, `concept_evidence` and `concept_relationship`, and `concept` gains `origin`, `evidence_status` and `confidence` (migration `0004`).
+- §16.1: Phase 6 is implemented and verified end to end — against a deterministic provider for every branch, and against the live Google Gemini API for the real model output. AI is no longer "not yet implemented" — the provider is Google Gemini only.
+- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `.env.example` updated to match; `GEMINI_API_KEY` documented as a server-only secret.
+- **Not claimed:** no second AI provider, embeddings, vector database, or auto-analysis was added. Demo concepts are removed from a course the moment it is really analysed.
+
 ---
 
 # Appendix B — Lesson 6 Verification Checklist

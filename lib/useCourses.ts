@@ -128,6 +128,19 @@ export async function removeMaterial(courseId: string, materialId: string): Prom
   }
 }
 
+/**
+ * Runs Edvance's course analysis for a course, returning its refreshed state.
+ * This is the only client entry point that triggers a model call, and it is
+ * always an explicit learner action. Throws with a display message on failure.
+ */
+export async function analyseCourse(courseId: string): Promise<Course> {
+  const response = await fetch(`/api/courses/${courseId}/analyse`, { method: "POST" });
+  if (!response.ok) {
+    throw new Error(await readError(response, "Course analysis did not finish. Please try again."));
+  }
+  return ((await response.json()) as { course: Course }).course;
+}
+
 /** Adds an assessment question to a course. Throws with a display message on failure. */
 export async function addAssessmentQuestion(
   courseId: string,

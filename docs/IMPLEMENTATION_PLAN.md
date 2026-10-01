@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** In progress — Phase 5 (private Supabase Storage) and Phase 5.6 (text extraction & evidence chunking) complete and verified end to end (2026-10-01); next phase Phase 6
+**Status:** In progress — Phase 5 (private Supabase Storage), Phase 5.6 (text extraction & evidence chunking) and Phase 6 (Course Intelligence, including a verified live Google Gemini call) complete and verified end to end (2026-10-01); next phase Phase 7
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -82,7 +82,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 ### Current Status
 
-**Current phase:** Phase 5.6 — Text Extraction & Evidence Chunking — **complete and verified end to end** (`Doc/PRD.md` Appendix A, Change 14). It builds on Phase 5 — Course Material Ingestion (Supabase Storage), complete and verified (`Doc/PRD.md` Appendix A, Changes 12–13). Phase 4 is complete (Change 11), on top of Phases 1–3 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
+**Current phase:** Phase 6 — Course Intelligence — **complete and verified end to end, including a real Google Gemini call** (`GEMINI_API_KEY` now present in Infisical; see Appendix A, Change 15). It builds on Phase 5.6 — Text Extraction & Evidence Chunking — complete and verified end to end (`Doc/PRD.md` Appendix A, Change 14), which builds on Phase 5 — Course Material Ingestion (Supabase Storage), complete and verified (Changes 12–13). Phase 4 is complete (Change 11), on top of Phases 1–3 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
 
 **Completed:**
 - Phase 1 — Design System & Assessment Intelligence Prototype (static local pages, mock data; `design.html`, `assessment-intelligence.html`).
@@ -127,6 +127,13 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
   - The course workspace no longer uses `localStorage`: the hooks fetch from the API and the create/add-question forms POST to it. The dead browser-storage modules were deleted.
   - New learners are seeded with the demo workspaces server-side (idempotent, concurrency-safe); the seeded rows now live in PostgreSQL rather than the browser.
   - `source_mapping` exists in the schema and repository but is not yet surfaced in the UI — populating it is Phase 6–7 work.
+- Phase 6 — Course Intelligence.
+  - `db/migrations/0004_course_intelligence.sql` adds `course_analysis` (status, safe `error_code`/`error_summary`, evidence fingerprint, counts, provider metadata), extends `concept` with `origin`/`evidence_status`/`confidence`, and adds `concept_evidence` (concept → real material + chunk + location + verbatim excerpt) and `concept_relationship` (`prerequisite`/`part_of`/`related_to`/`contrasts_with`).
+  - `lib/ai/` is the server-only intelligence layer: `gemini.ts` (the one provider, plus an env-gated deterministic test provider that is refused in production), `prompts.ts`, `schemas.ts` (the structured-output JSON Schema plus a strict runtime validator and reference resolver), `types.ts`, and `course-intelligence.ts` (bound context → generate → validate → resolve → de-duplicate).
+  - `POST /api/courses/[courseId]/analyse` authenticates, verifies ownership, loads evidence scoped to the learner, calls the model, validates every cited chunk against the input, and persists concepts, evidence, relationships and analysis state. It never runs on a page refresh, and it will not spend a model call when the stored intelligence is already up to date.
+  - A new **Intelligence** workspace tab shows the analysis state, each concept with its evidence status, definition, instructor term and the exact evidence behind it, plus justified relationships. Stored intelligence becomes **needs re-analysis** as soon as materials change.
+  - Legacy `.doc` and `.ppt` uploads are no longer accepted, since Edvance has no reliable extractor for them; `lib/materials.ts` and the docs were updated.
+  - Verified with `scripts/test-course-intelligence.mjs` — **59 passed, 0 failed** — plus the Phase 5.6 regression (**91 passed, 0 failed**), using an original six-part golden fixture (the fictional **FATHOM** framework). The **live Google Gemini call** is also verified against that same fixture by `scripts/verify-gemini-live.mjs` — **26 passed, 0 failed**: six concepts with exact instructor terminology, every citation resolved to a real `Section: …` chunk, and a justified relationship.
 - Phase 5.6 — Text Extraction & Evidence Chunking.
   - `db/migrations/0003_material_ingestion.sql` adds `material_ingestion_job` (status `pending|processing|completed|failed`, timestamps, safe `error_code`/`error_summary`, derived `metadata`) and `material_chunk` (ordered `ordinal`, `content`, human-readable `source_location`, structured `metadata`), both cascading from `learning_material`.
   - `lib/extraction/` is a server-only extraction layer: PDF (`pdfjs-dist`), DOCX (`mammoth`), and PPTX (`jszip` + Open XML), plus hand-written TXT, Markdown, WebVTT, and SRT parsers, all normalised to `{ text, location }`; a deterministic chunker turns blocks into ordered, location-tagged evidence chunks without splitting sentences.
@@ -140,11 +147,10 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 - Real extraction and chunking for all seven formats, correct page/slide/timestamp/section/line locations, ordered chunks, ingestion jobs, ownership isolation, failed-ingestion states, and delete cascades — `scripts/test-ingestion.mjs` reports 91 passed, 0 failed. See `Doc/PRD.md` Appendix A, Change 14.
 
 **Not yet implemented:**
-- Course Intelligence — AI-assisted concept extraction over the stored evidence. No AI provider is configured.
-- Live AI APIs (Gemini or otherwise).
+- Assessment Intelligence (Phase 7) and everything after it.
 - Production deployment.
 
-**Next phase:** Phase 6 — Course Intelligence.
+**Next phase:** Phase 7 — Assessment Intelligence.
 
 ---
 
@@ -333,18 +339,32 @@ This is the **Lesson 6 deliverable**.
 
 ### Phase 6 — Course Intelligence
 
-**Goal:** Extract structured knowledge while preserving instructor terminology and source evidence.
+**Technology:** Google Gemini, exclusively, through the official `@google/genai` server SDK. Server-only; the browser never calls a provider.
+
+**Goal:** Turn stored `material_chunk` evidence into real structured course intelligence, preserving instructor terminology and source evidence.
 
 **Outputs:**
 - Concept extraction from course materials.
 - Instructor terminology/framework preservation.
 - Concept-to-source references (where each concept was taught).
 - Course map of concept relationships.
+- An analysis state (`Not analyzed`/`Analyzing`/`Ready`/`Analysis failed`/`Insufficient evidence`/`Needs re-analysis`) that goes stale when materials change.
+
+**Delivered:**
+- `db/migrations/0004_course_intelligence.sql`: `course_analysis`, `concept_evidence`, `concept_relationship`, and `concept.origin`/`evidence_status`/`confidence`.
+- `lib/ai/`: provider wrapper, prompt builders (evidence-only, exact chunk ids, preserve course terminology), the structured-output schema, a strict runtime validator plus reference resolver, and the orchestration pipeline.
+- `POST /api/courses/[courseId]/analyse` with authentication, ownership, evidence loading, bounded context, strict validation, and transactional persistence.
+- Evidence states `SUPPORTED` / `PARTIALLY_SUPPORTED` / `INSUFFICIENT_EVIDENCE`; `INSUFFICIENT_EVIDENCE` is a successful outcome. Relationships use the small `prerequisite`/`part_of`/`related_to`/`contrasts_with` set.
+- The **Intelligence** workspace tab, and the removal of legacy `.doc`/`.ppt` uploads.
 
 **Acceptance Criteria:**
-- [ ] Concepts and instructor terms are extracted from supplied materials.
-- [ ] Each extracted claim carries a `sourceReference`.
-- [ ] Concepts map to source locations in the original material.
+- [x] Concepts and instructor terms are extracted from supplied materials.
+- [x] Each extracted claim carries its evidence: a real material, chunk and human-readable location.
+- [x] Concepts map to source locations in the original material.
+- [x] Unknown, cross-course and cross-user chunk ids are rejected, and a malformed or unverifiable response is rejected whole.
+- [x] Analysis state works, staleness works, ownership isolation holds, and no model call happens on a page refresh or when already up to date.
+- [x] Tests, typecheck, secret scan and the Phase 5.6 regression pass; documentation updated.
+- [x] **Real Google Gemini call verified** — `scripts/verify-gemini-live.mjs` reports **26 passed, 0 failed** against the live API (model `gemini-3.5-flash`); the six FATHOM components were extracted with exact instructor terminology and real, resolvable evidence.
 
 ---
 

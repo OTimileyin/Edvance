@@ -1,14 +1,23 @@
 import { pool } from "@/lib/db";
 import { SEED_COURSES } from "@/lib/data";
+import type { AiUsage, EvidenceChunk } from "@/lib/ai/types";
+import type { AnalyzedConcept, AnalyzedRelationship } from "@/lib/ai/course-intelligence";
 import type {
+  AnalysisStatus,
   AssessmentItem,
+  ConceptEvidenceRef,
   ConceptMastery,
   ConceptStatus,
   ConsistencyStatus,
   Course,
+  CourseConcept,
   CourseConsistency,
+  CourseIntelligence,
+  CourseRelationship,
+  EvidenceStatus,
   IngestionMetadata,
   IngestionStatus,
+  RelationshipKind,
   SourceItem,
   SourceType,
 } from "@/lib/types";
@@ -68,11 +77,80 @@ type ConsistencyRow = {
   next_action: string;
 };
 
+type AnalysisRow = {
+  course_id: string;
+  status: string;
+  error_code: string | null;
+  error_summary: string | null;
+  evidence_fingerprint: string | null;
+  concept_count: number;
+  relationship_count: number;
+  provider_metadata: { model?: string; inputTokens?: number; outputTokens?: number } | null;
+  analyzed_at: Date | null;
+};
+
+type CourseConceptRow = {
+  id: string;
+  course_id: string;
+  name: string;
+  instructor_term: string | null;
+  definition: string | null;
+  evidence_status: string | null;
+  confidence: string | null;
+};
+
+type ConceptEvidenceRow = {
+  id: string;
+  concept_id: string;
+  material_id: string;
+  material_title: string;
+  source_location: string;
+  excerpt: string | null;
+};
+
+type ConceptRelationshipRow = {
+  id: string;
+  course_id: string;
+  from_concept_id: string;
+  to_concept_id: string;
+  from_name: string;
+  to_name: string;
+  kind: string;
+  justification: string;
+};
+
 const DEFAULT_CONSISTENCY: CourseConsistency = {
   status: "insufficient-evidence",
   reason: "No lesson evidence has been added yet, so consistency cannot be evaluated.",
   nextAction: "Add course materials to begin evaluating evidence.",
 };
+
+const DEFAULT_INTELLIGENCE: CourseIntelligence = {
+  status: "not-analyzed",
+  errorCode: null,
+  errorSummary: null,
+  conceptCount: 0,
+  relationshipCount: 0,
+  analyzedAt: null,
+  provider: null,
+  concepts: [],
+  relationships: [],
+};
+
+/**
+ * A stable fingerprint of the analysable evidence in a course: the ids and
+ * chunk counts of every material that yielded chunks. It changes whenever a
+ * material is added or removed or its extraction changes, which is exactly when
+ * stored intelligence becomes stale. It contains no course contents.
+ */
+export function evidenceFingerprint(sources: SourceItem[]): string {
+  const parts = sources
+    .map((source) => ({ id: source.id, chunks: source.ingestion?.chunkCount ?? 0 }))
+    .filter((entry) => entry.chunks > 0)
+    .map((entry) => `${entry.id}:${entry.chunks}`)
+    .sort();
+  return `v1:${parts.join(",")}`;
+}
 
 function newId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
@@ -129,7 +207,7 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
   if (courseRows.length === 0) return [];
   const ids = courseRows.map((row) => row.id);
 
-  const [materials, concepts, assessments, findings] = await Promise.all([
+  const [materials, concepts, assessments, findings, analysis, courseConcepts] = await Promise.all([
     pool.query<MaterialRow>(
       `select ${MATERIAL_COLUMNS}
          from learning_material m
@@ -161,6 +239,43 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
         order by course_id, created_at desc`,
       [ids],
     ),
+    pool.query<AnalysisRow>(
+      `select course_id, status, error_code, error_summary, evidence_fingerprint,
+              concept_count, relationship_count, provider_metadata, analyzed_at
+         from course_analysis
+        where course_id = any($1::text[])`,
+      [ids],
+    ),
+    pool.query<CourseConceptRow>(
+      `select id, course_id, name, instructor_term, definition, evidence_status, confidence
+         from concept
+        where course_id = any($1::text[]) and origin = 'analysis'
+        order by ordinal asc, name asc`,
+      [ids],
+    ),
+  ]);
+
+  const conceptIds = courseConcepts.rows.map((row) => row.id);
+  const [evidenceRows, relationshipRows] = await Promise.all([
+    pool.query<ConceptEvidenceRow>(
+      `select e.id, e.concept_id, e.material_id, m.title as material_title,
+              e.source_location, e.excerpt
+         from concept_evidence e
+         join learning_material m on m.id = e.material_id
+        where e.concept_id = any($1::text[])
+        order by e.created_at asc`,
+      [conceptIds],
+    ),
+    pool.query<ConceptRelationshipRow>(
+      `select r.id, r.course_id, r.from_concept_id, r.to_concept_id,
+              cf.name as from_name, ct.name as to_name, r.kind, r.justification
+         from concept_relationship r
+         join concept cf on cf.id = r.from_concept_id
+         join concept ct on ct.id = r.to_concept_id
+        where r.course_id = any($1::text[])
+        order by r.created_at asc`,
+      [ids],
+    ),
   ]);
 
   const sourcesByCourse = new Map<string, SourceItem[]>();
@@ -175,7 +290,7 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
     const list = conceptsByCourse.get(row.course_id) ?? [];
     list.push({
       name: row.name,
-      status: (row.status ?? "Developing") as ConceptStatus,
+      status: (row.status ?? "Untested") as ConceptStatus,
       score: row.score ?? 0,
     });
     conceptsByCourse.set(row.course_id, list);
@@ -197,17 +312,106 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
     });
   }
 
-  return courseRows.map((row) => ({
-    id: row.id,
-    name: row.title,
-    institution: row.institution,
-    lesson: row.lesson,
-    summary: row.description,
-    concepts: conceptsByCourse.get(row.id) ?? [],
-    sources: sourcesByCourse.get(row.id) ?? [],
-    assessments: assessmentsByCourse.get(row.id) ?? [],
-    consistency: consistencyByCourse.get(row.id) ?? DEFAULT_CONSISTENCY,
-  }));
+  // --- Course intelligence -------------------------------------------------
+  const analysisByCourse = new Map<string, AnalysisRow>();
+  for (const row of analysis.rows) analysisByCourse.set(row.course_id, row);
+
+  const evidenceByConcept = new Map<string, ConceptEvidenceRef[]>();
+  for (const row of evidenceRows.rows) {
+    const list = evidenceByConcept.get(row.concept_id) ?? [];
+    list.push({
+      id: row.id,
+      materialId: row.material_id,
+      materialTitle: row.material_title,
+      sourceLocation: row.source_location,
+      excerpt: row.excerpt,
+    });
+    evidenceByConcept.set(row.concept_id, list);
+  }
+
+  const courseConceptsByCourse = new Map<string, CourseConcept[]>();
+  for (const row of courseConcepts.rows) {
+    const list = courseConceptsByCourse.get(row.course_id) ?? [];
+    list.push({
+      id: row.id,
+      name: row.name,
+      instructorTerm: row.instructor_term,
+      definition: row.definition,
+      evidenceStatus: (row.evidence_status as EvidenceStatus | null) ?? null,
+      confidence: row.confidence === null ? null : Number(row.confidence),
+      evidence: evidenceByConcept.get(row.id) ?? [],
+    });
+    courseConceptsByCourse.set(row.course_id, list);
+  }
+
+  const relationshipsByCourse = new Map<string, CourseRelationship[]>();
+  for (const row of relationshipRows.rows) {
+    const list = relationshipsByCourse.get(row.course_id) ?? [];
+    list.push({
+      id: row.id,
+      fromConceptId: row.from_concept_id,
+      toConceptId: row.to_concept_id,
+      fromConcept: row.from_name,
+      toConcept: row.to_name,
+      kind: row.kind as RelationshipKind,
+      justification: row.justification,
+    });
+    relationshipsByCourse.set(row.course_id, list);
+  }
+
+  return courseRows.map((row) => {
+    const sources = sourcesByCourse.get(row.id) ?? [];
+    const analysisRow = analysisByCourse.get(row.id);
+    return {
+      id: row.id,
+      name: row.title,
+      institution: row.institution,
+      lesson: row.lesson,
+      summary: row.description,
+      concepts: conceptsByCourse.get(row.id) ?? [],
+      sources,
+      assessments: assessmentsByCourse.get(row.id) ?? [],
+      consistency: consistencyByCourse.get(row.id) ?? DEFAULT_CONSISTENCY,
+      intelligence: mapIntelligence(row.id, analysisRow, sources, {
+        concepts: courseConceptsByCourse.get(row.id) ?? [],
+        relationships: relationshipsByCourse.get(row.id) ?? [],
+      }),
+    };
+  });
+}
+
+/**
+ * Builds the intelligence view for one course, computing staleness live: if the
+ * stored analysis is complete but the evidence fingerprint has changed, the
+ * status becomes `needs-reanalysis` without any model call.
+ */
+function mapIntelligence(
+  courseId: string,
+  row: AnalysisRow | undefined,
+  sources: SourceItem[],
+  loaded: { concepts: CourseConcept[]; relationships: CourseRelationship[] },
+): CourseIntelligence {
+  if (!row) return DEFAULT_INTELLIGENCE;
+
+  let status = row.status as AnalysisStatus;
+  if (
+    (status === "ready" || status === "insufficient-evidence") &&
+    row.evidence_fingerprint !== evidenceFingerprint(sources)
+  ) {
+    status = "needs-reanalysis";
+  }
+
+  return {
+    status,
+    errorCode: row.error_code,
+    errorSummary: row.error_summary,
+    conceptCount: row.concept_count,
+    relationshipCount: row.relationship_count,
+    analyzedAt: row.analyzed_at ? row.analyzed_at.toISOString() : null,
+    provider: row.provider_metadata ?? null,
+    concepts: loaded.concepts,
+    relationships: loaded.relationships,
+  };
 }
 
 export async function listCourses(userId: string): Promise<Course[]> {
@@ -608,6 +812,217 @@ export async function listSourceMappings(
     sourceLocation: row.source_location,
     confidence: row.confidence === null ? null : Number(row.confidence),
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Course intelligence (Phase 6)
+// ---------------------------------------------------------------------------
+
+/**
+ * Every stored evidence chunk for one of the learner's courses, in material and
+ * ordinal order. Scoped by the course's owner, so this can never return another
+ * learner's evidence. The caller bounds how much is sent to the model.
+ */
+export async function getCourseEvidence(
+  userId: string,
+  courseId: string,
+): Promise<EvidenceChunk[] | undefined> {
+  if (!(await ownsCourse(userId, courseId))) return undefined;
+  const { rows } = await pool.query<{
+    id: string;
+    material_id: string;
+    material_title: string;
+    source_location: string;
+    content: string;
+  }>(
+    `select ch.id, ch.material_id, m.title as material_title,
+            ch.source_location, ch.content
+       from material_chunk ch
+       join learning_material m on m.id = ch.material_id
+       join course c on c.id = m.course_id
+      where c.id = $1 and c.user_id = $2
+      order by m.uploaded_at asc, ch.ordinal asc`,
+    [courseId, userId],
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    materialId: row.material_id,
+    materialTitle: row.material_title,
+    sourceLocation: row.source_location,
+    content: row.content,
+  }));
+}
+
+/** The stored analysis state for one of the learner's courses. */
+export async function getStoredAnalysis(
+  userId: string,
+  courseId: string,
+): Promise<{ status: AnalysisStatus; fingerprint: string | null } | undefined> {
+  const { rows } = await pool.query<{ status: string; evidence_fingerprint: string | null }>(
+    `select a.status, a.evidence_fingerprint
+       from course_analysis a
+       join course c on c.id = a.course_id
+      where a.course_id = $1 and c.user_id = $2`,
+    [courseId, userId],
+  );
+  const row = rows[0];
+  if (!row) return undefined;
+  return { status: row.status as AnalysisStatus, fingerprint: row.evidence_fingerprint };
+}
+
+/**
+ * Marks an analysis as in progress and records the evidence it is running on.
+ * Setting `analyzing` also acts as a light lock so a double-click cannot start
+ * two overlapping analyses of the same course.
+ */
+export async function markCourseAnalysisAnalyzing(
+  courseId: string,
+  fingerprint: string,
+): Promise<void> {
+  await pool.query(
+    `insert into course_analysis (id, course_id, status, evidence_fingerprint, updated_at)
+     values ($1, $2, 'analyzing', $3, now())
+     on conflict (course_id) do update
+        set status = 'analyzing', evidence_fingerprint = $3,
+            error_code = null, error_summary = null, updated_at = now()`,
+    [newId("analysis"), courseId, fingerprint],
+  );
+}
+
+/** Records a safe analysis failure; never stores raw provider output. */
+export async function failCourseAnalysis(
+  courseId: string,
+  errorCode: string,
+  errorSummary: string,
+): Promise<void> {
+  await pool.query(
+    `insert into course_analysis (id, course_id, status, error_code, error_summary, updated_at)
+     values ($1, $2, 'failed', $3, $4, now())
+     on conflict (course_id) do update
+        set status = 'failed', error_code = $3, error_summary = $4, updated_at = now()`,
+    [newId("analysis"), courseId, errorCode, errorSummary],
+  );
+}
+
+export type IntelligenceToSave = {
+  status: "ready" | "insufficient-evidence";
+  concepts: AnalyzedConcept[];
+  relationships: AnalyzedRelationship[];
+  usage: AiUsage;
+};
+
+function normaliseConceptName(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Replaces a course's intelligence with a freshly validated result, in one
+ * transaction.
+ *
+ * The course's existing concepts — including the demo concepts seeded for a new
+ * workspace — are removed first, so after a real analysis a learner only ever
+ * sees concepts their own materials taught. Every evidence row is resolved
+ * against the exact evidence that was sent to the model: a cited chunk that did
+ * not exist, or belonged to another course, simply has no stored row to attach
+ * to and is dropped rather than persisted.
+ */
+export async function saveCourseIntelligence(
+  courseId: string,
+  fingerprint: string,
+  result: IntelligenceToSave,
+  evidence: EvidenceChunk[],
+): Promise<void> {
+  const chunkById = new Map(evidence.map((chunk) => [chunk.id, chunk]));
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query("delete from concept_relationship where course_id = $1", [courseId]);
+    await client.query("delete from concept where course_id = $1", [courseId]);
+
+    const idByName = new Map<string, string>();
+    let ordinal = 0;
+    for (const concept of result.concepts) {
+      const conceptId = newId("concept");
+      idByName.set(normaliseConceptName(concept.name), conceptId);
+      await client.query(
+        `insert into concept
+           (id, course_id, name, instructor_term, definition, source_reference,
+            ordinal, origin, evidence_status, confidence)
+         values ($1, $2, $3, $4, $5, $6, $7, 'analysis', $8, $9)`,
+        [
+          conceptId,
+          courseId,
+          concept.name,
+          concept.instructorTerm,
+          concept.definition,
+          concept.evidence[0]?.rationale ?? null,
+          ordinal,
+          concept.evidenceStatus,
+          concept.confidence,
+        ],
+      );
+      ordinal += 1;
+
+      for (const reference of concept.evidence) {
+        const chunk = chunkById.get(reference.chunkId);
+        if (!chunk) continue; // Cannot happen after validation; defensive only.
+        await client.query(
+          `insert into concept_evidence
+             (id, concept_id, material_id, chunk_id, source_location, excerpt)
+           values ($1, $2, $3, $4, $5, $6)
+           on conflict (concept_id, chunk_id) do nothing`,
+          [
+            newId("evidence"),
+            conceptId,
+            chunk.materialId,
+            chunk.id,
+            chunk.sourceLocation,
+            chunk.content,
+          ],
+        );
+      }
+    }
+
+    for (const relationship of result.relationships) {
+      const fromId = idByName.get(relationship.fromKey);
+      const toId = idByName.get(relationship.toKey);
+      if (!fromId || !toId || fromId === toId) continue;
+      await client.query(
+        `insert into concept_relationship
+           (id, course_id, from_concept_id, to_concept_id, kind, justification)
+         values ($1, $2, $3, $4, $5, $6)
+         on conflict (course_id, from_concept_id, to_concept_id, kind) do nothing`,
+        [newId("relationship"), courseId, fromId, toId, relationship.kind, relationship.justification],
+      );
+    }
+
+    await client.query(
+      `insert into course_analysis
+         (id, course_id, status, error_code, error_summary, evidence_fingerprint,
+          concept_count, relationship_count, provider_metadata, analyzed_at, updated_at)
+       values ($1, $2, $3, null, null, $4, $5, $6, $7::jsonb, now(), now())
+       on conflict (course_id) do update
+          set status = $3, error_code = null, error_summary = null,
+              evidence_fingerprint = $4, concept_count = $5, relationship_count = $6,
+              provider_metadata = $7::jsonb, analyzed_at = now(), updated_at = now()`,
+      [
+        newId("analysis"),
+        courseId,
+        result.status,
+        fingerprint,
+        result.concepts.length,
+        result.relationships.length,
+        JSON.stringify(result.usage),
+      ],
+    );
+
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 /**

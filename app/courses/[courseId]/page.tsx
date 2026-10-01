@@ -55,6 +55,19 @@ export default function CourseOverview() {
             <p>{course.sources.length} learning materials in this workspace.</p>
             <p className="card-meta">Lectures, slides, transcripts, notes, outlines</p>
           </Link>
+          <Link href={`/courses/${course.id}/intelligence`} className="link-card">
+            <h3>Intelligence</h3>
+            <p>
+              {course.intelligence.status === "ready"
+                ? `${course.intelligence.conceptCount} concepts extracted from your evidence.`
+                : course.intelligence.status === "needs-reanalysis"
+                  ? "Materials changed — re-analysis needed."
+                  : course.intelligence.status === "insufficient-evidence"
+                    ? "Not enough evidence to extract concepts yet."
+                    : "Course not analysed yet."}
+            </p>
+            <p className="card-meta">Concepts, evidence and relationships</p>
+          </Link>
           <Link href={`/courses/${course.id}/assessments`} className="link-card">
             <h3>Assessments</h3>
             <p>{course.assessments.length} questions collected so far.</p>

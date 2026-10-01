@@ -4,6 +4,8 @@ const CONCEPT_LABELS: Record<ConceptStatus, { label: string; className: string }
   Mastered: { label: "Mastered", className: "badge-success" },
   Developing: { label: "Developing", className: "badge-warning" },
   Weak: { label: "Weak", className: "badge-error" },
+  // A concept the learner has not practised yet. Its score is never invented.
+  Untested: { label: "Untested", className: "badge-neutral" },
 };
 
 const CONSISTENCY_LABELS: Record<
