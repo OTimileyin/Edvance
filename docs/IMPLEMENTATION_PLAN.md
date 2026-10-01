@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** In progress — Phase 5 (private Supabase Storage), Phase 5.6 (text extraction & evidence chunking) and Phase 6 (Course Intelligence, including a verified live Google Gemini call) complete and verified end to end (2026-10-01); next phase Phase 7
+**Status:** In progress — Phases 5, 5.6, 6 (Course Intelligence) and 7 (Assessment Intelligence) complete and verified end to end (2026-10-01), including a verified live Google Gemini call; next phase Phase 8
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -82,7 +82,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 ### Current Status
 
-**Current phase:** Phase 6 — Course Intelligence — **complete and verified end to end, including a real Google Gemini call** (`GEMINI_API_KEY` now present in Infisical; see Appendix A, Change 15). It builds on Phase 5.6 — Text Extraction & Evidence Chunking — complete and verified end to end (`Doc/PRD.md` Appendix A, Change 14), which builds on Phase 5 — Course Material Ingestion (Supabase Storage), complete and verified (Changes 12–13). Phase 4 is complete (Change 11), on top of Phases 1–3 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
+**Current phase:** Phase 7 — Assessment Intelligence — **complete and verified end to end, including a real Google Gemini call**: each assessment question is judged against the concepts the course's own materials taught, and the live model correctly flags the canonical six-versus-five inconsistency (see Appendix A, Change 16). It builds on Phase 6 — Course Intelligence — complete and verified end to end (`GEMINI_API_KEY` present in Infisical; see Appendix A, Change 15). It builds on Phase 5.6 — Text Extraction & Evidence Chunking — complete and verified end to end (`Doc/PRD.md` Appendix A, Change 14), which builds on Phase 5 — Course Material Ingestion (Supabase Storage), complete and verified (Changes 12–13). Phase 4 is complete (Change 11), on top of Phases 1–3 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
 
 **Completed:**
 - Phase 1 — Design System & Assessment Intelligence Prototype (static local pages, mock data; `design.html`, `assessment-intelligence.html`).
@@ -134,6 +134,12 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
   - A new **Intelligence** workspace tab shows the analysis state, each concept with its evidence status, definition, instructor term and the exact evidence behind it, plus justified relationships. Stored intelligence becomes **needs re-analysis** as soon as materials change.
   - Legacy `.doc` and `.ppt` uploads are no longer accepted, since Edvance has no reliable extractor for them; `lib/materials.ts` and the docs were updated.
   - Verified with `scripts/test-course-intelligence.mjs` — **59 passed, 0 failed** — plus the Phase 5.6 regression (**91 passed, 0 failed**), using an original six-part golden fixture (the fictional **FATHOM** framework). The **live Google Gemini call** is also verified against that same fixture by `scripts/verify-gemini-live.mjs` — **26 passed, 0 failed**: six concepts with exact instructor terminology, every citation resolved to a real `Section: …` chunk, and a justified relationship.
+- Phase 7 — Assessment Intelligence.
+  - `db/migrations/0005_assessment_intelligence.sql` adds `assessment_analysis` and the constraints that keep one finding per question and one source mapping per evidence location.
+  - `lib/ai/assessment-intelligence.ts` judges a question against the course's already-extracted concepts — never the raw material and never seed concepts — so a course must be analysed first; the endpoint returns 409 otherwise.
+  - `source_mapping` (schema-only since Phase 4) is now written and read; writing a real signature also removes the seeded course-level narrative so demo text is never shown beside genuine analysis.
+  - The Assessments tab shows a per-question signature: state, verdict, reason, next action, and the concepts it tests with their evidence.
+  - Verified with `scripts/test-assessment-intelligence.mjs` — **76 passed, 0 failed** — plus the deterministic Phase 6 suite (**59**) and the Phase 5.6 regression (**91**), and the live provider (**34 passed**, `gemini-3.5-flash`).
 - Phase 5.6 — Text Extraction & Evidence Chunking.
   - `db/migrations/0003_material_ingestion.sql` adds `material_ingestion_job` (status `pending|processing|completed|failed`, timestamps, safe `error_code`/`error_summary`, derived `metadata`) and `material_chunk` (ordered `ordinal`, `content`, human-readable `source_location`, structured `metadata`), both cascading from `learning_material`.
   - `lib/extraction/` is a server-only extraction layer: PDF (`pdfjs-dist`), DOCX (`mammoth`), and PPTX (`jszip` + Open XML), plus hand-written TXT, Markdown, WebVTT, and SRT parsers, all normalised to `{ text, location }`; a deterministic chunker turns blocks into ordered, location-tagged evidence chunks without splitting sentences.
@@ -147,10 +153,10 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 - Real extraction and chunking for all seven formats, correct page/slide/timestamp/section/line locations, ordered chunks, ingestion jobs, ownership isolation, failed-ingestion states, and delete cascades — `scripts/test-ingestion.mjs` reports 91 passed, 0 failed. See `Doc/PRD.md` Appendix A, Change 14.
 
 **Not yet implemented:**
-- Assessment Intelligence (Phase 7) and everything after it.
+- Mastery Intelligence (Phase 8) and everything after it.
 - Production deployment.
 
-**Next phase:** Phase 7 — Assessment Intelligence.
+**Next phase:** Phase 8 — Mastery Intelligence.
 
 ---
 
@@ -372,15 +378,20 @@ This is the **Lesson 6 deliverable**.
 
 **Goal:** Connect assessment questions to concepts, sources, and consistency checks.
 
-**Outputs:**
-- Assessment-to-source mapping (`SourceMapping`).
-- Consistency status evaluation (`Consistent`, `Possible inconsistency`, `Insufficient evidence`).
-- `ConsistencyFinding` records showing Source A, Source B, description, and status.
+**Delivered:**
+- `db/migrations/0005_assessment_intelligence.sql`: `assessment_analysis` (per-question state, safe error fields, evidence fingerprint, tested-concept count, safe provider metadata) plus one-finding-per-question and one-mapping-per-location constraints.
+- `lib/ai/assessment-intelligence.ts` plus an assessment prompt and JSON Schema: the model is given the course's **already-extracted** concepts and must name the ones the question tests by their exact supplied ids.
+- `POST /api/courses/[courseId]/assessments/[assessmentId]/analyse` — authenticate → ownership → require a ready course → model → strict validation → resolve concept ids → persist `source_mapping`, a `consistency_finding` and the analysis state in one transaction.
+- Consistency states `Consistent` / `Possible inconsistency` / `Insufficient evidence`. A claim of possible inconsistency must name the concept it disagrees with, or the whole response is rejected.
+- `source_mapping` is now populated and read (it was schema-only through Phase 6), and the course-level verdict is the most severe, most recent finding — so one inconsistent question is never hidden.
+- The Assessments tab shows each question's signature: state, verdict, the reason, the next action, and the concepts it tests with their own evidence.
 
 **Acceptance Criteria:**
-- [ ] An assessment question is mapped to relevant concepts and sources.
-- [ ] Detected inconsistencies are displayed with evidence.
-- [ ] Uncertain outcomes are labelled `Insufficient evidence` rather than guessed.
+- [x] An assessment question is mapped to relevant concepts and sources.
+- [x] Detected inconsistencies are displayed with evidence.
+- [x] Uncertain outcomes are labelled `Insufficient evidence` rather than guessed.
+- [x] Verified with `scripts/test-assessment-intelligence.mjs` — **76 passed, 0 failed** — and the live provider (`scripts/verify-gemini-live.mjs` — **34 passed, 0 failed**, including the real model flagging the six-versus-five inconsistency).
+- [x] Phase 6 (**59**) and Phase 5.6 (**91**) regressions still pass; typecheck, secret scan and baseline restored.
 
 ---
 

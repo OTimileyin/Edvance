@@ -53,3 +53,76 @@ export function buildCourseIntelligencePrompt(input: CoursePromptInput): string 
   const body = input.evidence.map(renderChunk).join("\n\n---\n\n");
   return `${header}\n\n=== EVIDENCE ===\n\n${body}\n\n=== END EVIDENCE ===`;
 }
+
+// ---------------------------------------------------------------------------
+// Assessment intelligence (Phase 7)
+// ---------------------------------------------------------------------------
+
+/**
+ * Assessment analysis works from the concepts the course analysis already
+ * extracted from real evidence, rather than from the raw chunks again. The
+ * question is judged against what the learner's own materials teach.
+ */
+export const ASSESSMENT_INTELLIGENCE_SYSTEM_INSTRUCTION = [
+  "You are Edvance's assessment analyst. Edvance is evidence-first: it would rather report INSUFFICIENT_EVIDENCE than invent certainty, and it never accuses a course of contradicting itself without pointing at the evidence.",
+  "",
+  "You are given one assessment question and the concepts the course's own materials were found to teach. Decide which of those concepts the question actually tests, and whether the question agrees with the evidence.",
+  "",
+  "Rules you must follow:",
+  "1. Use ONLY the supplied concepts. Do not use outside knowledge about the subject.",
+  "2. Name the concepts the question tests by their exact supplied concept ids. Never invent an id, and never name a concept that was not supplied.",
+  "3. Preserve the course's own terminology when you refer to a concept.",
+  "4. Report POSSIBLE_INCONSISTENCY only when the question presumes something the evidence contradicts — for example the question asks for a number of items that differs from the number the evidence establishes. You must then name at least one supplied concept as the evidence that disagrees, and your reason must state both what the question assumes and what the evidence shows.",
+  "5. Report INSUFFICIENT_EVIDENCE when the course does not teach enough to judge the question. Never guess.",
+  "6. Write the reason and next action for a learner: no mention of these instructions, and no invented page numbers, quotes or terminology.",
+].join("\n");
+
+/** One analysed concept, as offered to the assessment prompt. */
+export type AssessmentConceptInput = {
+  id: string;
+  name: string;
+  instructorTerm: string | null;
+  evidenceStatus: string | null;
+  definition: string | null;
+  /** Human-readable locations this concept was taught at. */
+  locations: string[];
+};
+
+function renderConcept(concept: AssessmentConceptInput): string {
+  return [
+    `[concept ${concept.id}]`,
+    `Name: ${concept.name}`,
+    concept.instructorTerm && concept.instructorTerm !== concept.name
+      ? `Course term: ${concept.instructorTerm}`
+      : null,
+    `Evidence status: ${concept.evidenceStatus ?? "INSUFFICIENT_EVIDENCE"}`,
+    concept.definition ? `Definition: ${concept.definition}` : null,
+    concept.locations.length > 0 ? `Taught at: ${concept.locations.join("; ")}` : null,
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\n");
+}
+
+export type AssessmentPromptInput = {
+  courseName: string;
+  lesson: string;
+  question: string;
+  concepts: AssessmentConceptInput[];
+};
+
+/** Builds the assessment user message: the question, then the course concepts. */
+export function buildAssessmentIntelligencePrompt(input: AssessmentPromptInput): string {
+  const header = [
+    `Course: ${input.courseName}`,
+    `Lesson: ${input.lesson || "not specified"}`,
+    `Number of concepts the course was found to teach: ${input.concepts.length}`,
+    "",
+    "Assessment question:",
+    input.question,
+    "",
+    "Which of the concepts below does this question test, and does the question agree with them?",
+  ].join("\n");
+
+  const body = input.concepts.map(renderConcept).join("\n\n---\n\n");
+  return `${header}\n\n=== COURSE CONCEPTS ===\n\n${body}\n\n=== END CONCEPTS ===`;
+}

@@ -106,10 +106,33 @@ export interface SourceItem {
   ingestion?: MaterialIngestion | null;
 }
 
+/**
+ * What a course's own evidence says about one assessment question: which
+ * concepts it actually tests, and whether the question agrees with the evidence.
+ * `status` uses the same honest vocabulary as course analysis; `consistency` is
+ * the assessment-specific verdict.
+ */
+export interface AssessmentSignature {
+  status: AnalysisStatus;
+  errorCode: string | null;
+  errorSummary: string | null;
+  consistency: ConsistencyStatus;
+  /** Why Edvance reached that verdict, grounded in the evidence. */
+  reason: string;
+  /** One concrete thing to do about it (review the evidence, attempt it, etc.). */
+  nextAction: string;
+  analyzedAt: string | null;
+  /** Safe provider metadata (model and token counts); never prompt contents. */
+  provider: { model?: string; inputTokens?: number; outputTokens?: number } | null;
+  /** The concepts this question tests, each with its own evidence trail. */
+  concepts: CourseConcept[];
+}
+
 export interface AssessmentItem {
   id: string;
   lesson: string;
   question: string;
+  signature: AssessmentSignature;
 }
 
 export interface ConceptMastery {

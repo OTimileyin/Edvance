@@ -141,6 +141,26 @@ export async function analyseCourse(courseId: string): Promise<Course> {
   return ((await response.json()) as { course: Course }).course;
 }
 
+/**
+ * Checks one assessment question against the course's extracted concepts,
+ * returning the refreshed course. Like course analysis this is an explicit
+ * learner action; it never runs on a page refresh. Throws with a display
+ * message on failure.
+ */
+export async function analyseAssessment(
+  courseId: string,
+  assessmentId: string,
+): Promise<Course> {
+  const response = await fetch(
+    `/api/courses/${courseId}/assessments/${assessmentId}/analyse`,
+    { method: "POST" },
+  );
+  if (!response.ok) {
+    throw new Error(await readError(response, "Question analysis did not finish. Please try again."));
+  }
+  return ((await response.json()) as { course: Course }).course;
+}
+
 /** Adds an assessment question to a course. Throws with a display message on failure. */
 export async function addAssessmentQuestion(
   courseId: string,

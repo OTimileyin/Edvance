@@ -22,6 +22,14 @@ export const EVIDENCE_STATUSES = [
 ] as const;
 export type EvidenceStatus = (typeof EVIDENCE_STATUSES)[number];
 
+/** The assessment verdict vocabulary: does the question agree with the evidence? */
+export const CONSISTENCY_STATES = [
+  "CONSISTENT",
+  "POSSIBLE_INCONSISTENCY",
+  "INSUFFICIENT_EVIDENCE",
+] as const;
+export type ConsistencyState = (typeof CONSISTENCY_STATES)[number];
+
 export const RELATIONSHIP_KINDS = [
   "prerequisite",
   "part_of",
@@ -153,6 +161,134 @@ export const COURSE_INTELLIGENCE_JSON_SCHEMA = {
   },
   required: ["concepts", "relationships", "overallEvidenceStatus"],
 } as const;
+
+/**
+ * The JSON Schema handed to Gemini for assessment intelligence. The model is
+ * given the course's already-extracted concepts and must name the ones the
+ * question actually tests by their exact supplied ids — never invent one.
+ */
+export const ASSESSMENT_INTELLIGENCE_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    testedConcepts: {
+      type: "array",
+      description:
+        "The supplied concepts this question actually tests. Use the exact concept ids you were given; return an empty array when none apply.",
+      items: {
+        type: "object",
+        properties: {
+          conceptId: {
+            type: "string",
+            description: "An exact concept id from the supplied list.",
+          },
+          why: {
+            type: "string",
+            description: "One short sentence on how the question exercises this concept.",
+          },
+        },
+        required: ["conceptId", "why"],
+      },
+    },
+    consistency: {
+      type: "string",
+      enum: [...CONSISTENCY_STATES],
+      description:
+        "CONSISTENT when the question agrees with what the evidence teaches; POSSIBLE_INCONSISTENCY when the question presumes something the evidence contradicts, such as a different number of items; INSUFFICIENT_EVIDENCE when the course does not teach enough to judge.",
+    },
+    reason: {
+      type: "string",
+      description:
+        "One or two sentences, grounded only in the supplied concepts, explaining the verdict. For a possible inconsistency, state exactly what the question assumes and what the evidence shows instead.",
+    },
+    nextAction: {
+      type: "string",
+      description: "One concrete action for the learner, grounded in the evidence.",
+    },
+  },
+  required: ["testedConcepts", "consistency", "reason", "nextAction"],
+} as const;
+
+export type ModelTestedConcept = { conceptId: string; why: string };
+
+export type ModelAssessmentIntelligence = {
+  testedConcepts: ModelTestedConcept[];
+  consistency: ConsistencyState;
+  reason: string;
+  nextAction: string;
+};
+
+/**
+ * Parses and validates raw assessment output.
+ *
+ * Beyond shape, it enforces the honesty rule that matters most here: a claim of
+ * POSSIBLE_INCONSISTENCY must name at least one existing concept as the evidence
+ * that disagrees. Edvance does not raise a contradiction it cannot point at.
+ */
+export function parseAssessmentIntelligence(raw: string): ModelAssessmentIntelligence {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new ModelOutputError("malformed-json", "The model did not return valid JSON.");
+  }
+
+  if (!isRecord(parsed)) {
+    throw new ModelOutputError("malformed-output", "The model response was not a JSON object.");
+  }
+
+  const rawTested = parsed.testedConcepts;
+  if (!Array.isArray(rawTested)) {
+    throw new ModelOutputError("malformed-output", "Field testedConcepts must be an array.");
+  }
+
+  const seen = new Set<string>();
+  const testedConcepts: ModelTestedConcept[] = rawTested.map((entry, index) => {
+    if (!isRecord(entry)) {
+      throw new ModelOutputError("malformed-output", `testedConcepts[${index}] was not an object.`);
+    }
+    const conceptId = requireString(entry.conceptId, `testedConcepts[${index}].conceptId`, 200);
+    if (seen.has(conceptId)) {
+      throw new ModelOutputError("duplicate-key", `Concept "${conceptId}" was listed twice.`);
+    }
+    seen.add(conceptId);
+    return {
+      conceptId,
+      why: optionalString(entry.why, `testedConcepts[${index}].why`, 500),
+    };
+  });
+
+  const consistency = requireEnum(parsed.consistency, CONSISTENCY_STATES, "consistency");
+  const reason = requireString(parsed.reason, "reason", 1200);
+  const nextAction = requireString(parsed.nextAction, "nextAction", 600);
+
+  if (consistency === "POSSIBLE_INCONSISTENCY" && testedConcepts.length === 0) {
+    throw new ModelOutputError(
+      "unjustified-inconsistency",
+      "A possible inconsistency must name the concept it disagrees with.",
+    );
+  }
+
+  return { testedConcepts, consistency, reason, nextAction };
+}
+
+/**
+ * Proves every concept the model named was one of the analysed concepts it was
+ * given. A concept id outside that set is hallucinated, from another course, or
+ * from another learner — in every case the whole response is rejected.
+ */
+export function resolveAssessmentReferences(
+  model: ModelAssessmentIntelligence,
+  allowedConceptIds: ReadonlySet<string>,
+): void {
+  for (const tested of model.testedConcepts) {
+    if (!allowedConceptIds.has(tested.conceptId)) {
+      throw new ModelOutputError(
+        "unknown-concept",
+        "The question analysis cited a concept that was not supplied.",
+      );
+    }
+  }
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);

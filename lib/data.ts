@@ -22,6 +22,22 @@ const NO_INTELLIGENCE: Course["intelligence"] = {
   relationships: [],
 };
 
+/**
+ * A demo question has never been checked against real evidence, and the seed
+ * data never claims otherwise: no concepts, no verdict, no invented citation.
+ */
+const NO_SIGNATURE: Course["assessments"][number]["signature"] = {
+  status: "not-analyzed",
+  errorCode: null,
+  errorSummary: null,
+  consistency: "insufficient-evidence",
+  reason: "This is demo content. It has not been checked against your own materials.",
+  nextAction: "Upload your own materials, analyse the course, then check this question.",
+  analyzedAt: null,
+  provider: null,
+  concepts: [],
+};
+
 export const SEED_COURSES: Course[] = [
   {
     id: "ai-foundry",
@@ -51,11 +67,13 @@ export const SEED_COURSES: Course[] = [
         id: "a1",
         lesson: "Prompt Engineering",
         question: "What are the five components of the PROMPT framework?",
+        signature: NO_SIGNATURE,
       },
       {
         id: "a2",
         lesson: "Prompt Engineering",
         question: "When would you constrain the Parameters of a prompt?",
+        signature: NO_SIGNATURE,
       },
     ],
     consistency: {
@@ -90,11 +108,13 @@ export const SEED_COURSES: Course[] = [
         id: "a1",
         lesson: "Choosing the Right Chart",
         question: "When would you prefer a bar chart over a line chart?",
+        signature: NO_SIGNATURE,
       },
       {
         id: "a2",
         lesson: "Choosing the Right Chart",
         question: "What role does color encoding play in chart readability?",
+        signature: NO_SIGNATURE,
       },
     ],
     consistency: {

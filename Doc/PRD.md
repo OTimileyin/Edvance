@@ -1220,6 +1220,53 @@ The live provider was reached through the running app's `POST /api/courses/[cour
 
 ---
 
+## Change 16 — Phase 7: Assessment Intelligence
+
+**Date:** 2026-10-01  
+**Requested by:** Product Owner (autonomous completion directive, §13)  
+**Status:** Implemented and verified end to end, including a real Google Gemini call
+
+### Reason
+Phase 6 established what a course teaches and where. An assessment question is only useful to a learner if Edvance can say what it actually tests — and, crucially, whether the question agrees with the course's own evidence. A question that asks for "the five components" of a six-part framework is exactly the failure this phase exists to catch, and it must be caught by pointing at the evidence, not by opinion.
+
+### Alternatives Considered
+- **Judging a question against the raw material again:** rejected. Re-reading every chunk per question would spend a model call on work the course analysis already did, and would let the question and the course disagree about what the course teaches. The question is judged against the concepts the evidence already established.
+- **Analysing questions automatically when one is added:** rejected for the same reason course analysis is manual — it spends money without the learner asking, and the course may not be analysed yet.
+- **Comparing word counts and numbers mechanically:** rejected. "Five" versus six components is a real signal, but deciding it in code would produce confident nonsense on prose. The model makes the judgement; Edvance only checks that the judgement is grounded in concepts it actually has.
+- **Allowing an inconsistency claim with no cited concept:** rejected outright. A verdict of `POSSIBLE_INCONSISTENCY` that names nothing is unverifiable, so the whole response is discarded.
+- **Keeping the seeded course-level narrative alongside real analysis:** rejected. Writing a real signature removes the demo finding, so seeded prose is never shown as if it were evidence.
+
+### Decision
+- **One provider, still server-only.** Assessment intelligence uses the same Google Gemini provider and the same `lib/ai/` layer. `lib/ai/assessment-intelligence.ts` is pure: it takes the question and the course's analysed concepts and returns a verdict, so it is unit-testable with no database.
+- **Schema.** Migration `0005_assessment_intelligence.sql` adds `assessment_analysis` (per-question `status`, safe `error_code`/`error_summary`, evidence fingerprint, tested-concept count, safe provider metadata, timestamps), a unique index giving each question at most one `consistency_finding`, and a unique index preventing duplicate source mappings for the same concept and location. Existing tables carry the rest: `source_mapping` (question → concept → material → location → confidence) and `consistency_finding` (status, description, next action).
+- **`source_mapping` is now used.** It was created in Phase 4 and unused through Phase 6; Phase 7 writes it from the validated verdict and reads it to build each question's signature.
+- **Grounded concepts only.** The prompt is given the course's extracted concepts with their evidence status, definition and taught locations. The model names concepts by the exact supplied id, and `resolveAssessmentReferences` proves every id was in the input — a hallucinated, cross-course or cross-user concept rejects the whole response.
+- **Consistency states.** `Consistent`, `Possible inconsistency`, `Insufficient evidence`, stored as `consistent` / `possible-inconsistency` / `insufficient-evidence` and surfaced as `CONSISTENT` / `POSSIBLE_INCONSISTENCY` / `INSUFFICIENT_EVIDENCE` from the model. A `POSSIBLE_INCONSISTENCY` must name at least one existing concept as the evidence that disagrees; otherwise the response is rejected as `unjustified-inconsistency`.
+- **A course must be analysed first.** Without a ready course analysis there are no evidence-grounded concepts, so the endpoint answers 409 and tells the learner to analyse the course rather than guessing from the question alone. A ready course with no concepts records `insufficient-evidence` honestly, with no model call.
+- **State and cost control mirror Phase 6.** Per-question states `not-analyzed` / `analyzing` / `ready` / `failed` / `insufficient-evidence` / `needs-reanalysis`; an up-to-date signature returns `outcome: "up-to-date"` without a model call; a new or changed material makes the signature `needs-reanalysis` because the concepts it was judged against are themselves stale; analysis is only ever an explicit learner action.
+- **The course verdict is honest too.** The course-level consistency is the most severe, most recent finding, so a single inconsistent question is never hidden by a later, milder result.
+
+### Verification
+Typecheck (`npx tsc --noEmit`) exit 0. `scripts/test-assessment-intelligence.mjs` reports **76 passed, 0 failed** against a dev server (port 3260) started with the deterministic provider; the Phase 6 suite reports **59 passed, 0 failed** and the Phase 5.6 regression **91 passed, 0 failed** on the same server. The live provider (`scripts/verify-gemini-live.mjs`, model `gemini-3.5-flash`) reports **34 passed, 0 failed**. The database and bucket were returned to baseline afterwards (`assessment_analysis` 0, `source_mapping` 0, `course_analysis` 0, `concept_evidence` 0, `material_chunk` 0; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments unchanged; bucket 0 objects).
+
+- **Six-versus-five PASS (deterministic):** the FATHOM fixture with the question "What are the five components of the FATHOM framework?" produced `possible-inconsistency` with a reason naming both numbers, six tested concepts, and six real `source_mapping` rows pointing at six real `Section: …` locations.
+- **Six-versus-five PASS (live model):** the real API returned `possible-inconsistency` with the reason "The question assumes there are five components in the FATHOM framework, whereas the course evidence shows there are six components: Frame, Assemble, Trace, Hold, Order, and Move.", naming all six real concepts and nothing invented.
+- **Consistent question PASS:** a question that agrees with the evidence was recorded as `consistent` with the concepts it tests.
+- **Rejection PASS:** an invalid concept id, an unjustified inconsistency, malformed output and a provider failure each produced 502, zero source mappings, a `failed` signature and a safe error summary that never echoed raw output.
+- **Gate PASS:** checking a question before the course is analysed is refused with 409; a ready course with no concepts records `insufficient-evidence` without a model call.
+- **Cost control PASS:** re-checking an up-to-date question returned `up-to-date` with no model call.
+- **Staleness PASS:** adding a material marked the signature `needs-reanalysis`, and re-checking was refused until the course was re-analysed.
+- **Isolation PASS:** another learner could not check the course (404), an unauthenticated request was refused (401), and a question id from another course was not found (404). No mapping ever pointed at another course's concept.
+- **Demo honesty PASS:** a seeded workspace's questions start `not-analyzed` with no concepts, and are refused until the course is analysed.
+
+### Impact on this document
+- §15 data model: `assessment_analysis` is added (migration `0005`); `source_mapping` and `consistency_finding` move from schema-only to populated.
+- §16.1: Phase 7 is complete and verified end to end against both the deterministic provider and the live Google Gemini API.
+- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+- **Not claimed:** no second AI provider, embeddings, vector database, or auto-analysis. Edvance never accuses a question of inconsistency without naming the evidence it disagrees with, and never states a number the course's materials do not establish.
+
+---
+
 # Appendix B — Lesson 6 Verification Checklist
 
 ## Task 1 — Implementation Plan

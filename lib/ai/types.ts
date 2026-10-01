@@ -20,14 +20,26 @@ export type EvidenceChunk = {
   content: string;
 };
 
+/** Which intelligence pipeline a request belongs to. Defaults to `course`. */
+export type AiRequestKind = "course" | "assessment";
+
+/** One analysed concept, as the deterministic provider sees it. */
+export type AiConceptInput = { id: string; name: string };
+
 /** A structured generation request handed to the provider. */
 export type AiRequest = {
+  /** Defaults to `course` when absent. */
+  kind?: AiRequestKind;
   systemInstruction: string;
   userPrompt: string;
   /** A JSON Schema the response must conform to. */
   jsonSchema: unknown;
   /** The evidence the prompt was built from, so a mock provider can cite it. */
   evidence: EvidenceChunk[];
+  /** Assessment requests only: the analysed concepts the prompt offered. */
+  concepts?: AiConceptInput[];
+  /** Assessment requests only: the question being judged. */
+  question?: string;
   /**
    * Test-only: selects a deterministic scenario in the mock provider. Ignored
    * entirely unless the mock provider is active, which never happens in

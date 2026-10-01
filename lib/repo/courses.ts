@@ -5,6 +5,7 @@ import type { AnalyzedConcept, AnalyzedRelationship } from "@/lib/ai/course-inte
 import type {
   AnalysisStatus,
   AssessmentItem,
+  AssessmentSignature,
   ConceptEvidenceRef,
   ConceptMastery,
   ConceptStatus,
@@ -119,6 +120,31 @@ type ConceptRelationshipRow = {
   justification: string;
 };
 
+type AssessmentAnalysisRow = {
+  assessment_question_id: string;
+  status: string;
+  error_code: string | null;
+  error_summary: string | null;
+  evidence_fingerprint: string | null;
+  tested_concept_count: number;
+  provider_metadata: { model?: string; inputTokens?: number; outputTokens?: number } | null;
+  analyzed_at: Date | null;
+};
+
+type QuestionFindingRow = {
+  assessment_question_id: string | null;
+  status: string;
+  description: string;
+  next_action: string;
+};
+
+type SourceMappingRow = {
+  assessment_question_id: string;
+  concept_id: string | null;
+  material_id: string | null;
+  source_location: string | null;
+};
+
 const DEFAULT_CONSISTENCY: CourseConsistency = {
   status: "insufficient-evidence",
   reason: "No lesson evidence has been added yet, so consistency cannot be evaluated.",
@@ -136,6 +162,25 @@ const DEFAULT_INTELLIGENCE: CourseIntelligence = {
   concepts: [],
   relationships: [],
 };
+
+/** A question that has never been checked against the course's evidence. */
+const DEFAULT_SIGNATURE: AssessmentSignature = {
+  status: "not-analyzed",
+  errorCode: null,
+  errorSummary: null,
+  consistency: "insufficient-evidence",
+  reason: "This question has not been checked against the course evidence yet.",
+  nextAction: "Analyse the course, then analyse this question.",
+  analyzedAt: null,
+  provider: null,
+  concepts: [],
+};
+
+/** Maps the stored consistency verdict onto the vocabulary the UI shows. */
+function consistencyFromStatus(status: string | null | undefined): ConsistencyStatus {
+  if (status === "consistent" || status === "possible-inconsistency") return status;
+  return "insufficient-evidence";
+}
 
 /**
  * A stable fingerprint of the analysable evidence in a course: the ids and
@@ -207,7 +252,17 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
   if (courseRows.length === 0) return [];
   const ids = courseRows.map((row) => row.id);
 
-  const [materials, concepts, assessments, findings, analysis, courseConcepts] = await Promise.all([
+  const [
+    materials,
+    concepts,
+    assessments,
+    findings,
+    analysis,
+    courseConcepts,
+    assessmentAnalysis,
+    questionFindings,
+    mappings,
+  ] = await Promise.all([
     pool.query<MaterialRow>(
       `select ${MATERIAL_COLUMNS}
          from learning_material m
@@ -232,11 +287,20 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
         order by created_at asc`,
       [ids],
     ),
+    // The course-level verdict is the most severe, most recent finding for the
+    // course — so one question flagged as inconsistent is never hidden by a
+    // later, milder result.
     pool.query<ConsistencyRow>(
       `select distinct on (course_id) course_id, status, description, next_action
          from consistency_finding
         where course_id = any($1::text[])
-        order by course_id, created_at desc`,
+        order by course_id,
+                 case status
+                   when 'possible-inconsistency' then 0
+                   when 'insufficient-evidence' then 1
+                   else 2
+                 end,
+                 created_at desc`,
       [ids],
     ),
     pool.query<AnalysisRow>(
@@ -251,6 +315,28 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
          from concept
         where course_id = any($1::text[]) and origin = 'analysis'
         order by ordinal asc, name asc`,
+      [ids],
+    ),
+    pool.query<AssessmentAnalysisRow>(
+      `select a.assessment_question_id, a.status, a.error_code, a.error_summary,
+              a.evidence_fingerprint, a.tested_concept_count, a.provider_metadata, a.analyzed_at
+         from assessment_analysis a
+         join assessment_question q on q.id = a.assessment_question_id
+        where q.course_id = any($1::text[])`,
+      [ids],
+    ),
+    pool.query<QuestionFindingRow>(
+      `select f.assessment_question_id, f.status, f.description, f.next_action
+         from consistency_finding f
+        where f.course_id = any($1::text[]) and f.assessment_question_id is not null`,
+      [ids],
+    ),
+    pool.query<SourceMappingRow>(
+      `select m.assessment_question_id, m.concept_id, m.material_id, m.source_location
+         from source_mapping m
+         join assessment_question q on q.id = m.assessment_question_id
+        where q.course_id = any($1::text[])
+        order by m.id asc`,
       [ids],
     ),
   ]);
@@ -296,7 +382,7 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
     conceptsByCourse.set(row.course_id, list);
   }
 
-  const assessmentsByCourse = new Map<string, AssessmentItem[]>();
+  const assessmentsByCourse = new Map<string, Omit<AssessmentItem, "signature">[]>();
   for (const row of assessments.rows) {
     const list = assessmentsByCourse.get(row.course_id) ?? [];
     list.push({ id: row.id, lesson: row.lesson, question: row.question_text });
@@ -359,9 +445,42 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
     relationshipsByCourse.set(row.course_id, list);
   }
 
+  // --- Assessment signatures (Phase 7) -------------------------------------
+  // Every concept is addressed by its own id, so a question's signature is
+  // built from real `source_mapping` rows pointing at real analysed concepts.
+  const conceptById = new Map<string, CourseConcept>();
+  for (const list of courseConceptsByCourse.values()) {
+    for (const concept of list) conceptById.set(concept.id, concept);
+  }
+
+  const signatureRowByQuestion = new Map<string, AssessmentAnalysisRow>();
+  for (const row of assessmentAnalysis.rows) {
+    signatureRowByQuestion.set(row.assessment_question_id, row);
+  }
+
+  const findingByQuestion = new Map<string, QuestionFindingRow>();
+  for (const row of questionFindings.rows) {
+    if (row.assessment_question_id) findingByQuestion.set(row.assessment_question_id, row);
+  }
+
+  const conceptsByQuestion = new Map<string, CourseConcept[]>();
+  for (const row of mappings.rows) {
+    if (!row.concept_id) continue;
+    const concept = conceptById.get(row.concept_id);
+    if (!concept) continue;
+    const list = conceptsByQuestion.get(row.assessment_question_id) ?? [];
+    if (!list.some((entry) => entry.id === concept.id)) list.push(concept);
+    conceptsByQuestion.set(row.assessment_question_id, list);
+  }
+
   return courseRows.map((row) => {
     const sources = sourcesByCourse.get(row.id) ?? [];
     const analysisRow = analysisByCourse.get(row.id);
+    const intelligence = mapIntelligence(row.id, analysisRow, sources, {
+      concepts: courseConceptsByCourse.get(row.id) ?? [],
+      relationships: relationshipsByCourse.get(row.id) ?? [],
+    });
+    const fingerprint = evidenceFingerprint(sources);
     return {
       id: row.id,
       name: row.title,
@@ -370,14 +489,58 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
       summary: row.description,
       concepts: conceptsByCourse.get(row.id) ?? [],
       sources,
-      assessments: assessmentsByCourse.get(row.id) ?? [],
+      assessments: (assessmentsByCourse.get(row.id) ?? []).map((item) => ({
+        ...item,
+        signature: mapSignature(
+          signatureRowByQuestion.get(item.id),
+          findingByQuestion.get(item.id),
+          conceptsByQuestion.get(item.id) ?? [],
+          fingerprint,
+          intelligence.status,
+        ),
+      })),
       consistency: consistencyByCourse.get(row.id) ?? DEFAULT_CONSISTENCY,
-      intelligence: mapIntelligence(row.id, analysisRow, sources, {
-        concepts: courseConceptsByCourse.get(row.id) ?? [],
-        relationships: relationshipsByCourse.get(row.id) ?? [],
-      }),
+      intelligence,
     };
   });
+}
+
+/**
+ * Builds one question's signature, computing staleness live.
+ *
+ * A signature is stale when the course evidence changed since it was produced,
+ * or when the course's own concepts are themselves stale — the question was
+ * judged against those concepts, so it cannot be fresher than them. Neither
+ * case costs a model call.
+ */
+function mapSignature(
+  row: AssessmentAnalysisRow | undefined,
+  finding: QuestionFindingRow | undefined,
+  concepts: CourseConcept[],
+  currentFingerprint: string,
+  courseStatus: AnalysisStatus,
+): AssessmentSignature {
+  if (!row) return { ...DEFAULT_SIGNATURE, concepts };
+
+  let status = row.status as AnalysisStatus;
+  if (
+    (status === "ready" || status === "insufficient-evidence") &&
+    (row.evidence_fingerprint !== currentFingerprint || courseStatus === "needs-reanalysis")
+  ) {
+    status = "needs-reanalysis";
+  }
+
+  return {
+    status,
+    errorCode: row.error_code,
+    errorSummary: row.error_summary,
+    consistency: consistencyFromStatus(finding?.status),
+    reason: finding?.description ?? DEFAULT_SIGNATURE.reason,
+    nextAction: finding?.next_action ?? DEFAULT_SIGNATURE.nextAction,
+    analyzedAt: row.analyzed_at ? row.analyzed_at.toISOString() : null,
+    provider: row.provider_metadata ?? null,
+    concepts,
+  };
 }
 
 /**
@@ -1012,6 +1175,153 @@ export async function saveCourseIntelligence(
         fingerprint,
         result.concepts.length,
         result.relationships.length,
+        JSON.stringify(result.usage),
+      ],
+    );
+
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Assessment intelligence (Phase 7)
+// ---------------------------------------------------------------------------
+
+/** Maps the model's verdict vocabulary onto the stored consistency vocabulary. */
+const CONSISTENCY_TO_STORED: Record<string, ConsistencyStatus> = {
+  CONSISTENT: "consistent",
+  POSSIBLE_INCONSISTENCY: "possible-inconsistency",
+  INSUFFICIENT_EVIDENCE: "insufficient-evidence",
+};
+
+export type AssessmentToSave = {
+  status: "ready" | "insufficient-evidence";
+  consistency: "CONSISTENT" | "POSSIBLE_INCONSISTENCY" | "INSUFFICIENT_EVIDENCE";
+  reason: string;
+  nextAction: string;
+  /** The ids of the analysed concepts the question was found to test. */
+  testedConceptIds: string[];
+  usage: AiUsage;
+};
+
+/** Marks a question's signature as in progress. Mirrors course analysis exactly. */
+export async function markAssessmentAnalysisAnalyzing(
+  questionId: string,
+  fingerprint: string,
+): Promise<void> {
+  await pool.query(
+    `insert into assessment_analysis
+       (id, assessment_question_id, status, evidence_fingerprint, updated_at)
+     values ($1, $2, 'analyzing', $3, now())
+     on conflict (assessment_question_id) do update
+        set status = 'analyzing', evidence_fingerprint = $3,
+            error_code = null, error_summary = null, updated_at = now()`,
+    [newId("qanalysis"), questionId, fingerprint],
+  );
+}
+
+/** Records a safe assessment failure; never stores raw provider output. */
+export async function failAssessmentAnalysis(
+  questionId: string,
+  errorCode: string,
+  errorSummary: string,
+): Promise<void> {
+  await pool.query(
+    `insert into assessment_analysis
+       (id, assessment_question_id, status, error_code, error_summary, updated_at)
+     values ($1, $2, 'failed', $3, $4, now())
+     on conflict (assessment_question_id) do update
+        set status = 'failed', error_code = $3, error_summary = $4, updated_at = now()`,
+    [newId("qanalysis"), questionId, errorCode, errorSummary],
+  );
+}
+
+/**
+ * Replaces one question's signature in a single transaction: its source
+ * mappings, its consistency finding, and its analysis state.
+ *
+ * Only concepts the course actually established can be mapped, and only real
+ * evidence rows become source locations — the model names ids, and Edvance
+ * looks up what those ids actually point at. A concept that is not in the
+ * course has no stored row to attach to, so nothing invented is persisted.
+ *
+ * Writing a real signature also removes the seeded course-level finding, so the
+ * demo narrative is never shown alongside genuine analysis.
+ */
+export async function saveAssessmentIntelligence(
+  courseId: string,
+  questionId: string,
+  fingerprint: string,
+  result: AssessmentToSave,
+  concepts: CourseConcept[],
+): Promise<void> {
+  const consistency = CONSISTENCY_TO_STORED[result.consistency] ?? "insufficient-evidence";
+  const conceptById = new Map(concepts.map((concept) => [concept.id, concept]));
+  const tested = result.testedConceptIds
+    .map((id) => conceptById.get(id))
+    .filter((concept): concept is CourseConcept => Boolean(concept));
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `delete from consistency_finding where course_id = $1 and assessment_question_id is null`,
+      [courseId],
+    );
+    await client.query(`delete from source_mapping where assessment_question_id = $1`, [questionId]);
+    await client.query(
+      `delete from consistency_finding where assessment_question_id = $1`,
+      [questionId],
+    );
+
+    for (const concept of tested) {
+      const trail: (ConceptEvidenceRef | null)[] =
+        concept.evidence.length > 0 ? concept.evidence : [null];
+      for (const evidence of trail) {
+        await client.query(
+          `insert into source_mapping
+             (id, assessment_question_id, concept_id, material_id, source_location, confidence)
+           values ($1, $2, $3, $4, $5, $6)
+           on conflict do nothing`,
+          [
+            newId("mapping"),
+            questionId,
+            concept.id,
+            evidence?.materialId ?? null,
+            evidence?.sourceLocation ?? null,
+            concept.confidence,
+          ],
+        );
+      }
+    }
+
+    await client.query(
+      `insert into consistency_finding
+         (id, course_id, assessment_question_id, status, description, next_action)
+       values ($1, $2, $3, $4, $5, $6)`,
+      [newId("finding"), courseId, questionId, consistency, result.reason, result.nextAction],
+    );
+
+    await client.query(
+      `insert into assessment_analysis
+         (id, assessment_question_id, status, error_code, error_summary, evidence_fingerprint,
+          tested_concept_count, provider_metadata, analyzed_at, updated_at)
+       values ($1, $2, $3, null, null, $4, $5, $6::jsonb, now(), now())
+       on conflict (assessment_question_id) do update
+          set status = $3, error_code = null, error_summary = null,
+              evidence_fingerprint = $4, tested_concept_count = $5,
+              provider_metadata = $6::jsonb, analyzed_at = now(), updated_at = now()`,
+      [
+        newId("qanalysis"),
+        questionId,
+        result.status,
+        fingerprint,
+        tested.length,
         JSON.stringify(result.usage),
       ],
     );

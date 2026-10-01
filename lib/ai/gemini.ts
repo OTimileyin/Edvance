@@ -161,6 +161,79 @@ function mockConceptsFor(evidence: EvidenceChunk[]) {
   }));
 }
 
+/** Maps the first spelled-out or numeric quantity in a question, e.g. "five" → 5. */
+const NUMBER_WORDS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+};
+
+function quantityIn(question: string): number | null {
+  const match = /\b(one|two|three|four|five|six|seven|eight|nine|ten|\d{1,3})\b/i.exec(question);
+  if (!match) return null;
+  return /^\d+$/.test(match[1]) ? Number(match[1]) : (NUMBER_WORDS[match[1].toLowerCase()] ?? null);
+}
+
+/**
+ * Deterministic assessment answer, derived from the concepts it was actually
+ * given. It models the one inconsistency Edvance most wants to catch: a question
+ * that asks for a number of items the evidence does not establish. Because it
+ * only ever names supplied concept ids, the pipeline's validators accept it.
+ */
+function mockAssessment(request: AiRequest, scenario: string, usage: AiResponse["usage"]): AiResponse {
+  const concepts = request.concepts ?? [];
+  const question = request.question ?? "";
+  const json = (value: unknown) => ({ text: JSON.stringify(value), usage });
+  const tested = concepts.map((concept) => ({
+    conceptId: concept.id,
+    why: `The question exercises ${concept.name}.`,
+  }));
+
+  if (scenario === "invalid-concept-id") {
+    return json({
+      testedConcepts: [{ conceptId: "concept-does-not-exist", why: "Fabricated evidence." }],
+      consistency: "CONSISTENT",
+      reason: "A claim with no evidence behind it.",
+      nextAction: "Nothing to do.",
+    });
+  }
+  if (scenario === "unjustified-inconsistency") {
+    return json({
+      testedConcepts: [],
+      consistency: "POSSIBLE_INCONSISTENCY",
+      reason: "The question seems wrong, but no evidence is cited.",
+      nextAction: "Nothing to do.",
+    });
+  }
+  if (scenario === "insufficient" || concepts.length === 0) {
+    return json({
+      testedConcepts: [],
+      consistency: "INSUFFICIENT_EVIDENCE",
+      reason: "The course does not yet teach enough to judge this question.",
+      nextAction: "Add material that covers this question.",
+    });
+  }
+
+  const asked = quantityIn(question);
+  if (asked !== null && asked !== concepts.length) {
+    return json({
+      testedConcepts: tested,
+      consistency: "POSSIBLE_INCONSISTENCY",
+      reason: `The question asks for ${asked} while the course evidence establishes ${concepts.length} (${concepts
+        .map((concept) => concept.name)
+        .join(", ")}).`,
+      nextAction: "Review the material this question is based on before attempting it.",
+    });
+  }
+
+  return json({
+    testedConcepts: tested,
+    consistency: "CONSISTENT",
+    reason: `The evidence teaches the concepts this question covers: ${concepts
+      .map((concept) => concept.name)
+      .join(", ")}.`,
+    nextAction: "Attempt the question and compare your answer with the evidence.",
+  });
+}
+
 function mockGenerate(request: AiRequest): AiResponse {
   const scenario = request.mockScenario ?? optionalEnv("EDVANCE_AI_MOCK") ?? "simple";
   const usage = { model: `mock:${scenario}`, inputTokens: 0, outputTokens: 0 };
@@ -170,6 +243,9 @@ function mockGenerate(request: AiRequest): AiResponse {
   }
   if (scenario === "malformed") {
     return { text: "not json at all", usage };
+  }
+  if (request.kind === "assessment") {
+    return mockAssessment(request, scenario, usage);
   }
   if (scenario === "invalid-chunk-id") {
     const concepts = mockConceptsFor(request.evidence).slice(0, 1);

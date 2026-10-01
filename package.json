@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "migrate": "infisical run --env=dev -- node scripts/migrate.mjs",
     "test:ingestion": "infisical run --env=dev -- node scripts/test-ingestion.mjs",
-    "test:intelligence": "infisical run --env=dev -- node scripts/test-course-intelligence.mjs"
+    "test:intelligence": "infisical run --env=dev -- node scripts/test-course-intelligence.mjs",
+    "test:assessment": "infisical run --env=dev -- node scripts/test-assessment-intelligence.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.25.0",

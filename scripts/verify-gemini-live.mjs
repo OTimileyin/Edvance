@@ -253,6 +253,74 @@ async function main() {
       );
     }
 
+    // --- Assessment intelligence: the six-versus-five inconsistency -------
+    {
+      const created = await session.fetch(`/api/courses/${courseId}/assessments`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ lesson: "Evidence", question: "What are the five components of the FATHOM framework?" }),
+      });
+      const createdBody = await created.json().catch(() => ({}));
+      const question = (createdBody.course?.assessments ?? []).find((entry) =>
+        entry.question.includes("five components"),
+      );
+      check("assessment created", Boolean(question?.id), `status ${created.status}`);
+
+      console.log("\n— calling Google Gemini for the assessment (real provider) —");
+      let analysedQuestion;
+      let questionBody;
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        analysedQuestion = await session.fetch(
+          `/api/courses/${courseId}/assessments/${question.id}/analyse`,
+          { method: "POST" },
+        );
+        questionBody = await analysedQuestion.json().catch(() => ({}));
+        if (analysedQuestion.status !== 502) break;
+        console.log(`  attempt ${attempt}: provider unavailable (${questionBody.error ?? "502"}); waiting…`);
+        await new Promise((resolve) => setTimeout(resolve, 15000));
+      }
+      check(
+        "assessment analysed (200)",
+        analysedQuestion.status === 200,
+        `status ${analysedQuestion.status} ${JSON.stringify(questionBody.error ?? "")}`,
+      );
+
+      const signature = (questionBody.course?.assessments ?? []).find(
+        (entry) => entry.id === question.id,
+      )?.signature;
+      console.log(`\nVerdict: ${signature?.consistency} — ${signature?.reason}`);
+      for (const concept of signature?.concepts ?? []) console.log(`  • tests ${concept.name}`);
+
+      check("signature state is ready", signature?.status === "ready", signature?.status);
+      check(
+        "real model flags the six-versus-five inconsistency",
+        signature?.consistency === "possible-inconsistency",
+        signature?.consistency,
+      );
+      check("signature explains the disagreement", Boolean(signature?.reason), signature?.reason);
+      check(
+        "signature names the concepts it tests",
+        (signature?.concepts?.length ?? 0) >= 1,
+        `${signature?.concepts?.length}`,
+      );
+      const conceptIds = new Set(concepts.map((concept) => concept.id));
+      check(
+        "signature cites only real course concepts",
+        (signature?.concepts ?? []).every((concept) => conceptIds.has(concept.id)),
+      );
+
+      const again = await session.fetch(
+        `/api/courses/${courseId}/assessments/${question.id}/analyse`,
+        { method: "POST" },
+      );
+      const againBody = await again.json().catch(() => ({}));
+      check(
+        "cost control: re-check is up-to-date with no model call",
+        again.status === 200 && againBody.outcome === "up-to-date",
+        `${again.status} ${againBody.outcome}`,
+      );
+    }
+
     // --- Staleness: new material invalidates the stored intelligence ------
     {
       const second = new FormData();
