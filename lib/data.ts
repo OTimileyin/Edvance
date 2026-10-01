@@ -83,6 +83,7 @@ export const SEED_COURSES: Course[] = [
       nextAction: "Review the relevant lesson evidence before attempting the assessment.",
     },
     intelligence: NO_INTELLIGENCE,
+    attempts: [],
   },
   {
     id: "storytelling-with-data",
@@ -123,5 +124,6 @@ export const SEED_COURSES: Course[] = [
       nextAction: "Attempt the practice set on chart selection.",
     },
     intelligence: NO_INTELLIGENCE,
+    attempts: [],
   },
 ];

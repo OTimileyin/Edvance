@@ -161,6 +161,27 @@ export async function analyseAssessment(
   return ((await response.json()) as { course: Course }).course;
 }
 
+/**
+ * Records one practice attempt and returns the refreshed course. Practising an
+ * assessment question updates every concept that question tests; practising a
+ * concept directly updates just that one. Mastery is derived from these
+ * attempts, never assigned. Throws with a display message on failure.
+ */
+export async function recordPractice(
+  courseId: string,
+  input: { assessmentId?: string; conceptId?: string; answer?: string; correct: boolean },
+): Promise<Course> {
+  const response = await fetch(`/api/courses/${courseId}/practice`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    throw new Error(await readError(response, "Could not record that practice attempt."));
+  }
+  return ((await response.json()) as { course: Course }).course;
+}
+
 /** Adds an assessment question to a course. Throws with a display message on failure. */
 export async function addAssessmentQuestion(
   courseId: string,

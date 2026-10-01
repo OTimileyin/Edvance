@@ -1,5 +1,6 @@
 import { pool } from "@/lib/db";
 import { SEED_COURSES } from "@/lib/data";
+import { deriveMastery } from "@/lib/mastery";
 import type { AiUsage, EvidenceChunk } from "@/lib/ai/types";
 import type { AnalyzedConcept, AnalyzedRelationship } from "@/lib/ai/course-intelligence";
 import type {
@@ -18,6 +19,7 @@ import type {
   EvidenceStatus,
   IngestionMetadata,
   IngestionStatus,
+  PracticeAttempt,
   RelationshipKind,
   SourceItem,
   SourceType,
@@ -145,6 +147,21 @@ type SourceMappingRow = {
   source_location: string | null;
 };
 
+type PracticeAttemptRow = {
+  id: string;
+  course_id: string;
+  concept_id: string | null;
+  concept_name: string | null;
+  assessment_question_id: string | null;
+  question_text: string | null;
+  answer: string;
+  is_correct: boolean;
+  created_at: Date;
+};
+
+/** How many recent attempts a course view carries, so a long history stays bounded. */
+const MAX_RECENT_ATTEMPTS = 50;
+
 const DEFAULT_CONSISTENCY: CourseConsistency = {
   status: "insufficient-evidence",
   reason: "No lesson evidence has been added yet, so consistency cannot be evaluated.",
@@ -262,6 +279,7 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
     assessmentAnalysis,
     questionFindings,
     mappings,
+    practice,
   ] = await Promise.all([
     pool.query<MaterialRow>(
       `select ${MATERIAL_COLUMNS}
@@ -339,6 +357,16 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
         order by m.id asc`,
       [ids],
     ),
+    pool.query<PracticeAttemptRow>(
+      `select a.id, a.course_id, a.concept_id, c.name as concept_name,
+              a.assessment_question_id, q.question_text, a.answer, a.is_correct, a.created_at
+         from practice_attempt a
+         left join concept c on c.id = a.concept_id
+         left join assessment_question q on q.id = a.assessment_question_id
+        where a.course_id = any($1::text[])
+        order by a.created_at desc, a.id desc`,
+      [ids],
+    ),
   ]);
 
   const conceptIds = courseConcepts.rows.map((row) => row.id);
@@ -371,14 +399,61 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
     sourcesByCourse.set(row.course_id, list);
   }
 
+  // --- Practice-derived mastery (Phase 8) ------------------------------------
+  // A concept's status is derived only from the learner's recorded attempts.
+  // A concept with no attempts falls back to its stored (seeded) state; nothing
+  // here can invent a status a learner has not practised for.
+  const attemptsByCourse = new Map<string, PracticeAttempt[]>();
+  const statsByConcept = new Map<string, { correct: boolean }[]>();
+  const lastAttemptByConcept = new Map<string, string>();
+  for (const row of practice.rows) {
+    const list = attemptsByCourse.get(row.course_id) ?? [];
+    if (list.length < MAX_RECENT_ATTEMPTS) {
+      list.push({
+        id: row.id,
+        conceptId: row.concept_id,
+        conceptName: row.concept_name,
+        questionId: row.assessment_question_id,
+        question: row.question_text,
+        answer: row.answer,
+        correct: row.is_correct,
+        createdAt: row.created_at.toISOString(),
+      });
+    }
+    attemptsByCourse.set(row.course_id, list);
+
+    if (row.concept_id) {
+      const attempts = statsByConcept.get(row.concept_id) ?? [];
+      attempts.push({ correct: row.is_correct });
+      statsByConcept.set(row.concept_id, attempts);
+      // Rows arrive most-recent-first, so the first seen is the latest.
+      if (!lastAttemptByConcept.has(row.concept_id)) {
+        lastAttemptByConcept.set(row.concept_id, row.created_at.toISOString());
+      }
+    }
+  }
+
   const conceptsByCourse = new Map<string, ConceptMastery[]>();
   for (const row of concepts.rows) {
     const list = conceptsByCourse.get(row.course_id) ?? [];
-    list.push({
-      name: row.name,
-      status: (row.status ?? "Untested") as ConceptStatus,
-      score: row.score ?? 0,
-    });
+    const stats = statsByConcept.get(row.id);
+    if (stats && stats.length > 0) {
+      const derived = deriveMastery(stats);
+      list.push({
+        name: row.name,
+        status: derived.status,
+        score: derived.score,
+        attempts: derived.attemptCount,
+        correct: derived.correctCount,
+        lastAttemptAt: lastAttemptByConcept.get(row.id) ?? null,
+      });
+    } else {
+      list.push({
+        name: row.name,
+        status: (row.status ?? "Untested") as ConceptStatus,
+        score: row.score ?? 0,
+      });
+    }
     conceptsByCourse.set(row.course_id, list);
   }
 
@@ -501,6 +576,7 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
       })),
       consistency: consistencyByCourse.get(row.id) ?? DEFAULT_CONSISTENCY,
       intelligence,
+      attempts: attemptsByCourse.get(row.id) ?? [],
     };
   });
 }
@@ -645,6 +721,123 @@ export async function addAssessment(
     [newId("question"), courseId, lesson.trim() || "Lesson 1", question.trim()],
   );
   return getCourse(userId, courseId).then((updated) => updated ?? course);
+}
+
+/** What a practice request asked to record. */
+export interface PracticeInput {
+  /** An assessment question to practise; its tested concepts get the attempt. */
+  assessmentId?: string;
+  /** A single concept to self-assess, when no question is involved. */
+  conceptId?: string;
+  answer?: string;
+  correct: boolean;
+}
+
+export type PracticeOutcome =
+  | { ok: true; course: Course }
+  | {
+      ok: false;
+      reason: "not-found" | "question-not-found" | "question-not-checked" | "unknown-concept";
+    };
+
+/**
+ * Records one real practice attempt and recomputes the mastery it affects.
+ *
+ * A question attempt is attributed to every concept the question was checked
+ * against (its real source mappings), one row per concept, so the trail
+ * survives a later re-analysis. Mastery is then re-derived from the learner's
+ * full attempt history and written to `mastery_state`; nothing here can set a
+ * status that the attempts do not support.
+ */
+export async function recordPractice(
+  userId: string,
+  courseId: string,
+  input: PracticeInput,
+): Promise<PracticeOutcome> {
+  const course = await getCourse(userId, courseId);
+  if (!course) return { ok: false, reason: "not-found" };
+
+  const targets: { conceptId: string; questionId: string | null }[] = [];
+  if (input.assessmentId) {
+    const assessment = course.assessments.find((item) => item.id === input.assessmentId);
+    if (!assessment) return { ok: false, reason: "question-not-found" };
+    const tested = assessment.signature.concepts;
+    if (tested.length === 0) return { ok: false, reason: "question-not-checked" };
+    for (const concept of tested) {
+      targets.push({ conceptId: concept.id, questionId: assessment.id });
+    }
+  } else if (input.conceptId) {
+    const concept = course.intelligence.concepts.find((item) => item.id === input.conceptId);
+    if (!concept) return { ok: false, reason: "unknown-concept" };
+    targets.push({ conceptId: concept.id, questionId: null });
+  } else {
+    return { ok: false, reason: "unknown-concept" };
+  }
+
+  const conceptIds = [...new Set(targets.map((target) => target.conceptId))];
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    for (const target of targets) {
+      await client.query(
+        `insert into practice_attempt
+           (id, user_id, course_id, concept_id, assessment_question_id, answer, is_correct)
+         values ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          newId("attempt"),
+          userId,
+          courseId,
+          target.conceptId,
+          target.questionId,
+          input.answer ?? "",
+          input.correct,
+        ],
+      );
+    }
+
+    for (const conceptId of conceptIds) {
+      const { rows } = await client.query<{ is_correct: boolean; created_at: Date }>(
+        `select is_correct, created_at
+           from practice_attempt
+          where user_id = $1 and concept_id = $2
+          order by created_at asc, id asc`,
+        [userId, conceptId],
+      );
+      const derived = deriveMastery(rows.map((row) => ({ correct: row.is_correct })));
+      const lastAt = rows.length > 0 ? rows[rows.length - 1].created_at : null;
+      await client.query(
+        `insert into mastery_state
+           (id, user_id, concept_id, status, score, attempt_count, correct_count, last_attempt_at, updated_at)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, now())
+         on conflict (user_id, concept_id) do update set
+           status = excluded.status,
+           score = excluded.score,
+           attempt_count = excluded.attempt_count,
+           correct_count = excluded.correct_count,
+           last_attempt_at = excluded.last_attempt_at,
+           updated_at = now()`,
+        [
+          newId("mastery"),
+          userId,
+          conceptId,
+          derived.status,
+          derived.score,
+          derived.attemptCount,
+          derived.correctCount,
+          lastAt,
+        ],
+      );
+    }
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  const refreshed = await getCourse(userId, courseId);
+  return { ok: true, course: refreshed ?? course };
 }
 
 /** Whether the learner owns this course. Used to authorise uploads before storing anything. */

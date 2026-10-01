@@ -139,6 +139,27 @@ export interface ConceptMastery {
   name: string;
   status: ConceptStatus;
   score: number;
+  /** Real practice attempts behind this status; absent/0 for seeded demo rows. */
+  attempts?: number;
+  correct?: number;
+  /** When the learner last practised this concept, if ever. */
+  lastAttemptAt?: string | null;
+}
+
+/**
+ * One thing a learner actually did: answered an assessment question, or
+ * self-assessed a single concept, and judged it correct or not. Mastery is
+ * derived from these rows — never stored as an assertion.
+ */
+export interface PracticeAttempt {
+  id: string;
+  conceptId: string | null;
+  conceptName: string | null;
+  questionId: string | null;
+  question: string | null;
+  answer: string;
+  correct: boolean;
+  createdAt: string;
 }
 
 export interface CourseConsistency {
@@ -158,4 +179,6 @@ export interface Course {
   assessments: AssessmentItem[];
   consistency: CourseConsistency;
   intelligence: CourseIntelligence;
+  /** The learner's recorded practice, most recent first (bounded). */
+  attempts: PracticeAttempt[];
 }

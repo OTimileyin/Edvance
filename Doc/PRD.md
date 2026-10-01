@@ -1267,6 +1267,51 @@ Typecheck (`npx tsc --noEmit`) exit 0. `scripts/test-assessment-intelligence.mjs
 
 ---
 
+## Change 17 — Phase 8: Mastery Intelligence
+
+**Date:** 2026-10-01  
+**Requested by:** Product Owner (autonomous completion directive, §14)  
+**Status:** Implemented and verified end to end (deterministic provider; no model call)
+
+### Reason
+Phases 6–7 established what a course teaches and what each question tests. Neither says anything about the learner. A mastery profile is only trustworthy if it is earned: if a status could be produced by the AI, or seeded as if it were a result, the learner would be looking at an assertion rather than evidence of their own work. Phase 8 makes mastery a pure function of what the learner actually did.
+
+### Alternatives Considered
+- **Letting the model grade an answer and set a status:** rejected. That is exactly the "AI-set mastery" the directive forbids; it would make the profile an opinion, cost a model call per attempt, and cannot be reproduced. Mastery is derived in code from recorded attempts.
+- **Deriving mastery on every read from the full attempt history only:** rejected as the sole mechanism, because the database would then have no materialised profile to read cheaply or reason about over time, and the Phase 4 `mastery_state` contract would go unused. Attempts remain the source of truth; `mastery_state` is recomputed from them on each write.
+- **Counting a single correct answer as mastery:** rejected. One lucky answer is not mastery; the rule requires a minimum number of attempts before the top state is reachable.
+- **Inventing a distinct status vocabulary:** rejected. The product already ships **Untested / Weak / Developing / Mastered** and `ConceptStatus` already carried them; Phase 8 uses that vocabulary unchanged.
+- **A model-written "why" explanation of a computed status:** deferred. It would add a model call and a quota dependency for no new information; the attempt trail itself is the explanation (`explainMastery` renders it in words).
+
+### Decision
+- **`practice_attempt` is the source of truth.** Migration `0006_practice_mastery.sql` adds it (learner, course, concept and/or assessment question, the answer text, correctness, timestamp) with an invariant that an attempt is always about a concept, a question, or both, plus indexes for the per-learner-per-concept read. It also adds `attempt_count`, `correct_count` and `last_attempt_at` to `mastery_state` so the materialised row shows the practice behind it; the defaults keep seeded demo rows valid.
+- **One deterministic rule.** `lib/mastery.ts` is pure and unit-testable: no attempts → **Untested**; fewer than half correct → **Weak**; at least half correct but not yet earned → **Developing**; at least 80% correct over at least three attempts → **Mastered**. `score` is the percentage of correct attempts (0 for Untested). The same history always yields the same result, and a single answer can never reach Mastered.
+- **Never AI-set.** No model is called anywhere in this phase. An attempt is the learner's own record of what they did; the status is computed from those records and nothing else.
+- **Attempts are attributed, not ambiguous.** Practising an assessment question writes one attempt per concept that question was checked against (its real `source_mapping`), so the attribution survives a later re-analysis; practising a single concept writes one attempt for that concept. After writing, the affected concepts' mastery is re-derived from the learner's complete attempt history and upserted into `mastery_state` in the same transaction.
+- **Prerequisites are honest.** A question can only be practised once it has been checked against the course's evidence; otherwise the endpoint answers 409 and points at the Assessments tab. A concept can only be practised if it belongs to the course, or the request is refused.
+- **The endpoint is the only write path.** `POST /api/courses/[courseId]/practice` authenticates, authorises by ownership, validates the single target and the boolean verdict, and returns the refreshed course. It is always an explicit learner action; nothing runs on a page refresh.
+- **The UI shows the trail.** The Mastery tab states that a concept with no attempts stays Untested, shows each concept's attempts and correct count, offers a practice panel (checked questions and single concepts, with an optional answer and a right/wrong record), and lists recent practice with the question and the learner's own answer.
+
+### Verification
+Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. `scripts/test-mastery-intelligence.mjs` reports **48 passed, 0 failed** against a dev server (port 3260) started with the deterministic provider; the Phase 7 suite reports **76 passed, 0 failed**, Phase 6 **59 passed, 0 failed**, and the Phase 5.6 regression **91 passed, 0 failed** on the same server. The secret scan is clean, and the database and bucket were returned to baseline afterwards (`practice_attempt` 0; `mastery_state` 20 unchanged; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments unchanged; bucket 0 objects). No model call was made.
+
+- **Honest baseline PASS:** before any practice every concept is **Untested**, no attempt rows exist, and no practice counts are invented.
+- **Ladder PASS:** on the six-part FATHOM fixture, one wrong attempt made all six tested concepts **Weak** (score 0); 1/2 correct → Developing (50); 2/3 → Developing (67); 3/4 → Developing (75); 4/5 → **Mastered** (80). The status only moved as the attempts justified, and every concept moved together.
+- **Attribution PASS:** a wrong question attempt wrote exactly six `practice_attempt` rows, one per tested concept; the stored score equalled the attempts that produced it (reproducible); the answer and the question were both retained on the attempt.
+- **Per-concept isolation PASS:** practising a single concept changed only that concept; the others stayed Mastered, and exactly one new row was written.
+- **Gate PASS:** practising an unchecked question was refused with 409 and a message pointing at the Assessments tab.
+- **Validation PASS:** a missing target, two targets at once, a non-boolean verdict, an over-long answer, an unknown concept and a non-JSON body were each refused with 400. No attempt was written for any rejected request.
+- **Isolation PASS:** another learner could not practise the course (404), an unauthenticated request was refused (401), a question id from another course was not found (404), and another course's concept was refused (400).
+- **Demo honesty PASS:** a seeded workspace still renders its demo mastery with no real attempts, and a demo question cannot be practised before the course is analysed (409).
+
+### Impact on this document
+- §15 data model: `practice_attempt` is added (migration `0006`); `mastery_state` gains attempt counts and a last-practised timestamp.
+- §16.1: Phase 8 is complete and verified end to end with no model call.
+- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+- **Not claimed:** no AI grades an answer, no AI assigns a mastery, and no status is seeded as if earned. Mastery is a deterministic function of the learner's own recorded attempts.
+
+---
+
 # Appendix B — Lesson 6 Verification Checklist
 
 ## Task 1 — Implementation Plan

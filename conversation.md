@@ -582,6 +582,37 @@ Nowhere — Phase 7 ran end to end autonomously. Phase 8 begins automatically.
 
 ---
 
+## Episode 24 — Phase 8: Mastery Intelligence (verified; no model call)
+
+### Product Owner prompt (verbatim, abridged)
+> [Autonomous completion master directive §14, Phase 8.] Connect learner performance to assessed concepts. Add `practice_attempt`; derive mastery from real attempts (**Untested / Weak / Developing / Mastered**) and never let AI set it. Commit `feat(mastery): add practice-based mastery intelligence`, then continue automatically to Phase 9.
+
+### What the AI builder did
+1. **Made mastery earned, not asserted.** `practice_attempt` (migration `0006`) records each thing a learner actually did — an assessment question or a single concept — with the answer text, the correctness verdict and when it happened. `lib/mastery.ts` turns those attempts into a status by one deterministic rule, so the same history always gives the same answer. **No model is called anywhere in this phase**: an attempt is the learner's own record, and the status is computed from it.
+2. **Chose a rule that a single answer cannot game.** No attempts → **Untested**; fewer than half correct → **Weak**; at least half correct → **Developing**; at least 80% correct over at least three attempts → **Mastered**. A lone correct answer can never crown a concept.
+3. **Attributed attempts durably.** Practising a question writes one attempt per concept that question was checked against (its real `source_mapping` rows), so the trail survives a later re-analysis; practising a concept writes one attempt for it. After writing, the affected concepts are re-derived from the learner's *whole* history and upserted into `mastery_state` — with attempt counts and a last-practised timestamp — in the same transaction.
+4. **Kept the Phase 4 contract.** `mastery_state` stays the materialised per-learner, per-concept result; the new columns make the practice behind it visible. Seeded demo rows keep their defaults and are never presented as earned.
+5. **Gated on evidence.** A question can only be practised once it has been checked against the course's evidence; otherwise the endpoint answers 409 and points at the Assessments tab. A concept can only be practised if it belongs to the course.
+6. **Added one write path.** `POST /api/courses/[courseId]/practice` authenticates, authorises by ownership, validates a single target and the boolean verdict (with a bounded answer), and returns the refreshed course — always an explicit learner action.
+7. **Showed the trail.** The Mastery tab states the rule, shows each concept's attempts and correct count, offers a practice panel (checked questions and single concepts, an optional answer, right/wrong record), and lists recent practice with the learner's own answer.
+8. **Wrote the deterministic suite.** `scripts/test-mastery-intelligence.mjs` — **48 passed, 0 failed** — covers the honest Untested baseline, the full ladder on the FATHOM fixture (wrong → Weak; 1/2 → Developing at 50; 2/3 → 67; 3/4 → 75; 4/5 → Mastered at 80), attribution, reproducibility, per-concept isolation, the unchecked-question gate, validation, ownership isolation and demo honesty.
+
+### Real end-to-end results (2026-10-01)
+- **Deterministic PASS:** `scripts/test-mastery-intelligence.mjs` — **48 passed, 0 failed**.
+- **Regressions PASS:** Phase 7 **76 passed**, Phase 6 **59 passed**, Phase 5.6 **91 passed**. Typecheck exit 0 after clearing `tsconfig.tsbuildinfo`. Secret scan found no leaks.
+- **Baseline restored:** `practice_attempt` 0; `mastery_state` 20 unchanged; bucket 0 objects; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments untouched.
+- **Not claimed:** no AI grades an answer, no AI assigns a mastery, and no status is seeded as if earned.
+
+### Where the user was asked to act
+Nowhere — Phase 8 ran end to end autonomously. Phase 9 begins automatically.
+
+### Files changed
+- New: `db/migrations/0006_practice_mastery.sql`, `lib/mastery.ts`, `app/api/courses/[courseId]/practice/route.ts`, `scripts/test-mastery-intelligence.mjs`
+- Changed: `lib/types.ts`, `lib/data.ts`, `lib/repo/courses.ts`, `lib/useCourses.ts`, `app/courses/[courseId]/mastery/page.tsx`, `package.json`
+- Docs: `Doc/PRD.md` (Change 17), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/EDVANCE_EXECUTION_STATE.md`, this episode
+
+---
+
 ## Current state (2026-10-01)
 
 - **Committed & pushed:** the interface sheet is commit `f89fdfc`, and it and everything before it are on `origin/main`. The push moved `9090f45..f89fdfc`, carrying four commits that had accumulated locally: Phase 2 + Field Guide (`2af22eb`), Phase 3 Better Auth (`bfe0e4c`), Press Room + logo (`b092460`), interface sheet (`f89fdfc`). Pushing was done in the same working session.
@@ -596,10 +627,11 @@ Nowhere — Phase 7 ran end to end autonomously. Phase 8 begins automatically.
 - **Phase 5 (Episodes 18–19, committed `0e33c80`):** course materials upload to private **Supabase Storage** (bucket `edvance-materials`). Episode 18 built the upload/download flow and the `mime_type`/`size_bytes` migration against Cloudflare R2; Episode 19 replaced R2 with the official Supabase server client (`lib/supabase-storage.ts`), added delete, and **verified the whole path end to end** — real PDF + TXT upload, private signed download with matching checksums, real delete, anonymous access refused, and the full validation/security matrix. Supabase is used for storage only: PostgreSQL remains the database and Better Auth the authentication.
 - **Phase 6 (Episodes 21–22, committed `feat(ai): add evidence-grounded course intelligence`):** courses are analysed into concepts grounded in real `material_chunk` evidence by **Google Gemini**, server-only through the official `@google/genai` SDK. Concepts carry instructor terminology, a definition and the exact evidence behind them; `SUPPORTED`/`PARTIALLY_SUPPORTED`/`INSUFFICIENT_EVIDENCE` are honest states and a fabricated citation rejects the whole response. Verified with the deterministic suite (**59 passed**) **and the live provider** (`scripts/verify-gemini-live.mjs`, **26 passed**), plus the Phase 5.6 regression (**91 passed**).
 - **Phase 7 (Episode 23, committed `feat(assessment): build evidence-grounded assessment intelligence`):** each assessment question is judged against the concepts the course's own materials taught, with honest verdicts **Consistent with the evidence** / **Possible inconsistency** / **Insufficient evidence**. `source_mapping` (dormant since Phase 4) is now populated and read, and the course verdict is the most severe finding. Verified deterministically (**76 passed**) and with the live model (**34 passed**), including the real six-versus-five detection.
+- **Phase 8 (Episode 24, committed `feat(mastery): add practice-based mastery intelligence`):** mastery is **derived from the learner's own recorded practice and never assigned by a model**. `practice_attempt` (migration `0006`) records each attempt — a question (credited to every concept it was checked against) or a single concept — and `lib/mastery.ts` turns the history into **Untested / Weak / Developing / Mastered** by one deterministic rule (no attempts → Untested; under half correct → Weak; at least half → Developing; at least 80% over at least three attempts → Mastered). Recording re-derives the affected concepts and upserts `mastery_state` with attempt counts in one transaction. `POST /api/courses/[courseId]/practice` is the only write path and refuses an unchecked question with 409. The Mastery tab shows the rule, each concept's attempts, a practice panel and recent practice. Verified deterministically (**48 passed, 0 failed**) with no model call.
 - **Phase 5.6 (Episode 20):** uploaded materials are now **extracted into location-tagged evidence** — PDF by page, slides by slide, transcripts by timestamp range, documents/notes by section or line range — chunked into ordered `material_chunk` rows with a `material_ingestion_job` tracking each attempt (`db/migrations/0003_material_ingestion.sql`, `lib/extraction/`, `lib/ingestion.ts`). Uploads ingest synchronously; failures keep the file and record only a safe code, and Sources shows **Ready for analysis** / Processing / Extraction failed with Retry. Verified with `scripts/test-ingestion.mjs` — **91 passed, 0 failed** — across all seven formats, locations, ordering, isolation, failed states, cascades, typecheck, and a secret scan. No AI provider, prompt, embedding, or vector database was added.
 
 ## Suggested next steps
-0. **Phase 8 — Mastery Intelligence (next, automatic).** Add `practice_attempt`, derive mastery from real attempts (**Untested / Weak / Developing / Mastered**), and keep AI out of assigning mastery — at most it explains a result the attempts already determined. Commit `feat(mastery): add practice-based mastery intelligence`.
+0. **Phase 9 — Targeted Revision (next, automatic).** Turn evidence and mastery into the smallest useful next action: recommend revision from the learner's weak/untested concepts, and generate targeted practice from weak areas rather than at random. Commit `feat(revision): add targeted revision workflow`.
 1. Product Owner review passes worth doing by eye: the **Assessments** tab after checking the five-component question (http://localhost:3260 or :3000), and the **Intelligence** tab — screenshots remain non-compositing in this environment, so the UI has not been seen visually yet.
 2. Worth hardening early: the live Gemini free tier is a shared queue, so a bounded retry and a clear learner-facing retry affordance matter more than they look — worth revisiting in Phase 10 alongside rate limiting and upload quotas.
 3. A cheap robustness win: replace TS incremental typechecking's stale-cache trap by making `npm run typecheck` clear `tsconfig.tsbuildinfo` first, so a false-clean cannot reach a commit again.

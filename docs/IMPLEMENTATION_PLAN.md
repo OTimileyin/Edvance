@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** In progress — Phases 5, 5.6, 6 (Course Intelligence) and 7 (Assessment Intelligence) complete and verified end to end (2026-10-01), including a verified live Google Gemini call; next phase Phase 8
+**Status:** In progress — Phases 5, 5.6, 6 (Course Intelligence), 7 (Assessment Intelligence) and 8 (Mastery Intelligence) complete and verified end to end (2026-10-01), including a verified live Google Gemini call; next phase Phase 9
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -153,10 +153,10 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 - Real extraction and chunking for all seven formats, correct page/slide/timestamp/section/line locations, ordered chunks, ingestion jobs, ownership isolation, failed-ingestion states, and delete cascades — `scripts/test-ingestion.mjs` reports 91 passed, 0 failed. See `Doc/PRD.md` Appendix A, Change 14.
 
 **Not yet implemented:**
-- Mastery Intelligence (Phase 8) and everything after it.
+- Targeted Revision (Phase 9) and everything after it.
 - Production deployment.
 
-**Next phase:** Phase 8 — Mastery Intelligence.
+**Next phase:** Phase 9 — Targeted Revision.
 
 ---
 
@@ -404,8 +404,17 @@ This is the **Lesson 6 deliverable**.
 - Mastery profile marking Mastered / Developing / Weak / Untested concepts.
 
 **Acceptance Criteria:**
-- [ ] Practice/self-assessment updates concept mastery status.
-- [ ] Mastery profile reflects changes correctly.
+- [x] Practice/self-assessment updates concept mastery status.
+- [x] Mastery profile reflects changes correctly.
+
+**Delivered:**
+- `practice_attempt` records each thing a learner actually did — an assessment question (attributed to every concept that question was checked against) or a single concept — with the answer, the correctness verdict and when it happened (`db/migrations/0006_practice_mastery.sql`).
+- `lib/mastery.ts` derives the status from those attempts alone, deterministically: no attempts → Untested; under half correct → Weak; at least half correct → Developing; at least 80% over at least three attempts → **Mastered**. No model is called; mastery is never AI-set.
+- Recording an attempt re-derives the affected concepts from the learner's complete history and upserts `mastery_state` (with attempt counts and a last-practised timestamp) in one transaction.
+- `POST /api/courses/[courseId]/practice` authenticates, authorises by ownership, validates a single target and verdict, refuses an unchecked question with 409, and returns the refreshed course.
+- The Mastery tab states the rule plainly, shows each concept's attempts and correct count, offers a practice panel for checked questions and single concepts, and lists recent practice with the learner's own answer.
+- Verified with `scripts/test-mastery-intelligence.mjs` — **48 passed, 0 failed** — covering the honest Untested baseline, the full status ladder (wrong → Weak; 1/2 → Developing; 4/5 → Mastered), attribution, reproducibility, per-concept isolation, the unchecked-question gate, validation, ownership isolation, and demo-workspace honesty.
+- Phase 7 (**76**), Phase 6 (**59**) and Phase 5.6 (**91**) regressions still pass; typecheck, secret scan and baseline restored.
 
 ---
 
