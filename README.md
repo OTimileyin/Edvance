@@ -177,7 +177,7 @@ One-time setup (per machine):
    infisical secrets set --file=.env --env=dev
    ```
 
-   The keys the app reads are `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`; for material uploads, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and `SUPABASE_STORAGE_BUCKET`; and — for course intelligence — `GEMINI_API_KEY` (optionally `GEMINI_MODEL`, which defaults to `gemini-flash-latest`). The `dev` environment pins `GEMINI_MODEL=gemini-3.5-flash` because the `-latest` alias was intermittently capacity-limited; the provider wrapper also retries a transient 429/5xx a bounded three times.
+   The keys the app reads are `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`; for material uploads, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and `SUPABASE_STORAGE_BUCKET`; and — for course intelligence — `GEMINI_API_KEY` (optionally `GEMINI_MODEL`, which defaults to `gemini-flash-latest`). The `dev` environment pins `GEMINI_MODEL=gemini-3-flash-preview` because the `-latest` alias was intermittently capacity-limited (the free tier is 20 requests/day/model); the provider wrapper also retries a transient 429/5xx a bounded three times.
 3. Install the CLI — `winget install infisical` on Windows, or `brew install infisical/get-cli/infisical` on macOS (see the [CLI install docs](https://infisical.com/docs/cli/overview)).
 4. Log in. In WSL 2, a remote SSH session, or Codespaces there is no browser, so use the interactive login: `infisical login -i`. Otherwise `infisical login`.
 5. Link this directory to the project once: `infisical init` and pick the `edvance` project. This writes `.infisical.json`, which holds local project settings only — no secret values — and is safe to commit. It is interactive and needs a real terminal; there is no flag that selects a project for you.
@@ -230,19 +230,22 @@ infisical run --env=prod -- next start
 
 Or hand the process a machine-identity access token directly, with no login step at all: `infisical run --token=<token> --env=prod -- next start`. Either way the child process sees the same variable names, so nothing in the application changes.
 
-## Deployment (prepared, not yet executed)
+## Deployment (live)
+
+**Edvance is deployed at <https://white-whale.spcf.app>** — Specific project `edvance`, environment
+`prod`, active deployment `depl_02f4368hqt4n86q6`. `/api/health` returns **200** with the database, AI
+and storage integrations healthy (`email: not-configured`); all migrations are applied and the app
+serves HTTPS. The deployed app passed the remote end-to-end suite below (**69 checks, 0 failures**).
 
 `specific.hcl` is the deployment spec for the **Specific** platform: a Node build, a `next start`
 service behind a public HTTPS endpoint, a managed PostgreSQL instance, a `/api/health` health check,
 and a `pre_deploy` step that applies `db/migrations/*.sql` before each rollout (safe to re-run, tracked
 in `schema_migrations`).
 
-**Edvance has not been deployed yet.** This section is the exact procedure to follow, not a record of
-a deploy. Two things are deliberately left to a human, because they need an account and real
-credentials:
+Two things are deliberately left to a human, because they need an account and real credentials:
 
 1. **Authenticate the platform.** Install the Specific CLI and sign in (`specific login`), or supply a
-   machine token. The CLI is not on `PATH` in this checkout, and no deployment credentials exist here.
+   machine token. Deploy from **WSL**, not native Windows — see the note after the procedure.
 2. **Set the operator-provided secrets** listed below. Values are never committed.
 
 The target is a **free tier** with managed PostgreSQL and HTTPS. Do not enable billing, and do not add
@@ -260,9 +263,10 @@ any service from the project's exclusion list (vector databases, Kafka/Redis, Ku
 | `email_from` | optional | Verified sender address; defaults to Resend's onboarding sender. |
 | `better_auth_secret` | auto | Generated and stored by the platform; signs sessions. |
 
-`GEMINI_MODEL` is pinned to `gemini-3.5-flash` in the spec. `DATABASE_URL`, `BETTER_AUTH_URL` and
-`NODE_ENV` are wired by the platform. With the optional integrations unset the app still runs and
-degrades honestly — it reports "not configured" instead of failing obscurely — but AI analysis and
+`GEMINI_MODEL` is pinned to `gemini-3-flash-preview` in the spec. The Gemini free tier allows **20
+requests/day/model**, so the pin is a model the operator's key can actually serve; change it to any
+available flash model. `DATABASE_URL`, `BETTER_AUTH_URL` and `NODE_ENV` are wired by the platform. With
+the optional integrations unset the app still runs and degrades honestly — it reports "not configured" instead of failing obscurely — but AI analysis and
 uploads would be unavailable, so both are required for a usable deployment.
 
 ### Procedure
@@ -286,6 +290,20 @@ infisical run --env=dev -- npx next build
 specific deploy
 ```
 
+Run the deploy from **WSL Ubuntu**, not native Windows: the Windows CLI fails at tarball creation
+with `specific.hcl not found in project directory`. Forward the operator secrets into WSL without
+ever putting them on a command line:
+
+```
+export WSLENV='GEMINI_API_KEY:SUPABASE_URL:SUPABASE_SECRET_KEY:SUPABASE_STORAGE_BUCKET'
+infisical run --env=dev -- wsl.exe -d Ubuntu -- bash -lc 'cd <project> && specific deploy -e prod'
+```
+
+The platform builder runs with **no runtime secrets**, so the `build` block supplies harmless
+build-only placeholders (`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`). Next.js collects
+route config at build time and `lib/auth.ts`/`lib/db.ts` read config at import, so without them the
+build fails with `Missing required environment variable DATABASE_URL`.
+
 ### Verify the deployment
 
 - `GET https://<deployment-url>/api/health` returns **200** with `database: "ok"` and
@@ -297,6 +315,12 @@ check a question, record practice, and generate revision practice — the full l
 - Confirm `NODE_ENV=production` means the deterministic mock provider is refused: analysis must either
 use the real Gemini key or report that analysis is not configured.
 - Re-run `specific deploy` and confirm migrations are a no-op and data survives.
+- Re-run the deployed smoke test end to end:
+  `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs`. It signs up
+  throwaway learners over HTTP only and exercises HTTPS/TLS, security headers, sign-up, upload +
+  ingestion into evidence chunks, course and assessment analysis against the live provider, mastery,
+  revision, cross-learner isolation and secret non-exposure (**69 checks**), then deletes what it
+  created.
 
 ## Running the Local Prototype
 

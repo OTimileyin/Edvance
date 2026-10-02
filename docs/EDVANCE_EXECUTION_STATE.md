@@ -66,8 +66,10 @@ None — the deployment is live and everything verified. Two optional, non-block
 
 ## ENVIRONMENT NOTES
 
-- `GEMINI_API_KEY` present in Infisical `dev`; `GEMINI_MODEL` pinned to `gemini-3.5-flash` in `dev`
-  and in `specific.hcl`. Never print or commit either value.
+- `GEMINI_API_KEY` present in Infisical `dev`; `GEMINI_MODEL` pinned to `gemini-3-flash-preview` in
+  `dev` and in `specific.hcl`. (Earlier live-provider runs above ran while `dev` pinned
+  `gemini-3.5-flash`; the deployed app serves `gemini-3-flash-preview`, which the remote suite
+  exercised.) Never print or commit either value.
 - `RESEND_API_KEY` is **not** present; the account-deletion email honestly reports
   `emailSent: false`. Adding the key activates the flow without code changes.
 - Next.js 16 allows only **one `next dev` per project directory** — stop the current server first.

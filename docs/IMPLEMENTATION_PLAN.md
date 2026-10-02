@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** **Complete — EDVANCE — SUBMISSION READY** (2026-10-02). Phases 5–12 are complete and verified end to end, including a verified live Google Gemini call, a production build, and an adversarial submission audit. Phase 11 (Deployment) is specified and documented but **not executed** — the one pending human action (platform credentials). See `docs/SUBMISSION_REPORT.md`.
+**Status:** **Complete — EDVANCE — DEPLOYED AND SUBMISSION READY** (2026-10-02). Phases 5–12 are complete and verified end to end, including a verified live Google Gemini call, a production build, an adversarial submission audit, and a **live deployment** at <https://white-whale.spcf.app> that passed a remote end-to-end suite (**69 checks, 0 failures**). See `docs/SUBMISSION_REPORT.md`.
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -485,14 +485,14 @@ This is the **Lesson 6 deliverable**.
 - [x] `specific.hcl` declares every secret the app reads, and every reference resolves.
 - [x] The health check points at the real readiness probe, and migrations run pre-deploy.
 - [x] The deploy procedure and a verification checklist are documented.
-- [ ] The app is deployed and smoke-tested. **Blocked:** the `specific` CLI and credentials are not available in this environment, and deploying creates external infrastructure requiring the account owner's authorisation.
+- [x] The app is deployed and smoke-tested. **Done:** live at <https://white-whale.spcf.app> (`depl_02f4368hqt4n86q6`); remote suite **69 passed / 0 failed**.
 
 **Delivered:**
 - `specific.hcl` now declares `gemini_api_key`, `supabase_url`, `supabase_secret_key`, `supabase_storage_bucket` and the optional `resend_api_key`/`email_from`, wires them into the service environment, pins `GEMINI_MODEL`, and changes the endpoint health check from `/` to the real `/api/health` probe. Every `secret.*` reference has a matching declaration (verified). `better_auth_secret` stays platform-generated.
 - `README.md` gains a **Deployment** section: the prerequisites, the secrets table, the deploy commands, and a verification checklist (health probe, security headers, the full learner loop, confirmation that the production mock is refused, and a re-deploy migration no-op).
 - The local production build the platform runs is verified (`next build` succeeds).
 
-**Not performed:** the deploy, remote migrations and the deployed smoke test — all blocked on platform credentials and authorisation. This is recorded as a human action, not silently skipped.
+**Executed (2026-10-02):** deployed to the `edvance` project / `prod` environment from **WSL** (the native-Windows CLI cannot build a tarball). All 8 migrations applied; `/api/health` → 200; HTTPS and security headers confirmed; `scripts/verify-remote-deployment.mjs` ran the full learner journey on the live app (**69 passed / 0 failed**) against the real Gemini provider (pinned `gemini-3-flash-preview`). The `build` block supplies build-only placeholder env because the platform builder has no runtime secrets.
 
 ---
 
@@ -510,7 +510,7 @@ This is the **Lesson 6 deliverable**.
 - [x] Full test gate green (typecheck, unit, six end-to-end suites, live provider, production build, secret scan, baseline).
 - [x] Manual walkthrough of the shipped screens.
 - [x] `docs/SUBMISSION_REPORT.md` written.
-- [x] Edvance declared submission ready, with the deployment recorded as a pending human action.
+- [x] Edvance declared submission ready **and deployed live** (the deployment is no longer pending).
 
 **Delivered:**
 - Adversarial audit: a fabricated citation, a fabricated concept, an unjustified contradiction, a cross-user read and an untrusted origin were each attempted and each refused. The mock provider cannot reach production (`NODE_ENV`), no client component imports a server-only module, and no secret is hardcoded or exposed via `NEXT_PUBLIC_`.

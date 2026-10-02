@@ -726,8 +726,34 @@ Nowhere — Phase 10 ran end to end autonomously. Phase 11 begins automatically.
 
 ---
 
-## Current state (2026-10-01)
+## Episode 29 — Phase 11 executed: Edvance deployed and verified live
 
+### Product Owner prompt (verbatim, abridged)
+> Proceed with Phase 11 deployment and complete the final submission-readiness checks. Edvance must be deployed for submission. Do NOT add payment/Paystack. Use the existing deployment plan and `docs/EDVANCE_EXECUTION_STATE.md` as source of truth. Once deployment succeeds, run the full remote smoke test, verify the complete learner journey, HTTPS, storage, ingestion, Gemini intelligence, mastery and revision on the deployed app, confirm no secrets are exposed, and update `docs/SUBMISSION_REPORT.md` and `docs/EDVANCE_EXECUTION_STATE.md`.
+
+### What the AI builder did
+1. **Deployed through the only path that works.** The Specific CLI cannot build a tarball on native Windows (`specific.hcl not found in project directory`), so the deploy ran from **WSL Ubuntu**, authenticated as a claimed agent account. Operator secrets were forwarded into WSL with `WSLENV` under `infisical run`, so no secret value ever appeared on a command line or in a log.
+2. **Fixed a deploy that could not build.** The platform builder runs with **no runtime secrets**, and `lib/auth.ts`/`lib/db.ts` read configuration at import, so the build failed with `Missing required environment variable DATABASE_URL`. The `build` block now supplies harmless build-only placeholders (`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`).
+3. **Pinned a model the key can actually serve.** The Gemini free tier is **20 requests/day/model** (confirmed from the raw 429 `QuotaFailure`), so `GEMINI_MODEL` is pinned to `gemini-3-flash-preview` in both `specific.hcl` and Infisical `dev`.
+4. **Wrote a re-runnable remote smoke test.** `scripts/verify-remote-deployment.mjs` is HTTP-only (it never touches the production database or bucket directly). It signs up throwaway learners and exercises HTTPS/TLS, the health probe, security headers, the no-fake-claim sweep, sign-up, upload + **synchronous ingestion into evidence chunks**, course analysis (six FATHOM concepts, each citing real evidence), an assessment check naming the inconsistency, mastery, revision, cross-learner isolation and secret non-exposure, then deletes what it created.
+
+### Real results (2026-10-02)
+- **DEPLOYED:** **https://white-whale.spcf.app** — project `edvance`, environment `prod`, active deployment `depl_02f4368hqt4n86q6`. All 8 migrations applied. `/api/health` → **200** (`database: ok`, ai/storage `configured`, email `not-configured`). Security headers and 404 confirmed live; no secret in any HTML or JSON payload.
+- **Remote suite PASS:** `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` → **69 passed / 0 failed** against the real provider. (Earlier runs failed only on the free-tier daily quota, which the script now survives with bounded retry-with-backoff.)
+- **Committed** `feat(deploy): deploy Edvance and verify the live app end to end` — `specific.hcl`, `scripts/verify-remote-deployment.mjs`, `docs/SUBMISSION_REPORT.md`, `docs/EDVANCE_EXECUTION_STATE.md`.
+
+### Where the user was asked to act
+**No human action required** — the deployment is live and the whole journey verified. Two optional notes only: the free-tier quota can be removed with a higher-quota key, and a pre-existing `verify-e2e@edvance.test` account from the Oct-1 verification can be deleted if a pristine database is preferred.
+
+### Files changed
+- New: `scripts/verify-remote-deployment.mjs`
+- Changed: `specific.hcl` (build placeholders; model pin), `README.md`, `docs/SUBMISSION_REPORT.md`, `docs/EDVANCE_EXECUTION_STATE.md`, this episode
+
+---
+
+## Current state (2026-10-02)
+
+- **Phase 11 (Episode 29, committed `feat(deploy): deploy Edvance and verify the live app end to end`):** Edvance is **deployed and live at https://white-whale.spcf.app** (`depl_02f4368hqt4n86q6`, project `edvance`, environment `prod`). All 8 migrations applied; `/api/health` → 200 (db ok, ai/storage configured, email not-configured); HTTPS + security headers confirmed; the re-runnable HTTP-only smoke test `scripts/verify-remote-deployment.mjs` reports **69 passed / 0 failed** against the real provider. `specific.hcl` gained build-only placeholder env and pins `GEMINI_MODEL=gemini-3-flash-preview` (free tier, 20 req/day/model). Deploys must run from WSL (the Windows CLI fails at tarball creation).
 - **Committed & pushed:** the interface sheet is commit `f89fdfc`, and it and everything before it are on `origin/main`. The push moved `9090f45..f89fdfc`, carrying four commits that had accumulated locally: Phase 2 + Field Guide (`2af22eb`), Phase 3 Better Auth (`bfe0e4c`), Press Room + logo (`b092460`), interface sheet (`f89fdfc`). Pushing was done in the same working session.
 - **Phase 3 (Episode 14):** Better Auth over local PostgreSQL (service `postgresql-edvance`, db `edvance`); server-side guard on `/courses`; per-user workspaces; Phase 3 docs committed separately.
 - **Press Room redesign + logo (Episode 15, committed `b092460`):** teal/cream/rust/sage palette with legacy aliases; Edvance seal monogram shipped as React components, favicon, and a shareable SVG; landing page, header, and footer rebuilt. Presentation only — no behaviour changed.
@@ -746,7 +772,7 @@ Nowhere — Phase 10 ran end to end autonomously. Phase 11 begins automatically.
 - **Phase 5.6 (Episode 20):** uploaded materials are now **extracted into location-tagged evidence** — PDF by page, slides by slide, transcripts by timestamp range, documents/notes by section or line range — chunked into ordered `material_chunk` rows with a `material_ingestion_job` tracking each attempt (`db/migrations/0003_material_ingestion.sql`, `lib/extraction/`, `lib/ingestion.ts`). Uploads ingest synchronously; failures keep the file and record only a safe code, and Sources shows **Ready for analysis** / Processing / Extraction failed with Retry. Verified with `scripts/test-ingestion.mjs` — **91 passed, 0 failed** — across all seven formats, locations, ordering, isolation, failed states, cascades, typecheck, and a secret scan. No AI provider, prompt, embedding, or vector database was added.
 
 ## Suggested next steps
-0. **Edvance is submission ready — the only remaining action is the deployment.** Authenticate the Specific CLI, set the operator secrets (`gemini_api_key`, `supabase_url`, `supabase_secret_key`, `supabase_storage_bucket`, optionally `resend_api_key`/`email_from`), run `specific deploy`, then smoke-test the live URL against the checklist in `docs/SUBMISSION_REPORT.md` (health probe, security headers, the full learner loop, and a re-deploy migration no-op).
+0. **Edvance is deployed and submission ready.** It is live at **https://white-whale.spcf.app** and passed the remote end-to-end suite (**69 checks, 0 failures**). Future work starts from the live URL: re-run `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` after any change, and redeploy from WSL. The gate and the exact commands are in `docs/EDVANCE_EXECUTION_STATE.md`.
 1. Product Owner review passes worth doing by eye: the **Assessments** tab after checking the five-component question (http://localhost:3260 or :3000), and the **Intelligence** tab — screenshots remain non-compositing in this environment, so the UI has not been seen visually yet.
 2. Worth hardening early: the live Gemini free tier is a shared queue, so a bounded retry and a clear learner-facing retry affordance matter more than they look — worth revisiting in Phase 10 alongside rate limiting and upload quotas.
 3. A cheap robustness win: replace TS incremental typechecking's stale-cache trap by making `npm run typecheck` clear `tsconfig.tsbuildinfo` first, so a false-clean cannot reach a commit again.

@@ -1469,6 +1469,36 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. Un
 
 ---
 
+## Change 22 — Phase 11 executed: live deployment and remote verification
+
+**Date:** 2026-10-02  
+**Requested by:** Product Owner ("Proceed with Phase 11 deployment and complete the final submission-readiness checks")  
+**Status:** Complete — **Edvance is deployed live at <https://white-whale.spcf.app>** and the full learner journey is verified on it
+
+### Reason
+Phase 11 was specified but deliberately not executed, and the Product Owner authorised the deploy. The build could no longer be verified only locally: the platform builder runs with no secrets, the deployed provider is the real Gemini API rather than a mock, and the remote environment is the only place the managed PostgreSQL, private storage, HTTPS and security headers actually run together.
+
+### Alternatives Considered
+- **Deploying from native Windows:** rejected by evidence. The Specific CLI fails at tarball creation (`specific.hcl not found in project directory`) and crashes; the deploy runs from **WSL Ubuntu**, where the CLI is authenticated as a claimed agent account.
+- **Putting a placeholder-free build on the platform:** impossible. The builder has no runtime secrets and `lib/auth.ts`/`lib/db.ts` read config at import, so the build fails with `Missing required environment variable DATABASE_URL`; the `build` block supplies harmless build-only placeholders instead.
+- **Leaving `GEMINI_MODEL` at the `-latest` alias:** rejected. The free tier is **20 requests/day/model** (confirmed from the raw 429 quota failure), and the alias pointed at an exhausted model; the spec pins `gemini-3-flash-preview`, which the key can serve.
+- **Verifying by hand, once:** rejected. A manual click-through is not repeatable proof; the deployment ships a re-runnable HTTP-only smoke test instead.
+- **Adding payments:** rejected — explicitly out of scope for this phase.
+
+### Decision
+- **Deployed.** Project `edvance` (`proj_0vqsej2psy3sy4tr`), environment `prod`, active deployment `depl_02f4368hqt4n86q6`. All 8 migrations applied by `pre_deploy`; `/api/health` returns `200` with the database healthy and AI/storage configured (`email: not-configured`).
+- **Remote verification is a first-class artifact.** `scripts/verify-remote-deployment.mjs` drives the live app over HTTP only (it never touches the production database or bucket directly): it signs up throwaway learners and exercises HTTPS/TLS, the health probe, security headers, the no-fake-claim sweep, sign-up, upload and **synchronous ingestion into evidence chunks**, course analysis, an assessment check, mastery, revision, cross-learner isolation and secret non-exposure, then deletes what it created.
+- **Honest degradation holds in production.** With `RESEND_API_KEY` unset, account deletion reports `emailSent: false`; the mock provider is refused under `NODE_ENV=production`.
+
+### Verification
+`BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` → **69 passed / 0 failed** against the real provider (`gemini-3-flash-preview`). Headers verified live (CSP, HSTS, `X-Frame-Options: DENY`, nosniff, Referrer-Policy, Permissions-Policy; no `X-Powered-By`); 404 on unknown routes; 401 on unauthenticated account deletion; no secret in any HTML or JSON payload. Committed as `feat(deploy): deploy Edvance and verify the live app end to end`.
+
+### Impact on this document
+- §16.5 / §18: the deployment is executed, and the remote evidence covers the whole learner journey; the deployment is no longer a pending human action.
+- `docs/SUBMISSION_REPORT.md` records the live URL, deployment id and remote run; `README.md`, `docs/IMPLEMENTATION_PLAN.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+
+---
+
 # Appendix B — Lesson 6 Verification Checklist
 
 ## Task 1 — Implementation Plan
