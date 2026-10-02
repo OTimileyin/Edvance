@@ -675,6 +675,30 @@ Nowhere — Phase 10 ran end to end autonomously. Phase 11 begins automatically.
 
 ---
 
+## Episode 27 — Phase 11: Deployment (specification completed; deploy blocked on a human action)
+
+### Product Owner prompt (verbatim, abridged)
+> [Autonomous completion master directive §17, Phase 11.] Inspect `specific.hcl`, deploy to a free tier with HTTPS and managed PostgreSQL, wire Infisical-compatible secrets, and smoke-test the deployed app end to end.
+
+### What the AI builder did
+1. **Stopped at the right boundary.** The `specific` CLI is not installed in this checkout and no deployment credentials exist, and a deploy creates real external infrastructure (a managed PostgreSQL instance and a public HTTPS URL). Rather than guess, the builder recorded this as a genuine human action and asked the Product Owner how to proceed; the Owner chose to **prepare the deploy without running it**.
+2. **Caught a deploy that would have shipped a hollow product.** `specific.hcl` declared only `PORT`, `NODE_ENV`, `DATABASE_URL`, `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET`. A deploy from it would have started cleanly and then offered a product **without AI analysis and without file storage** — the two things every earlier phase rests on. The spec now declares `gemini_api_key`, `supabase_url`, `supabase_secret_key`, `supabase_storage_bucket` and the optional `resend_api_key`/`email_from`, and pins `GEMINI_MODEL`.
+3. **Verified the spec internally.** Every `secret.*` reference in `specific.hcl` has a matching declaration (checked with a query over the file). `better_auth_secret` remains platform-generated.
+4. **Pointed the platform at a real health check.** The endpoint's `health_check` now targets `/api/health` (built in Phase 10) instead of `/`, so the platform sees an unhealthy instance when the database is unreachable.
+5. **Documented the procedure rather than inventing it.** The README gains a Deployment section: prerequisites (authenticate the platform, set the operator secrets), a secrets table, the deploy commands, and a verification checklist. Because the CLI is unavailable, the procedure names the steps and points the operator at `specific --help` instead of fabricating flag names.
+
+### Real results (2026-10-02)
+- **Spec PASS:** every `secret.*` reference resolves to a declaration; the local production build the platform runs (`npx next build`) succeeds.
+- **Not performed:** the deploy, remote migrations and the deployed smoke test — blocked on platform credentials and the account owner's authorisation. Recorded as a human action, not skipped silently.
+
+### Where the user was asked to act
+**One genuine human action:** authenticate the platform and supply the integration secrets. The Owner chose to prepare rather than deploy, so nothing external was created.
+
+### Files changed
+- Changed: `specific.hcl`, `README.md`, `Doc/PRD.md` (Change 20), `docs/IMPLEMENTATION_PLAN.md`, `docs/EDVANCE_EXECUTION_STATE.md`, this episode
+
+---
+
 ## Current state (2026-10-01)
 
 - **Committed & pushed:** the interface sheet is commit `f89fdfc`, and it and everything before it are on `origin/main`. The push moved `9090f45..f89fdfc`, carrying four commits that had accumulated locally: Phase 2 + Field Guide (`2af22eb`), Phase 3 Better Auth (`bfe0e4c`), Press Room + logo (`b092460`), interface sheet (`f89fdfc`). Pushing was done in the same working session.
@@ -695,7 +719,7 @@ Nowhere — Phase 10 ran end to end autonomously. Phase 11 begins automatically.
 - **Phase 5.6 (Episode 20):** uploaded materials are now **extracted into location-tagged evidence** — PDF by page, slides by slide, transcripts by timestamp range, documents/notes by section or line range — chunked into ordered `material_chunk` rows with a `material_ingestion_job` tracking each attempt (`db/migrations/0003_material_ingestion.sql`, `lib/extraction/`, `lib/ingestion.ts`). Uploads ingest synchronously; failures keep the file and record only a safe code, and Sources shows **Ready for analysis** / Processing / Extraction failed with Retry. Verified with `scripts/test-ingestion.mjs` — **91 passed, 0 failed** — across all seven formats, locations, ordering, isolation, failed states, cascades, typecheck, and a secret scan. No AI provider, prompt, embedding, or vector database was added.
 
 ## Suggested next steps
-0. **Phase 11 — Deployment (next, automatic).** Inspect `specific.hcl`, deploy to a free tier with HTTPS and managed PostgreSQL, wire Infisical-compatible secrets, and smoke-test the deployed app end to end. Commit, then continue automatically to Phase 12 (submission readiness).
+0. **Phase 12 — Submission Readiness (next, automatic).** Run an adversarial audit and a no-fake-feature sweep (grep for mock/demo/hardcoded/TODO/FIXME/placeholder/fake/seed and confirm every claim), execute the full test gate, write `docs/SUBMISSION_REPORT.md`, walk the app manually, and declare Edvance submission ready — carrying deployment as an explicit pending human action rather than a claimed success.
 1. Product Owner review passes worth doing by eye: the **Assessments** tab after checking the five-component question (http://localhost:3260 or :3000), and the **Intelligence** tab — screenshots remain non-compositing in this environment, so the UI has not been seen visually yet.
 2. Worth hardening early: the live Gemini free tier is a shared queue, so a bounded retry and a clear learner-facing retry affordance matter more than they look — worth revisiting in Phase 10 alongside rate limiting and upload quotas.
 3. A cheap robustness win: replace TS incremental typechecking's stale-cache trap by making `npm run typecheck` clear `tsconfig.tsbuildinfo` first, so a false-clean cannot reach a commit again.

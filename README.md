@@ -228,6 +228,74 @@ infisical run --env=prod -- next start
 
 Or hand the process a machine-identity access token directly, with no login step at all: `infisical run --token=<token> --env=prod -- next start`. Either way the child process sees the same variable names, so nothing in the application changes.
 
+## Deployment (prepared, not yet executed)
+
+`specific.hcl` is the deployment spec for the **Specific** platform: a Node build, a `next start`
+service behind a public HTTPS endpoint, a managed PostgreSQL instance, a `/api/health` health check,
+and a `pre_deploy` step that applies `db/migrations/*.sql` before each rollout (safe to re-run, tracked
+in `schema_migrations`).
+
+**Edvance has not been deployed yet.** This section is the exact procedure to follow, not a record of
+a deploy. Two things are deliberately left to a human, because they need an account and real
+credentials:
+
+1. **Authenticate the platform.** Install the Specific CLI and sign in (`specific login`), or supply a
+   machine token. The CLI is not on `PATH` in this checkout, and no deployment credentials exist here.
+2. **Set the operator-provided secrets** listed below. Values are never committed.
+
+The target is a **free tier** with managed PostgreSQL and HTTPS. Do not enable billing, and do not add
+any service from the project's exclusion list (vector databases, Kafka/Redis, Kubernetes, queues).
+
+### Secrets to set before deploying
+
+| Secret name (`specific.hcl`) | Required | What it is for |
+|---|---|---|
+| `gemini_api_key` | yes | Course/assessment analysis and targeted practice. From Google AI Studio. |
+| `supabase_url` | yes | Supabase project URL for private file storage. |
+| `supabase_secret_key` | yes | Supabase service-role key (server-only; never exposed to the browser). |
+| `supabase_storage_bucket` | yes | The private bucket name (e.g. `edvance-materials`). |
+| `resend_api_key` | optional | Transactional email for the account-deletion confirmation. Unset ⇒ the API reports `emailSent: false` honestly. |
+| `email_from` | optional | Verified sender address; defaults to Resend's onboarding sender. |
+| `better_auth_secret` | auto | Generated and stored by the platform; signs sessions. |
+
+`GEMINI_MODEL` is pinned to `gemini-3.5-flash` in the spec. `DATABASE_URL`, `BETTER_AUTH_URL` and
+`NODE_ENV` are wired by the platform. With the optional integrations unset the app still runs and
+degrades honestly — it reports "not configured" instead of failing obscurely — but AI analysis and
+uploads would be unavailable, so both are required for a usable deployment.
+
+### Procedure
+
+```
+# 1. Authenticate (once)
+specific login
+
+# 2. Point the CLI at this project, if it is not already
+specific init            # confirm against `specific --help` in your environment
+
+# 3. Set the operator secrets for the production environment
+#    (the exact flag names come from `specific secrets --help`)
+#    gemini_api_key, supabase_url, supabase_secret_key, supabase_storage_bucket
+#    and, optionally, resend_api_key and email_from
+
+# 4. Build locally first — this is the same build the platform runs
+infisical run --env=dev -- npx next build
+
+# 5. Deploy. The pre_deploy step runs `node scripts/migrate.mjs` automatically
+specific deploy
+```
+
+### Verify the deployment
+
+- `GET https://<deployment-url>/api/health` returns **200** with `database: "ok"` and
+each integration reported as `configured`.
+- The response carries the security headers from `next.config.ts` (`content-security-policy`,
+`x-frame-options: DENY`, `x-content-type-options: nosniff`, `referrer-policy`).
+- Sign up a throwaway account, create a course, upload a small text file, analyse the course, add and
+check a question, record practice, and generate revision practice — the full loop.
+- Confirm `NODE_ENV=production` means the deterministic mock provider is refused: analysis must either
+use the real Gemini key or report that analysis is not configured.
+- Re-run `specific deploy` and confirm migrations are a no-op and data survives.
+
 ## Running the Local Prototype
 
 ### Main app (Phase 2 + landing/demo sign-in)

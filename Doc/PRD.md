@@ -1404,6 +1404,40 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. Un
 
 ---
 
+## Change 20 — Phase 11: Deployment (prepared, not executed)
+
+**Date:** 2026-10-02  
+**Requested by:** Product Owner (autonomous completion directive, §17)  
+**Status:** Deployment specification completed and documented; the deploy itself is blocked on a human action
+
+### Reason
+Phase 10 produced a passing production build, which is the last thing that can be proven locally. A real deployment needs an account and credentials on the target platform, and it creates external infrastructure — a managed PostgreSQL instance and a public HTTPS endpoint — so it is the one step that genuinely cannot be completed autonomously and must not be guessed at.
+
+### Alternatives Considered
+- **Deploying with whatever the specification already contained:** rejected. `specific.hcl` declared only `PORT`, `NODE_ENV`, `DATABASE_URL`, `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET`. A deploy from it would have started successfully and then silently offered a product **without AI analysis and without file storage** — the two things every earlier phase depends on. That is worse than not deploying.
+- **Inventing the platform's secret-setting commands:** rejected. The `specific` CLI is not available in this checkout, so the procedure names the steps and directs the operator to `specific --help` rather than fabricating flags.
+- **Committing the credentials needed for a deploy:** rejected. Secrets are supplied through the platform's secret store; the repository declares the secret *names* only.
+- **Enabling billing to obtain a bigger tier:** rejected. The directive requires a free tier, and nothing in the app needs more than that.
+- **Running a deploy to "see if it works":** rejected. It creates real external resources and must be authorised by the account owner first.
+
+### Decision
+- **The spec is now complete.** `specific.hcl` declares every secret the app reads — `gemini_api_key`, `supabase_url`, `supabase_secret_key`, `supabase_storage_bucket`, and the optional `resend_api_key`/`email_from` — wires them into the service environment, pins `GEMINI_MODEL`, and keeps `better_auth_secret` platform-generated. Every `secret.*` reference has a matching declaration (verified).
+- **The health check is real.** The endpoint's `health_check` now points at `/api/health` (added in Phase 10) rather than `/`, so the platform sees an unhealthy instance when the database is unreachable.
+- **Migrations run before rollout.** The existing `pre_deploy` step applies `db/migrations/*.sql` once each against the deployed database; re-running is a no-op.
+- **The procedure is documented, not executed.** `README.md` gains a Deployment section: prerequisites (authenticate the platform; set the operator secrets), the exact secrets table, the deploy commands, and a verification checklist (health probe, security headers, the full learner loop, confirmation that the production mock is refused, and a re-deploy no-op).
+- **Degradation stays honest.** With the optional integrations unset the app still runs, but reports "not configured" for analysis, storage or email rather than failing obscurely — and the documentation states plainly that AI and storage are required for a usable deployment.
+
+### Verification
+Every `secret.*` reference in `specific.hcl` has a matching `secret` declaration. The local production build the platform runs is verified: `infisical run --env=dev -- npx next build` succeeds (TypeScript checked, 13 static pages generated, every route compiled). No deploy was performed, and no external infrastructure was created.
+
+- **Not performed:** the deploy itself, migrations against a remote database, and the deployed smoke test — all blocked on platform credentials and authorisation.
+
+### Impact on this document
+- §16.5: the deployment specification and procedure are complete; execution is pending human authorisation.
+- `README.md`, `docs/IMPLEMENTATION_PLAN.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+
+---
+
 # Appendix B — Lesson 6 Verification Checklist
 
 ## Task 1 — Implementation Plan

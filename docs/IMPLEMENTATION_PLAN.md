@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** In progress — Phases 5, 5.6, 6 (Course Intelligence), 7 (Assessment Intelligence), 8 (Mastery Intelligence), 9 (Targeted Revision) and 10 (Product Completion & Hardening) complete and verified end to end (2026-10-02), including a verified live Google Gemini call and a production build; next phase Phase 11
+**Status:** In progress — Phases 5, 5.6, 6 (Course Intelligence), 7 (Assessment Intelligence), 8 (Mastery Intelligence), 9 (Targeted Revision) and 10 (Product Completion & Hardening) complete and verified end to end (2026-10-02), including a verified live Google Gemini call and a production build; Phase 11 (Deployment) is specified and documented but **not executed** (awaits platform credentials); next phase Phase 12
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -153,9 +153,10 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 - Real extraction and chunking for all seven formats, correct page/slide/timestamp/section/line locations, ordered chunks, ingestion jobs, ownership isolation, failed-ingestion states, and delete cascades — `scripts/test-ingestion.mjs` reports 91 passed, 0 failed. See `Doc/PRD.md` Appendix A, Change 14.
 
 **Not yet implemented:**
-- Deployment (Phase 11) and Submission Readiness (Phase 12).
+- Submission Readiness (Phase 12).
+- Deployment execution (Phase 11): prepared and documented, blocked on platform credentials and authorisation.
 
-**Next phase:** Phase 11 — Deployment.
+**Next phase:** Phase 12 — Submission Readiness (deployment execution remains pending a human action).
 
 ---
 
@@ -470,6 +471,29 @@ This is the **Lesson 6 deliverable**.
 - **Unit tests.** `npm run test:unit` runs a dependency-free `node:test` suite over the pure modules — mastery rules, the rate limiter, and material format/quota helpers — alongside the existing end-to-end suites.
 - **Production build.** `next build` compiles, type-checks, and prerenders every route successfully.
 - Verified with `scripts/test-product-hardening.mjs` — **43 passed, 0 failed** — covering the health probe, security headers, the 404 page, course and question edit/delete (including storage cleanup and check invalidation), and the account lifecycle. Unit suite **24 passed, 0 failed**; Phases 9/8/7/6/5.6 regressions **72 / 48 / 76 / 59 / 91** all pass; typecheck, secret scan and baseline restored.
+
+---
+
+### Phase 11 — Deployment
+
+**Goal:** Ship the built product to a free-tier host with HTTPS and managed PostgreSQL.
+
+**Outputs:**
+- A complete deployment specification (`specific.hcl`).
+- A documented procedure and verification checklist.
+
+**Acceptance Criteria:**
+- [x] `specific.hcl` declares every secret the app reads, and every reference resolves.
+- [x] The health check points at the real readiness probe, and migrations run pre-deploy.
+- [x] The deploy procedure and a verification checklist are documented.
+- [ ] The app is deployed and smoke-tested. **Blocked:** the `specific` CLI and credentials are not available in this environment, and deploying creates external infrastructure requiring the account owner's authorisation.
+
+**Delivered:**
+- `specific.hcl` now declares `gemini_api_key`, `supabase_url`, `supabase_secret_key`, `supabase_storage_bucket` and the optional `resend_api_key`/`email_from`, wires them into the service environment, pins `GEMINI_MODEL`, and changes the endpoint health check from `/` to the real `/api/health` probe. Every `secret.*` reference has a matching declaration (verified). `better_auth_secret` stays platform-generated.
+- `README.md` gains a **Deployment** section: the prerequisites, the secrets table, the deploy commands, and a verification checklist (health probe, security headers, the full learner loop, confirmation that the production mock is refused, and a re-deploy migration no-op).
+- The local production build the platform runs is verified (`next build` succeeds).
+
+**Not performed:** the deploy, remote migrations and the deployed smoke test — all blocked on platform credentials and authorisation. This is recorded as a human action, not silently skipped.
 
 ---
 
