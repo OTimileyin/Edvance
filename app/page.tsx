@@ -381,7 +381,7 @@ export default function Home() {
                 </Link>
               </div>
               <p className="hero-note">
-                Free while in development · course analysis not yet live
+                Evidence-first · every citation checked before it is stored
               </p>
             </div>
 
@@ -538,11 +538,12 @@ export default function Home() {
             </h2>
             <div className="alert">
               <p>
-                Accounts, sessions, and per-user workspaces are <strong>real</strong>{" "}
-                — Better Auth over a local PostgreSQL database. Course materials,
-                questions, and analysis still run on <strong>mock data</strong> in
-                your browser; live source ingestion and AI processing arrive in
-                later phases.
+                Everything you use is <strong>real</strong>: accounts and sessions
+                (Better Auth over PostgreSQL), private file storage, text extraction,
+                AI course and assessment analysis, practice-based mastery, and
+                targeted revision. Analysis runs only when you ask for it, and the
+                model is called from the server alone. Seeded demo workspaces are
+                clearly labelled and are replaced by your own materials.
               </p>
             </div>
             <div className="cta-row" style={{ marginTop: "var(--space-8)" }}>

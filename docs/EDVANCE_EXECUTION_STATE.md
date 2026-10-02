@@ -7,18 +7,21 @@ file + the repository** — never from chat memory.
 
 ## CURRENT PHASE
 
-**Phase 12 — Submission Readiness** (autonomous completion directive §18)
+**Phase 12 — Submission Readiness — COMPLETE.**
 
 ## CURRENT TASK
 
-Phase 11 is **prepared and documented but not executed** — the deploy is a pending human action (see
-below). Begin Phase 12: run an adversarial audit and a no-fake-feature sweep, execute the full test
-gate, write `docs/SUBMISSION_REPORT.md`, walk the app manually, and declare Edvance submission ready
-— carrying the deployment as an explicit pending human action rather than a claimed success.
+Nothing is in flight. **Edvance is SUBMISSION READY.** Phases 0–12 are complete and verified; the
+only outstanding action is the deployment itself, which needs platform credentials (see HUMAN
+ACTIONS REQUIRED). The submission deliverable is `docs/SUBMISSION_REPORT.md`.
+
+If a further change is requested, resume from this file and the repository — not from chat memory —
+and re-run the gate before claiming anything new.
 
 ## LAST VERIFIED COMMIT
 
-`fb96dc2` — `feat: complete the product and harden it` (Phase 10). Branch `main`.
+`18db198` — `docs(deploy): complete and document the deployment specification` (Phase 11). Branch `main`.
+Phase 10 was `fb96dc2`.
 Phase 9 was `3d7b818`; Phase 8 was `aa6f014`; Phase 7 was `2d51d6f`; Phase 6 was `2bce681`;
 Phase 5.6 was `f45ad5a`; Phase 5.5 was `0e33c80`. (Phase 11's spec/doc changes are committed with it.)
 
@@ -35,25 +38,26 @@ Phase 5.6 was `f45ad5a`; Phase 5.5 was `0e33c80`. (Phase 11's spec/doc changes a
   regressions **72 / 48 / 76 / 59 / 91**, typecheck exit 0, production build passes.
 - Phase 11 — Deployment. **Specification complete; deploy not executed.** `specific.hcl` declares
   every secret the app reads and points the health check at `/api/health`; the procedure is
-  documented in `README.md`. Blocked on platform credentials (human action).
+  documented in `README.md`. Committed `18db198`. Pending platform credentials (human action).
+- Phase 12 — Submission Readiness. **Complete.** Edvance declared submission ready: adversarial
+audit held, no-fake-feature sweep clean, four stale product claims found and fixed, full gate green
+(typecheck, unit 24, end-to-end 43/72/48/76/59/91, live Gemini 34, production build, secret scan,
+baseline), `docs/SUBMISSION_REPORT.md` written.
 
 ## ACTIVE BLOCKERS
 
-None for Phase 12. The following remains a **pending human action**, not a blocker to submission
-readiness:
-
-- **Deployment execution** (Phase 11): the `specific` CLI is not installed and no deployment
-  credentials exist. The Product Owner chose to prepare the deploy without running it. Nothing
-  external was created.
+None.
 
 ## HUMAN ACTIONS REQUIRED
+
+One item, and it does not block submission readiness:
 
 1. **Run the deployment** when ready: install and authenticate the Specific CLI, set the operator
    secrets (`gemini_api_key`, `supabase_url`, `supabase_secret_key`, `supabase_storage_bucket`, and
    optionally `resend_api_key`/`email_from`), then `specific deploy`. The exact steps are in the
-   README's Deployment section. The `pre_deploy` step runs migrations automatically.
-2. Confirm the deployment target (project name, region) and that a free tier with managed PostgreSQL
-   and HTTPS is acceptable. Do not enable billing.
+   README's Deployment section; `pre_deploy` runs migrations automatically. Confirm the target
+   (project name, region) and that a free tier with managed PostgreSQL and HTTPS is acceptable — do
+   not enable billing.
 
 ## ENVIRONMENT NOTES
 
@@ -74,26 +78,19 @@ readiness:
 - `specific.hcl` is now committed (Phase 11). It contains no secret values, only references and one
   platform-generated secret.
 
-## NEXT AUTONOMOUS ACTION
+## IF WORK CONTINUES
 
-Phase 12 — Submission Readiness, per the directive §18:
+There is no queued phase. If a new change is requested, resume from **this file + the repository**,
+make the change, and re-run the gate before claiming anything:
 
-1. **Adversarial audit.** Walk every route and API; try to make the app lie, invent evidence, hide a
-   failure, or cross a user boundary. Record what holds and what does not.
-2. **No-fake-feature sweep.** `grep -rinE "mock|demo|hardcoded|todo|fixme|placeholder|fake|seed"` over
-   the app and confirm every hit is legitimate (seeded demo content, the env-gated test provider,
-   documentation) — never a stubbed feature presented as real. Confirm the mock provider is refused in
-   production.
-3. **Full test gate.** `rm -f tsconfig.tsbuildinfo && npx tsc --noEmit`; `npm run test:unit`; the
-   Phase 10/9/8/7/6/5.6 suites; the live Gemini check if the quota allows; `npx next build`; secret
-   scan; DB + bucket back to baseline.
-4. **Write `docs/SUBMISSION_REPORT.md`** — scope, what is real, what is deliberately limited, the
-   verification results, and the pending deployment action.
-5. **Manual walkthrough** of the shipped screens (landing → sign-up → course → sources → intelligence
-   → assessments → mastery → revision → account), checking responsive layout and accessibility.
-6. Update `Doc/PRD.md`, `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and this file,
-   then state **EDVANCE — SUBMISSION READY** (with deployment as the one outstanding human action).
-   Commit `docs: add submission readiness report`.
+1. `rm -f tsconfig.tsbuildinfo && npx tsc --noEmit`.
+2. `npm run test:unit`.
+3. Start one mock dev server (`EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260`)
+   and run the Phase 10 / 9 / 8 / 7 / 6 / 5.6 suites with `BASE_URL=http://localhost:3260`.
+4. `infisical run --env=dev -- npx next build`.
+5. Confirm the secret scan is clean and the database + bucket are back to baseline.
+6. Update `Doc/PRD.md` (a new Change), `docs/IMPLEMENTATION_PLAN.md`, `README.md`,
+   `conversation.md` (a new Episode), `docs/SUBMISSION_REPORT.md` and this file, then commit.
 
 ## TEST STATUS
 
@@ -134,4 +131,7 @@ Pre-existing, deliberately untouched: `.gitignore` (`.specific`, `specific.local
 
 ## FINAL SUBMISSION STATUS
 
-**Not yet declared.** Phase 12 remains.
+**EDVANCE — SUBMISSION READY.** Phases 0–12 complete and verified end to end. The deployment is the
+one outstanding human action; every claimed capability is implemented, tested (automated suites, a
+live provider run, a production build) and honest about its limits. See
+`docs/SUBMISSION_REPORT.md`.

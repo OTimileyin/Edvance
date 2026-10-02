@@ -1,6 +1,6 @@
 # Edvance — Implementation Plan
 
-**Status:** In progress — Phases 5, 5.6, 6 (Course Intelligence), 7 (Assessment Intelligence), 8 (Mastery Intelligence), 9 (Targeted Revision) and 10 (Product Completion & Hardening) complete and verified end to end (2026-10-02), including a verified live Google Gemini call and a production build; Phase 11 (Deployment) is specified and documented but **not executed** (awaits platform credentials); next phase Phase 12
+**Status:** **Complete — EDVANCE — SUBMISSION READY** (2026-10-02). Phases 5–12 are complete and verified end to end, including a verified live Google Gemini call, a production build, and an adversarial submission audit. Phase 11 (Deployment) is specified and documented but **not executed** — the one pending human action (platform credentials). See `docs/SUBMISSION_REPORT.md`.
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -153,10 +153,9 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 - Real extraction and chunking for all seven formats, correct page/slide/timestamp/section/line locations, ordered chunks, ingestion jobs, ownership isolation, failed-ingestion states, and delete cascades — `scripts/test-ingestion.mjs` reports 91 passed, 0 failed. See `Doc/PRD.md` Appendix A, Change 14.
 
 **Not yet implemented:**
-- Submission Readiness (Phase 12).
-- Deployment execution (Phase 11): prepared and documented, blocked on platform credentials and authorisation.
+- Deployment execution (Phase 11): prepared and documented, pending platform credentials and authorisation.
 
-**Next phase:** Phase 12 — Submission Readiness (deployment execution remains pending a human action).
+**Next phase:** None — the MVP is submission ready. Run the deployment when the credentials are available (README, Deployment), then smoke-test the live URL against the checklist in `docs/SUBMISSION_REPORT.md`.
 
 ---
 
@@ -494,6 +493,30 @@ This is the **Lesson 6 deliverable**.
 - The local production build the platform runs is verified (`next build` succeeds).
 
 **Not performed:** the deploy, remote migrations and the deployed smoke test — all blocked on platform credentials and authorisation. This is recorded as a human action, not silently skipped.
+
+---
+
+### Phase 12 — Submission Readiness
+
+**Goal:** Prove the submission holds under adversarial scrutiny, or fix what does not.
+
+**Outputs:**
+- `docs/SUBMISSION_REPORT.md`.
+- A full, freshly run verification gate.
+
+**Acceptance Criteria:**
+- [x] Adversarial audit performed; honesty guarantees attacked and held.
+- [x] No-fake-feature sweep clean.
+- [x] Full test gate green (typecheck, unit, six end-to-end suites, live provider, production build, secret scan, baseline).
+- [x] Manual walkthrough of the shipped screens.
+- [x] `docs/SUBMISSION_REPORT.md` written.
+- [x] Edvance declared submission ready, with the deployment recorded as a pending human action.
+
+**Delivered:**
+- Adversarial audit: a fabricated citation, a fabricated concept, an unjustified contradiction, a cross-user read and an untrusted origin were each attempted and each refused. The mock provider cannot reach production (`NODE_ENV`), no client component imports a server-only module, and no secret is hardcoded or exposed via `NEXT_PUBLIC_`.
+- **One real defect found and fixed:** the landing page, footer and header still claimed analysis was "not yet live" and running on "mock data", and labelled the product "Demo · mock data" — false since Phases 6–9. Corrected.
+- Full gate: typecheck exit 0; unit **24**; end-to-end **43 / 72 / 48 / 76 / 59 / 91**, all 0 failed; live provider **34**, 0 failed; production build passes; secret scan clean; database and bucket restored to baseline.
+- `docs/SUBMISSION_REPORT.md` records scope, real versus deliberately limited, the verification matrix, adversarial findings, the manual walkthrough, deployment status and how to run everything.
 
 ---
 

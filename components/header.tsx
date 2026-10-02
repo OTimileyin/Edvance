@@ -30,7 +30,7 @@ export function AppHeader() {
         </nav>
 
         <div className="header-tools">
-          <span className="demo-flag">Demo · mock data</span>
+          <span className="demo-flag">Evidence-first</span>
           {signedIn ? (
             <>
               <Link className="nav-user" href="/account">

@@ -40,9 +40,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Logo idSuffix="footer" size={32} />
             </Link>
             <p className="footer-note">
-              Evidence-first course intelligence. Accounts and sessions are real
-              — stored in local PostgreSQL. Course analysis still runs on mock
-              data until live AI processing lands.
+              Evidence-first course intelligence. Accounts, private file storage
+              and analysis are real — PostgreSQL, object storage, and an AI
+              provider called only from the server. Seeded demo content is
+              labelled as demo.
             </p>
             <nav className="footer-links" aria-label="Legal">
               <Link href="/privacy">Privacy</Link>

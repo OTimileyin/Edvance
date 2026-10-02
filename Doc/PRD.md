@@ -1438,6 +1438,37 @@ Every `secret.*` reference in `specific.hcl` has a matching `secret` declaration
 
 ---
 
+## Change 21 — Phase 12: Submission Readiness
+
+**Date:** 2026-10-02  
+**Requested by:** Product Owner (autonomous completion directive, §18)  
+**Status:** Complete — Edvance is declared submission ready, with deployment as one pending human action
+
+### Reason
+The product is built and hardened; the remaining risk is not missing code but misplaced confidence — a stale claim, a fake feature, or a failure the UI hides. Phase 12 exists to try to break that confidence on purpose before anyone else does.
+
+### Alternatives Considered
+- **Declaring readiness from the passing test suites alone:** rejected. Suites verify the paths the author thought of; an adversarial pass is what finds the claim nobody re-read after the architecture changed.
+- **Grepping only for TODO/FIXME and treating that as the audit:** rejected. The sweep also had to prove the *positive* claims: that the mock provider cannot reach production, that no client component imports a server-only module, and that no secret is exposed.
+- **Leaving the deployment out of the report because it was not executed:** rejected outright. A submission report that omits an unperformed step is exactly the kind of comfortable gap this phase is meant to remove; it is stated plainly instead.
+
+### Decision
+- **Adversarial audit.** Every honesty guarantee was attacked directly — a fabricated citation, a fabricated concept, an unjustified contradiction, a cross-user read, an untrusted origin — and each held. The guarantees are enforced in code (`resolveReferences`, `resolveAssessmentReferences`, `resolveRevisionReferences`, owner-scoped queries) rather than asserted in prose.
+- **No-fake-feature sweep.** A grep for `mock|demo|hardcoded|todo|fixme|placeholder|fake|seed` returns only legitimate hits (the env-gated test provider, the seeded demo dataset, the demo account, HTML placeholders); there are no TODO/FIXME/HACK markers, no client component importing a server-only module, and no `NEXT_PUBLIC_` or hardcoded secret.
+- **The audit found one real defect, and it was fixed.** The landing page, footer and header still claimed that course analysis was "not yet live" and that analysis "still runs on mock data", and flagged the product as "Demo · mock data". All four statements have been false since Phases 6–9; they were corrected to describe the product as it now is. This is the clearest justification for the phase.
+- **Full gate re-run.** Typecheck, the unit suite, all six end-to-end suites, the live Gemini check, the production build, the secret scan and the database/bucket baseline, all from the committed tree.
+- **`docs/SUBMISSION_REPORT.md`** records the scope, what is real versus deliberately limited, the verification matrix, the adversarial findings, the manual walkthrough, the deployment status, and how to run everything.
+- **Deployment is carried, not claimed.** The report states that the deploy has not been run and why, rather than implying a live service.
+
+### Verification
+Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. Unit suite **24 passed**. End-to-end suites **43 / 72 / 48 / 76 / 59 / 91 passed, 0 failed**. Live provider `scripts/verify-gemini-live.mjs` **34 passed, 0 failed** against `gemini-3.5-flash`, including the real six-versus-five detection. Production `next build` passes (13 static pages). Secret scan clean. Database and bucket restored to baseline.
+
+### Impact on this document
+- §16.1 / §23: every MVP success criterion is met and verified; the deployment is the one outstanding human action.
+- `docs/SUBMISSION_REPORT.md` is added as the submission deliverable; `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+
+---
+
 # Appendix B — Lesson 6 Verification Checklist
 
 ## Task 1 — Implementation Plan

@@ -699,6 +699,33 @@ Nowhere — Phase 10 ran end to end autonomously. Phase 11 begins automatically.
 
 ---
 
+## Episode 28 — Phase 12: Submission Readiness (Edvance declared submission ready)
+
+### Product Owner prompt (verbatim, abridged)
+> [Autonomous completion master directive §18, Phase 12.] Run an adversarial audit, sweep for fake features, execute the full test gate, write a submission report, walk the app manually, and declare Edvance submission ready.
+
+### What the AI builder did
+1. **Tried to make the app lie, on purpose.** A fabricated citation, a fabricated concept, an unjustified contradiction, a cross-user read and an untrusted origin were each attempted; each was refused in code, not in prose. The mock provider cannot reach production (`NODE_ENV` guard), no client component imports a server-only module, and no secret is hardcoded or exposed through `NEXT_PUBLIC_`.
+2. **Ran the no-fake-feature sweep.** A grep for `mock|demo|hardcoded|todo|fixme|placeholder|fake|seed` returned only legitimate hits — the env-gated test provider, the seeded demo dataset, the demo account, and HTML placeholders. No `TODO`/`FIXME`/`HACK` markers and no stubbed feature presented as real.
+3. **Found and fixed a real defect.** The manual walkthrough caught the landing page still claiming analysis was "not yet live", the footer saying analysis "still runs on mock data", and the header flag reading "Demo · mock data" — all false since Phases 6–9. The copy now describes the product as it is. This was the clearest justification for the phase.
+4. **Re-ran the whole gate** from the committed tree: typecheck exit 0; unit **24**; end-to-end **43 / 72 / 48 / 76 / 59 / 91**, all 0 failed; **live Gemini 34 passed** (the real model flagged the six-versus-five inconsistency again); production `next build` passes; secret scan clean; database and bucket restored to baseline.
+5. **Walked the screens.** Public routes render correctly (screenshot-confirmed), the 404 page and `/api/health` behave, unauthenticated `/courses` returns 307 to sign-in, unauthenticated API calls return 401, and Better Auth correctly rejected an untrusted origin ('Invalid origin') — a security feature, not a bug.
+6. **Wrote `docs/SUBMISSION_REPORT.md`** — scope, what is real versus deliberately limited, the verification matrix, the adversarial findings, the manual walkthrough, the deployment status, and how to run everything.
+7. **Declared the status honestly.** Edvance is submission ready; the deployment is carried as a pending human action rather than implied to be done.
+
+### Real results (2026-10-02)
+- **Gate PASS:** typecheck 0; unit 24; hardening 43; revision 72; mastery 48; assessment 76; course 59; ingestion 91; live Gemini 34; production build passes; secret scan clean; baseline restored.
+- **Defect fixed:** four stale product claims on the landing page, in the footer and in the header.
+
+### Where the user was asked to act
+**One pending human action:** run the deployment (authenticate the platform, set the secrets, `specific deploy`). Everything else is complete.
+
+### Files changed
+- New: `docs/SUBMISSION_REPORT.md`
+- Changed: `app/page.tsx`, `app/layout.tsx`, `components/header.tsx` (stale claims), `Doc/PRD.md` (Change 21), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/EDVANCE_EXECUTION_STATE.md`, this episode
+
+---
+
 ## Current state (2026-10-01)
 
 - **Committed & pushed:** the interface sheet is commit `f89fdfc`, and it and everything before it are on `origin/main`. The push moved `9090f45..f89fdfc`, carrying four commits that had accumulated locally: Phase 2 + Field Guide (`2af22eb`), Phase 3 Better Auth (`bfe0e4c`), Press Room + logo (`b092460`), interface sheet (`f89fdfc`). Pushing was done in the same working session.
@@ -719,7 +746,7 @@ Nowhere — Phase 10 ran end to end autonomously. Phase 11 begins automatically.
 - **Phase 5.6 (Episode 20):** uploaded materials are now **extracted into location-tagged evidence** — PDF by page, slides by slide, transcripts by timestamp range, documents/notes by section or line range — chunked into ordered `material_chunk` rows with a `material_ingestion_job` tracking each attempt (`db/migrations/0003_material_ingestion.sql`, `lib/extraction/`, `lib/ingestion.ts`). Uploads ingest synchronously; failures keep the file and record only a safe code, and Sources shows **Ready for analysis** / Processing / Extraction failed with Retry. Verified with `scripts/test-ingestion.mjs` — **91 passed, 0 failed** — across all seven formats, locations, ordering, isolation, failed states, cascades, typecheck, and a secret scan. No AI provider, prompt, embedding, or vector database was added.
 
 ## Suggested next steps
-0. **Phase 12 — Submission Readiness (next, automatic).** Run an adversarial audit and a no-fake-feature sweep (grep for mock/demo/hardcoded/TODO/FIXME/placeholder/fake/seed and confirm every claim), execute the full test gate, write `docs/SUBMISSION_REPORT.md`, walk the app manually, and declare Edvance submission ready — carrying deployment as an explicit pending human action rather than a claimed success.
+0. **Edvance is submission ready — the only remaining action is the deployment.** Authenticate the Specific CLI, set the operator secrets (`gemini_api_key`, `supabase_url`, `supabase_secret_key`, `supabase_storage_bucket`, optionally `resend_api_key`/`email_from`), run `specific deploy`, then smoke-test the live URL against the checklist in `docs/SUBMISSION_REPORT.md` (health probe, security headers, the full learner loop, and a re-deploy migration no-op).
 1. Product Owner review passes worth doing by eye: the **Assessments** tab after checking the five-component question (http://localhost:3260 or :3000), and the **Intelligence** tab — screenshots remain non-compositing in this environment, so the UI has not been seen visually yet.
 2. Worth hardening early: the live Gemini free tier is a shared queue, so a bounded retry and a clear learner-facing retry affordance matter more than they look — worth revisiting in Phase 10 alongside rate limiting and upload quotas.
 3. A cheap robustness win: replace TS incremental typechecking's stale-cache trap by making `npm run typecheck` clear `tsconfig.tsbuildinfo` first, so a false-clean cannot reach a commit again.
