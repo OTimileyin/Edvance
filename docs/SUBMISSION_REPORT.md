@@ -2,9 +2,24 @@
 
 **Date:** 2026-10-02
 **Branch:** `main`
-**Last verified commit:** `18db198` — `docs(deploy): complete and document the deployment specification`
-**Status:** **EDVANCE — SUBMISSION READY**, with one outstanding human action (see
-[Deployment](#deployment--one-pending-human-action)).
+**Last verified commit:** `b97cd0d` — `docs: add the submission readiness report and correct stale claims`
+**Live deployment:** **https://white-whale.spcf.app** (`depl_02f4368hqt4n86q6`)
+**Status:** **EDVANCE — DEPLOYED AND SUBMISSION READY.** The app is live, serves HTTPS, and passed a
+remote end-to-end verification of the complete learner journey (**69 checks, 0 failures**).
+
+---
+
+## 0. Live deployment
+
+| | |
+|---|---|
+| **URL** | https://white-whale.spcf.app (managed HTTPS, HSTS) |
+| **Platform** | Specific (`specific.hcl`); project `edvance` (`proj_0vqsej2psy3sy4tr`), environment `prod` |
+| **Active deployment** | `depl_02f4368hqt4n86q6` |
+| **Database** | Managed PostgreSQL; all 8 migrations applied (`schema_migrations` = 8) |
+| **Health** | `GET /api/health` → `200 {"status":"ok","database":"ok","integrations":{"ai":"configured","storage":"configured","email":"not-configured"}}` |
+| **Model** | `gemini-3-flash-preview` (pinned in `specific.hcl`) |
+| **Remote verification** | `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` → **69 passed / 0 failed** |
 
 ---
 
@@ -52,7 +67,10 @@ source.
 
 **Deliberately limited (documented, not hidden)**
 
-- **Deployment is prepared but not executed** — pending platform credentials; see §6.
+- **The Gemini free tier is 20 requests/day/model.** The deployment pins one available model; a
+  burst can still surface as an honest, retryable provider failure, and a very heavy day can exhaust
+  the model's quota. The model is a one-line change in `specific.hcl`; a key with quota removes the
+  limit entirely.
 - **ESLint and Prettier are not configured.** Static guarantees are `tsc --noEmit`, the unit suite,
   and the end-to-end suites.
 - **Rate limiting is in-memory per process**; a multi-instance deployment would need a shared store.
@@ -84,7 +102,9 @@ source.
 | Phase 6 — course intelligence | `npm run test:intelligence` | **59 passed / 0 failed** |
 | Phase 5.6 — ingestion | `npm run test:ingestion` | **91 passed / 0 failed** |
 | Live provider | `node scripts/verify-gemini-live.mjs` | **34 passed / 0 failed** (`gemini-3.5-flash`) |
+| **Remote (deployed)** | `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` | **69 passed / 0 failed** (`gemini-3-flash-preview`) |
 | Production build | `infisical run --env=dev -- npx next build` | **passes** (13 static pages) |
+| Production build (no env) | `npx next build` with only the `specific.hcl` build args | **passes** — the env-free builder succeeds |
 | Secret scan | `infisical scan --redact` | **no leaks found** |
 | Baseline | database + bucket | restored (`practice_attempt`/`practice_question`/`revision_plan` 0; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments / 20 mastery rows; bucket 0 objects) |
 
@@ -99,6 +119,16 @@ while the seeded question asks for *five* — produced:
 > Order, and Move."
 
 naming six real concepts and citing only real `Section: …` locations.
+
+**The remote run.** Against the deployed app, the same journey was driven end to end over HTTPS with
+the real provider: it signed up a learner, uploaded the FATHOM fixture (ingested synchronously into
+evidence chunks), analysed the course (six concepts extracted, each citing real evidence), added the
+five-versus-six question and checked it (`possible-inconsistency`, reason naming the six components),
+practised it (one wrong attempt → every concept `Weak`; four more correct → `Mastered` at 80%), and
+generated a targeted revision plan (weak concepts prioritised, grounded practice questions). It also
+confirmed HTTPS + HSTS, the full security-header set, a **404** on unknown routes, **401** on an
+unauthenticated account delete, cross-learner isolation (**404** on a foreign course), and that no
+configuration secret appears in any payload. All **69** checks passed.
 
 ## 4. Adversarial audit (Phase 12)
 
@@ -151,18 +181,27 @@ No client component imports a server-only module (checked), and no secret is ref
   revision, account) are exercised by the seven end-to-end suites, which sign up real accounts and
   drive every route's API layer.
 
-## 6. Deployment — one pending human action
+## 6. Deployment — live
 
-`specific.hcl` is complete: it declares every secret the app reads (`gemini_api_key`, `supabase_url`,
+`specific.hcl` declares every secret the app reads (`gemini_api_key`, `supabase_url`,
 `supabase_secret_key`, `supabase_storage_bucket`, the optional `resend_api_key`/`email_from`, and the
 platform-generated `better_auth_secret`), pins `GEMINI_MODEL`, points the endpoint health check at
-`/api/health`, and runs migrations in `pre_deploy`. Every `secret.*` reference has a matching
-declaration.
+`/api/health`, and runs `scripts/migrate.mjs` in `pre_deploy` (all migrations are safe to re-run).
+The app is deployed at **https://white-whale.spcf.app**.
 
-**The deploy itself has not been run** — it requires platform authentication and creates external
-infrastructure, so it stays an explicit human action. The exact steps and a verification checklist
-are in [README.md](../README.md) (Deployment). Without it, the product is verified locally and in a
-production build, but has no public URL.
+Two deployment facts are worth recording:
+
+- **The builder has no runtime secrets.** Next.js collects route configuration at build time, and
+  `lib/auth.ts`/`lib/db.ts` read configuration at import, so the build would otherwise fail. The
+  `build` block therefore passes harmless build-only placeholders (`DATABASE_URL`, `BETTER_AUTH_SECRET`,
+  `BETTER_AUTH_URL`) — literals, never the real values, which the service environment supplies at
+  runtime. `specific docs builds` documents this pattern.
+- **Model choice.** The free tier allows 20 requests/day/model, so the deployed model is pinned to one
+  the operator's key can serve (`gemini-3-flash-preview`). Changing it is a one-line edit; a key with
+  quota lifts the ceiling.
+
+The operator can manage the deployment (logs, metrics, secrets, database) from
+https://dashboard.specific.dev.
 
 ## 7. How to run it
 
@@ -183,10 +222,11 @@ BASE_URL=http://localhost:3260 npm run test:hardening   # and :revision, :master
 
 ## 8. Declaration
 
-Edvance is **submission ready**: every claimed capability is implemented, verified by automated
-tests and a live provider run, and honest about its limits. The single outstanding item is the
-deployment itself, which awaits the account owner's credentials and authorisation — recorded here
-rather than presented as done.
+Edvance is **deployed and submission ready**: every claimed capability is implemented and verified —
+by automated suites, a live provider run, and a remote end-to-end verification of the running
+application over HTTPS (69 checks, 0 failures) — and the product is honest about its limits. The one
+operational caveat is the Gemini free tier's 20 requests/day/model cap, which the deployment
+surfaces as an honest retryable failure rather than a crash or a fabricated result.
 
 ---
 
@@ -202,3 +242,5 @@ rather than presented as done.
 | 9 | `3d7b818` | Targeted revision workflow |
 | 10 | `fb96dc2` | Product completion & hardening |
 | 11 | `18db198` | Deployment specification & documentation |
+| 12 | `b97cd0d` | Submission readiness report & stale-claim fixes |
+| Deploy | _this commit_ | Execute the deployment, pin a servable model, add remote verification |

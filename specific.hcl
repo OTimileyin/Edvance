@@ -4,9 +4,21 @@
 # (`specific deploy`). Connection details reach the app as environment
 # variables, so the application code stays unchanged.
 
+# Local-shaped placeholders so the build can import modules that read
+# configuration at import time (Better Auth asserts DATABASE_URL and
+# BETTER_AUTH_SECRET; the course pool is built from DATABASE_URL). These are the
+# platform's build args, not secrets, and are never present at runtime — the
+# service env below supplies the real values. A literal dummy is used because
+# build args cannot reference `secret.*`.
 build "web" {
   base    = "node"
   command = "npm run build"
+
+  env = {
+    DATABASE_URL       = "postgresql://localhost/build"
+    BETTER_AUTH_SECRET = "build-only-placeholder"
+    BETTER_AUTH_URL    = "http://localhost:3000"
+  }
 }
 
 service "web" {
@@ -34,7 +46,11 @@ service "web" {
     # reports that analysis is not configured. The mock provider is refused in
     # production, so it can never answer a real learner here.
     GEMINI_API_KEY = secret.gemini_api_key
-    GEMINI_MODEL   = "gemini-3.5-flash"
+    # Pinned explicitly so a rollout is reproducible. The free tier is 20
+    # requests/day/model, so this is a model the operator's key can actually
+    # serve today (the code default, gemini-flash-latest, currently aliases a
+    # model whose free quota is spent). Change it to any available flash model.
+    GEMINI_MODEL   = "gemini-3-flash-preview"
 
     # --- File storage (Supabase, private bucket) ----------------------------
     # Without these the app runs, but uploads honestly report that storage is not

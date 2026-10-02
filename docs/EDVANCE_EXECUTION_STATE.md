@@ -7,23 +7,25 @@ file + the repository** — never from chat memory.
 
 ## CURRENT PHASE
 
-**Phase 12 — Submission Readiness — COMPLETE.**
+**Phase 11 — Deployment — COMPLETE.** Edvance is deployed at https://white-whale.spcf.app.
 
 ## CURRENT TASK
 
-Nothing is in flight. **Edvance is SUBMISSION READY.** Phases 0–12 are complete and verified; the
-only outstanding action is the deployment itself, which needs platform credentials (see HUMAN
-ACTIONS REQUIRED). The submission deliverable is `docs/SUBMISSION_REPORT.md`.
+Nothing is in flight. **EDVANCE — DEPLOYED AND SUBMISSION READY.** Phases 0–12 are complete; the
+deployment ran and passed a remote end-to-end verification (69 checks, 0 failures) covering HTTPS,
+headers, storage, ingestion, Gemini course/assessment intelligence, mastery, revision, cross-learner
+isolation and secret non-exposure. The submission deliverable is `docs/SUBMISSION_REPORT.md`.
 
 If a further change is requested, resume from this file and the repository — not from chat memory —
 and re-run the gate before claiming anything new.
 
 ## LAST VERIFIED COMMIT
 
-`18db198` — `docs(deploy): complete and document the deployment specification` (Phase 11). Branch `main`.
-Phase 10 was `fb96dc2`.
+`b97cd0d` — `docs: add the submission readiness report and correct stale claims` (Phase 12). Branch `main`.
+The deployment changes (below) are committed on top of it.
+Phase 11 was `18db198`; Phase 10 was `fb96dc2`.
 Phase 9 was `3d7b818`; Phase 8 was `aa6f014`; Phase 7 was `2d51d6f`; Phase 6 was `2bce681`;
-Phase 5.6 was `f45ad5a`; Phase 5.5 was `0e33c80`. (Phase 11's spec/doc changes are committed with it.)
+Phase 5.6 was `f45ad5a`; Phase 5.5 was `0e33c80`.
 
 ## COMPLETED PHASES
 
@@ -36,9 +38,12 @@ Phase 5.6 was `f45ad5a`; Phase 5.5 was `0e33c80`. (Phase 11's spec/doc changes a
 - Phase 9 — Targeted Revision. Committed `3d7b818`. Deterministic **72**.
 - Phase 10 — Product Completion & Hardening. Committed `fb96dc2`. Hardening **43**, unit **24**,
   regressions **72 / 48 / 76 / 59 / 91**, typecheck exit 0, production build passes.
-- Phase 11 — Deployment. **Specification complete; deploy not executed.** `specific.hcl` declares
-  every secret the app reads and points the health check at `/api/health`; the procedure is
-  documented in `README.md`. Committed `18db198`. Pending platform credentials (human action).
+- Phase 11 — Deployment. **Executed and live.** Deployed from WSL Ubuntu (the Specific CLI does not
+  run on native Windows) to project `edvance` (`proj_0vqsej2psy3sy4tr`), environment `prod`, active
+  deployment `depl_02f4368hqt4n86q6` at **https://white-whale.spcf.app**. All 8 migrations applied;
+  `/api/health` returns `200` with database/ai/storage healthy (`email: not-configured`). The `build`
+  block gained build-only placeholder env (see ENVIRONMENT NOTES); `GEMINI_MODEL` is pinned to
+  `gemini-3-flash-preview`. Remote verification: **69 checks, 0 failures**.
 - Phase 12 — Submission Readiness. **Complete.** Edvance declared submission ready: adversarial
 audit held, no-fake-feature sweep clean, four stale product claims found and fixed, full gate green
 (typecheck, unit 24, end-to-end 43/72/48/76/59/91, live Gemini 34, production build, secret scan,
@@ -50,14 +55,14 @@ None.
 
 ## HUMAN ACTIONS REQUIRED
 
-One item, and it does not block submission readiness:
+None — the deployment is live and everything verified. Two optional, non-blocking notes:
 
-1. **Run the deployment** when ready: install and authenticate the Specific CLI, set the operator
-   secrets (`gemini_api_key`, `supabase_url`, `supabase_secret_key`, `supabase_storage_bucket`, and
-   optionally `resend_api_key`/`email_from`), then `specific deploy`. The exact steps are in the
-   README's Deployment section; `pre_deploy` runs migrations automatically. Confirm the target
-   (project name, region) and that a free tier with managed PostgreSQL and HTTPS is acceptable — do
-   not enable billing.
+1. **Gemini quota.** The operator's key is on the free tier (20 requests/day/model). A busy day can
+   exhaust the pinned model. To change it, edit `GEMINI_MODEL` in `specific.hcl`, update it in
+   Infisical `dev`, and redeploy; a key with quota removes the limit.
+2. **Test residue.** The production database still holds a pre-existing `verify-e2e@edvance.test`
+   account (2 courses) created by the earlier Oct-1 deploy verification, not by this run. Harmless;
+   delete it from https://dashboard.specific.dev if a clean database is preferred.
 
 ## ENVIRONMENT NOTES
 
@@ -75,8 +80,20 @@ One item, and it does not block submission readiness:
 - Unit tests run the TypeScript directly under Node's type-stripping loader. **Do not add TypeScript
   parameter properties / enums / namespaces to modules under `tests/unit`** — they are unsupported
   by stripping.
-- `specific.hcl` is now committed (Phase 11). It contains no secret values, only references and one
+- `specific.hcl` is committed. It contains no secret values, only references and one
   platform-generated secret.
+- **Deploy runs in WSL Ubuntu, not Windows.** `wsl.exe -d Ubuntu -- bash -lc 'cd /mnt/c/Users/ADMIN/Documents/Qubators/Edvance && specific deploy -e prod ...'`;
+  the CLI lives at `/usr/local/bin/specific` there and is authenticated as a **claimed** agent
+  account. The native-Windows CLI breaks at tarball creation (`specific.hcl not found in project
+  directory`), so always deploy through WSL.
+- Secrets reach the WSL deploy without touching a command line: export
+  `WSLENV='GEMINI_API_KEY:SUPABASE_URL:SUPABASE_SECRET_KEY:SUPABASE_STORAGE_BUCKET'` and run the CLI
+  under `infisical run --env=dev`, referencing `$GEMINI_API_KEY` etc. inside the WSL shell.
+- **The platform builder has no runtime secrets.** Next.js collects route config at build time and
+  `lib/auth.ts`/`lib/db.ts` read config at import, so the `build` block must supply harmless
+  build-only placeholders (`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`) or the build fails
+  with `Missing required environment variable DATABASE_URL`. Reproduce the builder with only those
+  three dummy values set.
 
 ## IF WORK CONTINUES
 
@@ -87,9 +104,12 @@ make the change, and re-run the gate before claiming anything:
 2. `npm run test:unit`.
 3. Start one mock dev server (`EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260`)
    and run the Phase 10 / 9 / 8 / 7 / 6 / 5.6 suites with `BASE_URL=http://localhost:3260`.
-4. `infisical run --env=dev -- npx next build`.
-5. Confirm the secret scan is clean and the database + bucket are back to baseline.
-6. Update `Doc/PRD.md` (a new Change), `docs/IMPLEMENTATION_PLAN.md`, `README.md`,
+4. `infisical run --env=dev -- npx next build`, and once with only the `specific.hcl` build-arg
+   placeholders to reproduce the platform builder.
+5. If the app changed, redeploy from WSL and re-run the remote suite:
+   `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs`.
+6. Confirm the secret scan is clean and the database + bucket are back to baseline.
+7. Update `Doc/PRD.md` (a new Change), `docs/IMPLEMENTATION_PLAN.md`, `README.md`,
    `conversation.md` (a new Episode), `docs/SUBMISSION_REPORT.md` and this file, then commit.
 
 ## TEST STATUS
@@ -105,13 +125,15 @@ make the change, and re-run the gate before claiming anything:
 | Phase 6 — `scripts/test-course-intelligence.mjs` | **59 passed / 0 failed** |
 | Phase 5.6 — `scripts/test-ingestion.mjs` | **91 passed / 0 failed** |
 | Live Gemini — `scripts/verify-gemini-live.mjs` | **34 passed / 0 failed** (`gemini-3.5-flash`) |
+| Remote deployed — `scripts/verify-remote-deployment.mjs` | **69 passed / 0 failed** (`gemini-3-flash-preview`, https://white-whale.spcf.app) |
 | Production build — `infisical run --env=dev -- npx next build` | **passes** (13 static pages) |
 | Secret scan | `infisical scan --redact` → no leaks found |
 | Database + bucket | baseline (bucket 0 objects; `practice_attempt`/`practice_question`/`revision_plan` 0; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments / 20 mastery rows) |
 
 ## KNOWN LIMITATIONS
 
-- **Deployment is prepared but not executed** (Phase 11) — pending platform credentials.
+- **Deployed** at https://white-whale.spcf.app (Specific). The Gemini free tier is 20
+  requests/day/model, so a burst can surface as an honest, retryable provider failure.
 - **ESLint and Prettier are not configured.** Static guarantees are `tsc --noEmit`, the unit suite
   and the end-to-end suites.
 - Rate limiting is **in-memory per process**; a multi-instance deployment would need a shared store.
@@ -131,7 +153,8 @@ Pre-existing, deliberately untouched: `.gitignore` (`.specific`, `specific.local
 
 ## FINAL SUBMISSION STATUS
 
-**EDVANCE — SUBMISSION READY.** Phases 0–12 complete and verified end to end. The deployment is the
-one outstanding human action; every claimed capability is implemented, tested (automated suites, a
-live provider run, a production build) and honest about its limits. See
-`docs/SUBMISSION_REPORT.md`.
+**EDVANCE — DEPLOYED AND SUBMISSION READY.** Phases 0–12 complete; the app is live at
+**https://white-whale.spcf.app** and passed a remote end-to-end verification (69 checks, 0 failures)
+covering HTTPS, headers, storage, ingestion, Gemini course/assessment intelligence, mastery,
+revision, cross-learner isolation and secret non-exposure. Every claimed capability is implemented,
+tested and honest about its limits. See `docs/SUBMISSION_REPORT.md`.
