@@ -9,6 +9,11 @@ file + the repository** — never from chat memory.
 
 **Phase 11 — Deployment — COMPLETE.** Edvance is deployed at https://white-whale.spcf.app.
 
+**Second deployment target (Vercel) — prepared, not live.** `vercel.json`, the `POSTGRES_URL`
+fallback, the runbook and the two-deployment diff tooling are on `main`, but the Vercel project has
+no production deployment — its domain returns `DEPLOYMENT_NOT_FOUND`. Specific remains the live
+deployment. See "SECOND DEPLOYMENT TARGET" below.
+
 ## CURRENT TASK
 
 Nothing is in flight. **EDVANCE — DEPLOYED AND SUBMISSION READY.** Phases 0–12 are complete; the
@@ -49,6 +54,17 @@ audit held, no-fake-feature sweep clean, four stale product claims found and fix
 (typecheck, unit 24, end-to-end 43/72/48/76/59/91, live Gemini 34, production build, secret scan,
 baseline), `docs/SUBMISSION_REPORT.md` written.
 
+## SECOND DEPLOYMENT TARGET
+
+**Vercel — prepared, not yet live.** The repository supports a second, independent deployment on
+Vercel (`vercel.json` build command, `POSTGRES_URL` fallback, `docs/VERCEL_DEPLOYMENT_RUNBOOK.md`).
+The Vercel project currently has **no successful production deployment**: its domain answers with
+`DEPLOYMENT_NOT_FOUND` and it has served zero requests. `npm run verify:remote:diff -- <urlA> <urlB>`
+reports 16 passed / 53 failed against it versus Specific's 69 / 0 — every difference downstream of
+nothing being served. To finish: connect Vercel Postgres in the dashboard and redeploy the latest
+`main`, then require 69/0 before recording it as live. **Specific stays the live, submission
+deployment until then.**
+
 ## ACTIVE BLOCKERS
 
 None.
@@ -63,6 +79,9 @@ None — the deployment is live and everything verified. Two optional, non-block
 2. **Test residue.** The production database still holds a pre-existing `verify-e2e@edvance.test`
    account (2 courses) created by the earlier Oct-1 deploy verification, not by this run. Harmless;
    delete it from https://dashboard.specific.dev if a clean database is preferred.
+3. **Optional second deployment.** To bring the prepared Vercel target live, connect Vercel Postgres
+   and redeploy the latest `main` (see `docs/VERCEL_DEPLOYMENT_RUNBOOK.md`). Not required for the
+   submission; Specific is live.
 
 ## ENVIRONMENT NOTES
 

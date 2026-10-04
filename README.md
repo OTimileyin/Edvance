@@ -237,9 +237,11 @@ Or hand the process a machine-identity access token directly, with no login step
 and storage integrations healthy (`email: not-configured`); all migrations are applied and the app
 serves HTTPS. The deployed app passed the remote end-to-end suite below (**69 checks, 0 failures**).
 
-A second, independent deployment target is available: [docs/VERCEL_DEPLOYMENT_RUNBOOK.md](docs/VERCEL_DEPLOYMENT_RUNBOOK.md)
+A second, independent deployment target is **prepared but not yet live**: [docs/VERCEL_DEPLOYMENT_RUNBOOK.md](docs/VERCEL_DEPLOYMENT_RUNBOOK.md)
 walks a first-time deployer through importing the repository into Vercel, wiring Vercel Postgres,
-setting the environment variables, and verifying the result.
+setting the environment variables, and verifying the result. It becomes a submission link only once
+`/api/health` responds and the remote suite reports 69/0; until then the live deployment is the
+Specific URL above.
 
 `specific.hcl` is the deployment spec for the **Specific** platform: a Node build, a `next start`
 service behind a public HTTPS endpoint, a managed PostgreSQL instance, a `/api/health` health check,

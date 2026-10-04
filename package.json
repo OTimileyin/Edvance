@@ -18,7 +18,8 @@
     "test:revision": "infisical run --env=dev -- node scripts/test-targeted-revision.mjs",
     "test:hardening": "infisical run --env=dev -- node scripts/test-product-hardening.mjs",
     "verify:remote": "node scripts/verify-remote-deployment.mjs",
-    "verify:remote:specific": "node scripts/verify-remote-deployment.mjs https://white-whale.spcf.app"
+    "verify:remote:specific": "node scripts/verify-remote-deployment.mjs https://white-whale.spcf.app",
+    "verify:remote:diff": "node scripts/verify-remote-deployment.mjs --diff"
   },
   "dependencies": {
     "@google/genai": "^2.25.0",

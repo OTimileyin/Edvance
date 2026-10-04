@@ -9,35 +9,60 @@
 // It is HTTP-only: it never opens the production database or bucket directly and
 // cleans up after itself by deleting the accounts it created.
 //
-// Usage — point it at any deployment without editing this file:
+// Usage — point it at any deployment, or diff two of them side by side:
 //   npm run verify:remote -- https://your-app.vercel.app
-//   npm run verify:remote -- https://white-whale.spcf.app
+//   npm run verify:remote:specific
+//   npm run verify:remote:diff -- https://white-whale.spcf.app https://your-app.vercel.app
 //   BASE_URL=https://your-app.vercel.app node scripts/verify-remote-deployment.mjs
 //
-// The target comes from the first CLI argument, else BASE_URL, else the
-// Specific production URL. BETTER_AUTH_URL overrides the trusted origin only
-// when the deployed auth origin differs from the URL being probed.
+// One URL (or none) probes a single deployment: the target is the first CLI
+// argument, else BASE_URL, else the Specific production URL. Two URLs (or
+// `--diff A B`) run the suite against both and print exactly which checks pass
+// on one deployment and fail on the other. BETTER_AUTH_URL overrides the trusted
+// origin only in single-deployment mode; in diff mode each deployment is trusted
+// at its own URL.
+
+import { compareRuns } from "./lib/remote-diff.mjs";
 
 const DEFAULT_BASE_URL = "https://white-whale.spcf.app";
-const target = process.argv[2] ?? process.env.BASE_URL ?? DEFAULT_BASE_URL;
-if (!/^https?:\/\//.test(target)) {
-  console.error(`verify-remote-deployment: expected an http(s) URL, got "${target}"`);
-  process.exit(2);
-}
-const BASE_URL = target.replace(/\/$/, "");
-const TRUSTED_ORIGIN = (process.env.BETTER_AUTH_URL ?? BASE_URL).replace(/\/$/, "");
-console.log(`Verifying ${BASE_URL} (trusted origin ${TRUSTED_ORIGIN})\n`);
-
 const PASSWORD = "remote-smoke-password";
-let passed = 0;
-const failures = [];
+// Set per run: which deployment is being probed, and the request origin the
+// app's CSRF check must accept.
+let BASE_URL = DEFAULT_BASE_URL;
+let TRUSTED_ORIGIN = DEFAULT_BASE_URL;
+
+// Set per run: collects the outcome of every `check` so two runs can be diffed.
+let recorder = newRecorder();
+
+function newRecorder() {
+  return { passed: 0, failures: [], order: [], results: new Map(), crashed: null };
+}
+
+function normalizeUrl(url) {
+  return url.replace(/\/+$/, "");
+}
+
+function isHttpUrl(value) {
+  return /^https?:\/\//.test(value);
+}
+
+function shortLabel(url) {
+  try {
+    return new URL(url).hostname.split(".")[0];
+  } catch {
+    return url;
+  }
+}
 
 function check(name, condition, detail = "") {
-  if (condition) {
-    passed += 1;
+  const ok = Boolean(condition);
+  recorder.order.push(name);
+  recorder.results.set(name, { ok, detail });
+  if (ok) {
+    recorder.passed += 1;
     console.log(`PASS  ${name}`);
   } else {
-    failures.push(`${name}${detail ? ` — ${detail}` : ""}`);
+    recorder.failures.push(`${name}${detail ? ` — ${detail}` : ""}`);
     console.log(`FAIL  ${name}${detail ? ` — ${detail}` : ""}`);
   }
 }
@@ -216,8 +241,10 @@ function conceptNamed(course, name) {
 
 const SECRET_NAMES = /GEMINI_API_KEY|SUPABASE_SECRET_KEY|SUPABASE_URL|RESEND_API_KEY|BETTER_AUTH_SECRET|DATABASE_URL|postgres:\/\/|sk_live|AQ\.Ab|Bearer\s+[A-Za-z0-9]{20}/;
 
-async function main() {
-  const stamp = Date.now();
+async function runSuite(label) {
+  recorder = newRecorder();
+  const slug = label.replace(/[^a-z0-9]/gi, "").toLowerCase() || "run";
+  const stamp = `${slug}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
   const emailA = `remote-a-${stamp}@edvance.test`;
   const emailB = `remote-b-${stamp}@edvance.test`;
 
@@ -400,12 +427,107 @@ async function main() {
     check("cleanup: session is now unauthenticated", (await learnerA.fetch(`/api/courses/${courseId}`)).status === 401);
   }
 
-  console.log(`\n${passed} passed, ${failures.length} failed`);
-  if (failures.length > 0) {
-    console.log("\nFailures:");
-    for (const failure of failures) console.log(`  - ${failure}`);
-    process.exit(1);
+  return recorder;
+}
+
+/** Runs the whole suite against one deployment; captures a crash instead of throwing. */
+async function runOnce(url, label, { honorEnvOrigin }) {
+  BASE_URL = normalizeUrl(url);
+  TRUSTED_ORIGIN =
+    honorEnvOrigin && process.env.BETTER_AUTH_URL?.trim()
+      ? normalizeUrl(process.env.BETTER_AUTH_URL.trim())
+      : BASE_URL;
+
+  console.log(`\n===== ${label} ===== ${BASE_URL}`);
+  console.log(`trusted origin: ${TRUSTED_ORIGIN}`);
+
+  try {
+    return await runSuite(label);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`  ! ${label} crashed before finishing: ${message}`);
+    recorder.crashed = message;
+    return recorder;
   }
+}
+
+function summarise(run, label) {
+  console.log(
+    `  ${label}: ${run.passed} passed, ${run.failures.length} failed${run.crashed ? " (crashed)" : ""}`,
+  );
+}
+
+function printDiff(runA, runB, labelA, labelB) {
+  const { names, differing } = compareRuns(runA, runB);
+  const cell = (value) => (value === null ? "ABSENT" : value ? "PASS" : "FAIL");
+
+  console.log("\n===== side-by-side =====");
+  summarise(runA, labelA);
+  summarise(runB, labelB);
+  console.log(`\n  ${names.length} checks compared; ${differing.length} differ.`);
+
+  if (differing.length === 0) {
+    console.log("  The two deployments agree on every check.");
+    return;
+  }
+
+  const widthA = Math.max(labelA.length, 6);
+  const widthB = Math.max(labelB.length, 6);
+  console.log(`\n  ${labelA.padEnd(widthA)} ${labelB.padEnd(widthB)} check`);
+  for (const d of differing) {
+    const detail = d.b === false ? d.detailB : d.a === false ? d.detailA : "";
+    console.log(`  ${cell(d.a).padEnd(widthA)} ${cell(d.b).padEnd(widthB)} ${d.name}${detail ? `  — ${detail}` : ""}`);
+  }
+}
+
+async function main() {
+  const argv = process.argv.slice(2);
+  const explicitDiff = argv[0] === "--diff";
+  const targets = (explicitDiff ? argv.slice(1) : argv).filter(Boolean);
+
+  for (const target of targets) {
+    if (!isHttpUrl(target)) {
+      console.error(`verify-remote-deployment: expected an http(s) URL, got "${target}"`);
+      process.exit(2);
+    }
+  }
+
+  const diffMode = explicitDiff || targets.length === 2;
+  if (diffMode && targets.length !== 2) {
+    console.error("verify-remote-deployment: diff mode needs exactly two URLs, e.g. --diff https://a https://b");
+    process.exit(2);
+  }
+  if (targets.length > 2) {
+    console.error("verify-remote-deployment: at most two URLs are accepted");
+    process.exit(2);
+  }
+
+  if (!diffMode) {
+    const url = targets[0] ?? process.env.BASE_URL ?? DEFAULT_BASE_URL;
+    if (!isHttpUrl(url)) {
+      console.error(`verify-remote-deployment: expected an http(s) URL, got "${url}"`);
+      process.exit(2);
+    }
+    const label = shortLabel(url);
+    const run = await runOnce(url, label, { honorEnvOrigin: true });
+    console.log(`\n${run.passed} passed, ${run.failures.length} failed`);
+    if (run.failures.length > 0) {
+      console.log("\nFailures:");
+      for (const failure of run.failures) console.log(`  - ${failure}`);
+    }
+    process.exitCode = run.crashed || run.failures.length > 0 ? 1 : 0;
+    return;
+  }
+
+  const [urlA, urlB] = targets;
+  const labelA = shortLabel(urlA);
+  const labelB = shortLabel(urlB);
+  const runA = await runOnce(urlA, labelA, { honorEnvOrigin: false });
+  const runB = await runOnce(urlB, labelB, { honorEnvOrigin: false });
+
+  printDiff(runA, runB, labelA, labelB);
+  process.exitCode =
+    runA.crashed || runB.crashed || runA.failures.length > 0 || runB.failures.length > 0 ? 1 : 0;
 }
 
 main().catch((error) => {

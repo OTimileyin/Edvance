@@ -21,6 +21,20 @@ remote end-to-end verification of the complete learner journey (**69 checks, 0 f
 | **Model** | `gemini-3-flash-preview` (pinned in `specific.hcl`) |
 | **Remote verification** | `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` → **69 passed / 0 failed** |
 
+### Second deployment target — Vercel (prepared, not yet live)
+
+Edvance carries everything needed for a second, independent deployment on Vercel: `vercel.json` runs
+`node scripts/migrate.mjs && next build`, the database URL resolves from either `DATABASE_URL` or the
+`POSTGRES_URL` that Vercel's Postgres integration injects (`lib/env.ts`, `scripts/migrate.mjs`), and
+`docs/VERCEL_DEPLOYMENT_RUNBOOK.md` documents the procedure end to end.
+
+This target is **not live, and is not a submission URL**. The Vercel project has no successful
+production deployment: its domain answers with Vercel's `DEPLOYMENT_NOT_FOUND`, and the project has
+served zero CDN requests and zero function invocations. **https://white-whale.spcf.app remains the
+live deployment.** Completing the second target needs one dashboard action — connect Vercel Postgres
+and redeploy the latest `main` — after which the same remote suite must report 69/0 before this
+report records it as live.
+
 ---
 
 ## 1. What Edvance is
@@ -202,6 +216,12 @@ Two deployment facts are worth recording:
 
 The operator can manage the deployment (logs, metrics, secrets, database) from
 https://dashboard.specific.dev.
+
+A second target, **Vercel**, is prepared but not live (see §0). Its build command applies migrations
+the same way, and `scripts/verify-remote-deployment.mjs --diff <urlA> <urlB>` — or
+`npm run verify:remote:diff -- <urlA> <urlB>` — reports check by check which of two deployments
+agree. Run against the not-yet-live Vercel host it currently reports **16 passed / 53 failed**
+against Specific's **69 / 0**, every difference downstream of no deployment being served.
 
 ## 7. How to run it
 
