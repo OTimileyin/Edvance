@@ -9,11 +9,24 @@
 // It is HTTP-only: it never opens the production database or bucket directly and
 // cleans up after itself by deleting the accounts it created.
 //
-// Usage:
-//   BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs
+// Usage — point it at any deployment without editing this file:
+//   npm run verify:remote -- https://your-app.vercel.app
+//   npm run verify:remote -- https://white-whale.spcf.app
+//   BASE_URL=https://your-app.vercel.app node scripts/verify-remote-deployment.mjs
+//
+// The target comes from the first CLI argument, else BASE_URL, else the
+// Specific production URL. BETTER_AUTH_URL overrides the trusted origin only
+// when the deployed auth origin differs from the URL being probed.
 
-const BASE_URL = (process.env.BASE_URL ?? "https://white-whale.spcf.app").replace(/\/$/, "");
-const TRUSTED_ORIGIN = process.env.BETTER_AUTH_URL ?? BASE_URL;
+const DEFAULT_BASE_URL = "https://white-whale.spcf.app";
+const target = process.argv[2] ?? process.env.BASE_URL ?? DEFAULT_BASE_URL;
+if (!/^https?:\/\//.test(target)) {
+  console.error(`verify-remote-deployment: expected an http(s) URL, got "${target}"`);
+  process.exit(2);
+}
+const BASE_URL = target.replace(/\/$/, "");
+const TRUSTED_ORIGIN = (process.env.BETTER_AUTH_URL ?? BASE_URL).replace(/\/$/, "");
+console.log(`Verifying ${BASE_URL} (trusted origin ${TRUSTED_ORIGIN})\n`);
 
 const PASSWORD = "remote-smoke-password";
 let passed = 0;

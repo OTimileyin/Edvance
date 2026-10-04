@@ -237,6 +237,10 @@ Or hand the process a machine-identity access token directly, with no login step
 and storage integrations healthy (`email: not-configured`); all migrations are applied and the app
 serves HTTPS. The deployed app passed the remote end-to-end suite below (**69 checks, 0 failures**).
 
+A second, independent deployment target is available: [docs/VERCEL_DEPLOYMENT_RUNBOOK.md](docs/VERCEL_DEPLOYMENT_RUNBOOK.md)
+walks a first-time deployer through importing the repository into Vercel, wiring Vercel Postgres,
+setting the environment variables, and verifying the result.
+
 `specific.hcl` is the deployment spec for the **Specific** platform: a Node build, a `next start`
 service behind a public HTTPS endpoint, a managed PostgreSQL instance, a `/api/health` health check,
 and a `pre_deploy` step that applies `db/migrations/*.sql` before each rollout (safe to re-run, tracked
