@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 
-import { requiredEnv } from "./env";
+import { databaseUrl } from "./env";
 
 /**
  * Shared PostgreSQL pool for application data access.
@@ -14,8 +14,9 @@ const globalForDb = globalThis as unknown as { edvancePool?: Pool };
 export const pool =
   globalForDb.edvancePool ??
   new Pool({
-    // Required: throws a readable error at import if Infisical injection did not happen.
-    connectionString: requiredEnv("DATABASE_URL"),
+    // Required: throws a readable error at import if neither DATABASE_URL nor
+    // the POSTGRES_URL that Vercel's Postgres integration injects is present.
+    connectionString: databaseUrl(),
   });
 
 if (process.env.NODE_ENV !== "production") {

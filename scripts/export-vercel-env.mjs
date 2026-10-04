@@ -17,8 +17,9 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const target = join(here, "..", ".env.vercel.local");
 
-// Everything except DATABASE_URL, which the Vercel Postgres integration injects
-// into the project itself. BETTER_AUTH_URL is filled in once Vercel has told us
+// Everything except the database connection string, which the Vercel Postgres
+// integration injects into the project itself (as DATABASE_URL or POSTGRES_URL —
+// the app accepts either). BETTER_AUTH_URL is filled in once Vercel has told us
 // the deployment's URL.
 const SHARED = [
   "GEMINI_API_KEY",
@@ -60,8 +61,8 @@ lines.push("");
 lines.push("# Set this to the deployed URL Vercel gives you, e.g. https://edvance.vercel.app");
 lines.push("BETTER_AUTH_URL=");
 lines.push("");
-lines.push("# DATABASE_URL is provided automatically by the Vercel Postgres integration.");
-lines.push("# Do not set it by hand.");
+lines.push("# The database connection string is provided automatically by the Vercel");
+lines.push("# Postgres integration (as DATABASE_URL or POSTGRES_URL). Do not set it by hand.");
 lines.push("");
 
 if (missing.length > 0) {

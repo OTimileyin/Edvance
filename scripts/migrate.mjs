@@ -6,6 +6,12 @@
 //
 // Usage: npm run migrate        (DATABASE_URL is injected by Infisical;
 //                                the production pre-deploy step supplies it directly)
+//
+// On Vercel the Postgres integration does not always inject `DATABASE_URL`; it
+// may expose the connection only as `POSTGRES_URL` (or Prisma's alias). For
+// schema migrations a direct (non-pooled) connection is safest, so the
+// non-pooling names are tried first, then the pooled ones. The Specific/Infisical
+// deployment sets only `DATABASE_URL`, so its behaviour is unchanged.
 
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -15,10 +21,21 @@ import pg from "pg";
 const here = dirname(fileURLToPath(import.meta.url));
 const migrationsDir = join(here, "..", "db", "migrations");
 
-const connectionString = process.env.DATABASE_URL;
+const DATABASE_URL_NAMES = [
+  "DATABASE_URL_UNPOOLED", // Vercel/Neon: direct, non-pooled connection
+  "POSTGRES_URL_NON_POOLING", // Vercel Postgres: direct, non-pooled connection
+  "DATABASE_URL", // Edvance's documented name (Infisical, Specific)
+  "POSTGRES_URL", // Vercel Postgres: pooled connection
+  "POSTGRES_PRISMA_URL", // Vercel Postgres: pooled (Prisma alias)
+];
+
+const connectionString = DATABASE_URL_NAMES.map((name) => process.env[name]?.trim()).find(
+  Boolean,
+);
 if (!connectionString) {
-  console.error("DATABASE_URL is not set. Run with: npm run migrate");
-  console.error("(this expects Infisical: infisical run --env=dev -- node scripts/migrate.mjs)");
+  console.error(`No database connection string is set. Set one of: ${DATABASE_URL_NAMES.join(", ")}.`);
+  console.error("Locally: npm run migrate (this expects Infisical: infisical run --env=dev -- node scripts/migrate.mjs)");
+  console.error("On Vercel: the Postgres integration injects POSTGRES_URL automatically.");
   process.exit(1);
 }
 
