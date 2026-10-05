@@ -32,34 +32,53 @@ jobs:
       - name: Typecheck and unit tests
         run: npm run check
 
-  # Runs the real production build so a Next.js build break is caught here
-  # rather than surfacing as a failed deploy on the target platform. It is
-  # the same build Vercel runs: `npm run build` (Next 16 / Turbopack) on Node 24.
-  #
-  # The three env vars are BUILD-TIME PLACEHOLDERS only — they let the Next.js
-  # server bundle resolve lib/db.ts and the Better Auth setup at build time
-  # without touching real infrastructure. None of them reach a database or a
-  # provider during `next build`; they exist purely so module import does not
-  # crash the bundle. They are deliberately invalid at runtime.
-build:
-  name: production build
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
+  # Runs the real production build against an ephemeral Postgres service,
+  # mirroring the Vercel build command exactly: `node scripts/migrate.mjs && npm
+  # run build`. A migration break OR a Next.js build break fails the gate here,
+  # not on deploy. The `postgres` service is throwaway CI infra; DATABASE_URL
+  # points at it, and BETTER_AUTH_SECRET/URL keep the auth setup happy at build
+  # time (they are not real runtime credentials).
+  build:
+    name: production build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: edvance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-tries 5
+    steps:
+      - uses: actions/checkout@v4
 
-    # Node 24, matching the check job and the deployed server.
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 24
-        cache: npm
+      # Node 24, matching the check job and the deployed server.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Production build
-      env:
-        DATABASE_URL: postgres://placeholder:placeholder@localhost:5432/placeholder
-        BETTER_AUTH_SECRET: ci-build-placeholder-secret-not-for-runtime-use
-        BETTER_AUTH_URL: http://localhost:3000
-        NEXT_TELEMETRY_DISABLED: 1
-      run: npm run build
+      # Applies every db/migrations/*.sql exactly as the deploy does. Idempotent,
+      # so re-runs against the fresh service database are a no-op after the first.
+      - name: Apply migrations
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/edvance
+          NEXT_TELEMETRY_DISABLED: 1
+        run: node scripts/migrate.mjs
+
+      - name: Production build
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/edvance
+          BETTER_AUTH_SECRET: ci-build-placeholder-secret-not-for-runtime-use
+          BETTER_AUTH_URL: http://localhost:3000
+          NEXT_TELEMETRY_DISABLED: 1
+        run: npm run build
