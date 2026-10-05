@@ -1,8 +1,10 @@
 # Edvance — Submission Report
 
 **Date:** 2026-10-02
+**Deployment status last re-checked:** 2026-10-05
 **Branch:** `main`
-**Last verified commit:** `b97cd0d` — `docs: add the submission readiness report and correct stale claims`
+**Last verified commit:** `756c4fb` — `feat(deploy): diff two deployments check by check and record the second target`
+**Verified at this commit:** remote suite against Specific → **69 passed / 0 failed**; two-deployment diff mode exercised against the not-yet-live Vercel host → **16 passed / 53 failed**.
 **Live deployment:** **https://white-whale.spcf.app** (`depl_02f4368hqt4n86q6`)
 **Status:** **EDVANCE — DEPLOYED AND SUBMISSION READY.** The app is live, serves HTTPS, and passed a
 remote end-to-end verification of the complete learner journey (**69 checks, 0 failures**).

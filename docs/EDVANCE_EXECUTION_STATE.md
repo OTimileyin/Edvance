@@ -26,8 +26,10 @@ and re-run the gate before claiming anything new.
 
 ## LAST VERIFIED COMMIT
 
-`b97cd0d` — `docs: add the submission readiness report and correct stale claims` (Phase 12). Branch `main`.
-The deployment changes (below) are committed on top of it.
+`756c4fb` — `feat(deploy): diff two deployments check by check and record the second target`. Branch `main`.
+The remote suite was run against this commit's script: Specific **69 passed / 0 failed**, and the
+two-deployment diff mode was exercised against the not-yet-live Vercel host (**16 passed / 53 failed**).
+Phase 12 was `b97cd0d`; the deployment commits were `ec06507`, `afef1b8`, `b3e3a98`.
 Phase 11 was `18db198`; Phase 10 was `fb96dc2`.
 Phase 9 was `3d7b818`; Phase 8 was `aa6f014`; Phase 7 was `2d51d6f`; Phase 6 was `2bce681`;
 Phase 5.6 was `f45ad5a`; Phase 5.5 was `0e33c80`.
