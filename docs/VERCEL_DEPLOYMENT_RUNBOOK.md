@@ -194,6 +194,26 @@ created. Expect **`69 passed, 0 failed`**.
 
 ---
 
+## Changing the code
+
+The repository does not accept direct pushes — `main` is protected and every change must arrive
+as a pull request whose **`typecheck + unit tests`** and **`production build`** checks are green.
+The build check runs the real migrate + build against a Postgres service container, so a migration
+break or a Next.js build break fails in CI rather than mid-deploy. Branches must be up to date with
+`main` before merging.
+
+```bash
+git switch -c fix/my-fix
+# ...edit, commit...
+git push -u origin fix/my-fix
+gh pr create        # or open the pull-request link GitHub prints
+```
+
+Merge once both checks are green. If a direct push is rejected with "protected branch hook
+declined", that is this policy working as intended.
+
+---
+
 ## What makes this deployment work
 
 - **`vercel.json`** — `"buildCommand": "node scripts/migrate.mjs && next build"`.

@@ -34,3 +34,5 @@ Thumbs.db
 
 # Local agent tooling (reinstallable skills)
 .opencode/
+.specific
+specific.local
