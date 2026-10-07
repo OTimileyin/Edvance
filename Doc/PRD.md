@@ -7,7 +7,7 @@
 **Version:** 2.0  
 **Status:** Phase 1 Complete — Assessment Intelligence Prototype (Lesson 6)  
 **Owner:** Oluwatimileyin Oyelabi  
-**Platform:** Web Application  
+**Platform:** Web Application
 
 ---
 
@@ -77,6 +77,7 @@ This is the product's first wedge. The larger course-intelligence platform can g
 ## 5. Target Users
 
 ### Primary Users
+
 - University students
 - Bootcamp participants
 - Fellowship and cohort-based learners
@@ -84,6 +85,7 @@ This is the product's first wedge. The larger course-intelligence platform can g
 - Learners taking structured online courses
 
 ### Secondary Users — Future
+
 - Lecturers
 - Training organisations
 - Universities
@@ -99,6 +101,7 @@ This is the product's first wedge. The larger course-intelligence platform can g
 The learner attends classes and receives lecture videos, slides, PDFs, assignments, transcripts, and assessment questions.
 
 They understand some of the course but struggle to determine:
+
 - what matters most,
 - where concepts were taught,
 - how different topics connect,
@@ -131,6 +134,7 @@ Instead of only summarizing content, Edvance connects:
 **Course Material + Instructor Terminology + Assessment Questions + Source Evidence + Learner Mastery**
 
 It should answer:
+
 - What exactly is this assessment question testing?
 - Where was this concept taught?
 - Which materials support this answer?
@@ -143,21 +147,27 @@ It should answer:
 ## 9. Core Product Principles
 
 ### Source-Grounded
+
 Important claims should trace back to supplied course material whenever possible.
 
 ### Instructor-Aligned
+
 Preserve the terminology, frameworks, examples, and structure used by the instructor.
 
 ### Evidence Before Guessing
+
 If there is not enough evidence, say so instead of inventing an answer.
 
 ### Mastery Over Summarization
+
 Help the learner understand and apply knowledge rather than merely shortening content.
 
 ### Clear Provenance
+
 Show where important information came from.
 
 ### Human Judgment Preserved
+
 When evidence is inconsistent or incomplete, show the evidence and uncertainty rather than silently deciding what the instructor meant.
 
 ---
@@ -206,30 +216,39 @@ Review Parameters and Target Output before attempting the assessment.
 ## 11. Main User Journey
 
 ### Step 1 — Create a Course Workspace
+
 The learner creates a workspace for a course or programme.
 
 ### Step 2 — Add Learning Materials
+
 The learner adds lecture transcripts, slides, PDFs, notes, course outlines, and assessment questions.
 
 ### Step 3 — Extract Course Concepts
+
 Edvance identifies major concepts, instructor terminology, frameworks, definitions, examples, relationships, and relevant source locations.
 
 ### Step 4 — Add an Assessment Question
+
 The learner enters or selects a question.
 
 ### Step 5 — Assessment Intelligence
+
 Edvance identifies the concepts required by the question, strongest supporting evidence, relevant source locations, and instructor terminology.
 
 ### Step 6 — Consistency Check
+
 Possible statuses:
+
 - Consistent
 - Possible inconsistency
 - Insufficient evidence
 
 ### Step 7 — Mastery Check
+
 The learner's performance or self-assessment is connected to the concepts being tested.
 
 ### Step 8 — Targeted Revision
+
 Edvance recommends the smallest useful revision action based on the learner's weak concepts.
 
 ---
@@ -270,37 +289,45 @@ For Lesson 6, the prototype may present this experience using mock/test data.
 ## 14. Technical Architecture
 
 ### Framework
+
 **Next.js with TypeScript**
 
 ### Database
+
 **PostgreSQL**
 
 Current development decision:
+
 - PostgreSQL is the structured data store.
 - PostgreSQL runs locally for now.
 - Cloud database deployment is deferred.
 
 ### Authentication
+
 **Better Auth**
 
 Authentication is planned for a later implementation phase. Working sign-in is not required for Lesson 6.
 
 ### File Storage
+
 **Supabase Storage**
 
 Private object storage (bucket `edvance-materials`) for course files such as PDFs, slide decks, notes, and transcripts. Supabase is used **only** for object/file storage: PostgreSQL remains the Edvance database, Better Auth remains authentication, and Infisical remains the secrets manager. Cloudflare R2 was previously selected and implemented but never connected; it was replaced in Change 13 (Appendix A).
 
 ### Local Development
+
 - The application runs locally.
 - PostgreSQL runs locally.
 - The browser is used to test the prototype.
 - Production deployment is postponed.
 
 ### Supporting Local Tools
+
 **Docker** may be used to run local services such as PostgreSQL.  
 **Caddy** may be introduced later as a reverse proxy when useful.
 
 ### Future External Services
+
 Future versions may connect to AI model APIs, email services, transcription services, and file-processing services.
 
 No secrets should be committed to the public repository.
@@ -310,6 +337,7 @@ No secrets should be committed to the public repository.
 ## 15. High-Level Data Model
 
 ### User
+
 - id
 - name
 - email
@@ -317,6 +345,7 @@ No secrets should be committed to the public repository.
 - createdAt
 
 ### Course
+
 - id
 - userId
 - title
@@ -324,6 +353,7 @@ No secrets should be committed to the public repository.
 - createdAt
 
 ### LearningMaterial
+
 - id
 - courseId
 - type
@@ -332,6 +362,7 @@ No secrets should be committed to the public repository.
 - uploadedAt
 
 ### Concept
+
 - id
 - courseId
 - name
@@ -340,12 +371,14 @@ No secrets should be committed to the public repository.
 - sourceReference
 
 ### AssessmentQuestion
+
 - id
 - courseId
 - questionText
 - createdAt
 
 ### SourceMapping
+
 - id
 - assessmentQuestionId
 - conceptId
@@ -354,6 +387,7 @@ No secrets should be committed to the public repository.
 - confidence
 
 ### ConsistencyFinding
+
 - id
 - assessmentQuestionId
 - status
@@ -362,6 +396,7 @@ No secrets should be committed to the public repository.
 - sourceB
 
 ### MasteryState
+
 - id
 - userId
 - conceptId
@@ -378,6 +413,7 @@ No secrets should be committed to the public repository.
 **Current Phase:** Phase 5.6 — Text Extraction & Evidence Chunking is **complete and verified end to end** on 2026-10-01 (Appendix A, Change 14). It builds on Phase 5 (course material ingestion via private **Supabase Storage**, verified in Changes 12–13). Phase 4 course data (Change 11), Phase 3 accounts (Change 8), Phase 2, the landing page/demo sign-in steering addition (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance identity (Change 9), and the interface sheet re-pointed at the live app (Change 10) are all delivered. Next phase: Phase 6 — Course Intelligence.
 
 **Completed (2026-09-27 – 2026-10-01):**
+
 - Phase 1 — Design System & Assessment Intelligence Prototype.
   - Implementation plan created; architecture reviewed and steering decisions logged (Appendix A, Decision 1).
   - Local PostgreSQL selected for later data integration.
@@ -435,6 +471,7 @@ No secrets should be committed to the public repository.
   - **Verified end to end (Change 14):** 91 assertions passing across all seven formats, location correctness, chunk ordering, ownership isolation, failed-ingestion states, delete cascades, typecheck, and a secret scan. **Not claimed:** no AI provider, prompt, concept extraction, embeddings, or vector database was added — those belong to Phase 6.
 
 **Not yet implemented:**
+
 - Course Intelligence — AI-assisted concept extraction over the stored evidence. No AI provider is configured.
 - Live AI APIs (Gemini or otherwise).
 - Production deployment.
@@ -442,9 +479,11 @@ No secrets should be committed to the public repository.
 **Next Phase:** Phase 6 — Course Intelligence.
 
 ### Phase 0 — Project Foundation
+
 **Goal:** Establish the project environment and documentation.
 
 **Outputs:**
+
 - Next.js + TypeScript project structure
 - Public GitHub repository
 - Updated PRD
@@ -453,21 +492,25 @@ No secrets should be committed to the public repository.
 - No secrets committed
 
 **Acceptance Criteria:**
+
 - [ ] Project opens locally
 - [ ] Repository is public
 - [ ] PRD exists
 - [ ] No secrets are committed
 
 ### Phase 1 — Design System & Assessment Intelligence Prototype
+
 **Goal:** Create the visual language and build one local page that communicates the signature Edvance experience.
 
 **Outputs:**
+
 - `design.html`
 - Initial local app page
 - Assessment Intelligence screen
 - Mock/test data only
 
 **Acceptance Criteria:**
+
 - [x] `design.html` opens locally
 - [x] Color palette is visible
 - [x] Typography examples are visible
@@ -479,9 +522,11 @@ No secrets should be committed to the public repository.
 - [x] Mock/test data only is used
 
 ### Phase 2 — Core Application Structure
+
 **Goal:** Build the learner experience around courses and course evidence.
 
 **Outputs:**
+
 - Course workspace
 - Navigation
 - Sources section
@@ -490,24 +535,29 @@ No secrets should be committed to the public repository.
 - Basic responsive layout
 
 ### Phase 3 — Accounts & Authentication
+
 **Goal:** Introduce user identity and protected experiences.
 
 **Technology:** Better Auth
 
 ### Phase 4 — Course Data & PostgreSQL
+
 **Goal:** Persist structured course and learner records.
 
 **Technology:** PostgreSQL
 
 ### Phase 5 — Course Material Ingestion
+
 **Goal:** Allow real course material into the evidence pipeline.
 
 **Planned Storage:** Supabase Storage (private bucket)
 
 ### Phase 5.6 — Text Extraction & Evidence Chunking
+
 **Goal:** Turn stored materials into structured, location-aware evidence the later intelligence phases can cite.
 
 **Outputs:**
+
 - Server-only extraction layer for PDF, TXT, Markdown, DOCX, PPTX, WebVTT, and SRT.
 - `material_ingestion_job` and `material_chunk` tables; synchronous ingestion on upload, with retry.
 - Sources processing state ("Ready for analysis") with factual derived metadata, and clearly-labelled demo sources.
@@ -515,15 +565,19 @@ No secrets should be committed to the public repository.
 **Not in this phase:** any AI provider, prompt, concept extraction, embeddings, or vector database.
 
 ### Phase 6 — Course Intelligence
+
 **Goal:** Extract structured knowledge while preserving instructor terminology and source evidence.
 
 ### Phase 7 — Assessment Intelligence
+
 **Goal:** Connect assessment questions to concepts, sources, and consistency checks.
 
 ### Phase 8 — Mastery Intelligence
+
 **Goal:** Connect learner performance to assessed concepts.
 
 ### Phase 9 — Targeted Revision
+
 **Goal:** Turn evidence and mastery into a useful next action.
 
 ---
@@ -531,7 +585,9 @@ No secrets should be committed to the public repository.
 ## 17. Design System
 
 ### Design Direction
+
 Edvance should feel:
+
 - Clear
 - Evidence-driven
 - Modern
@@ -546,19 +602,19 @@ An artisan-poster palette: teal for structure, cream for the page, rust for flag
 sage for growth. Implemented in `app/globals.css`; snapshotted in the `design.html`
 interface sheet, which renders the live screens against that stylesheet.
 
-| Token | Value | Usage |
-|---|---|---|
-| `--teal-950` / `--teal-900` | `#0D2327` / `#123236` | Deep bands, footers, dark chrome |
-| `--teal-700` | `#22545A` | Primary actions |
-| `--teal-600` | `#2C6E70` | Secondary accents, mastery |
-| `--teal-300` / `--teal-100` | `#9AC8BE` / `#DCEAE3` | On-dark text, tints |
-| `--cream-50` / `--cream-100` | `#FBF6EA` / `#F6EFDD` | Page background |
-| `--cream-200` / `--cream-300` | `#EDE2C9` / `#DBC9A8` | Borders, rules |
-| `--rust-700` / `--rust-600` / `--rust-500` | `#A03B1E` / `#C9502E` / `#DC6338` | Flags, inconsistencies, calls to act |
-| `--sage-600` / `--sage-100` | `#6B8A5E` / `#E4EBD6` | Mastered / consistent |
-| `--gold-600` / `--gold-100` | `#C99A3C` / `#F5ECD4` | Developing / caution |
-| `--color-surface` | `#FFFCF5` | Cards and panels |
-| `--color-neutral-950` / `--color-neutral-600` | `#23201A` / `#5A5344` | Main and secondary text |
+| Token                                         | Value                             | Usage                                |
+| --------------------------------------------- | --------------------------------- | ------------------------------------ |
+| `--teal-950` / `--teal-900`                   | `#0D2327` / `#123236`             | Deep bands, footers, dark chrome     |
+| `--teal-700`                                  | `#22545A`                         | Primary actions                      |
+| `--teal-600`                                  | `#2C6E70`                         | Secondary accents, mastery           |
+| `--teal-300` / `--teal-100`                   | `#9AC8BE` / `#DCEAE3`             | On-dark text, tints                  |
+| `--cream-50` / `--cream-100`                  | `#FBF6EA` / `#F6EFDD`             | Page background                      |
+| `--cream-200` / `--cream-300`                 | `#EDE2C9` / `#DBC9A8`             | Borders, rules                       |
+| `--rust-700` / `--rust-600` / `--rust-500`    | `#A03B1E` / `#C9502E` / `#DC6338` | Flags, inconsistencies, calls to act |
+| `--sage-600` / `--sage-100`                   | `#6B8A5E` / `#E4EBD6`             | Mastered / consistent                |
+| `--gold-600` / `--gold-100`                   | `#C99A3C` / `#F5ECD4`             | Developing / caution                 |
+| `--color-surface`                             | `#FFFCF5`                         | Cards and panels                     |
+| `--color-neutral-950` / `--color-neutral-600` | `#23201A` / `#5A5344`             | Main and secondary text              |
 
 Legacy token names (`--forest-*`, `--paper-*`, `--coral-*`, `--oak-*`) are kept as aliases
 to the values above so existing components retint without churn.
@@ -577,10 +633,12 @@ to the values above so existing components retint without churn.
 These values may be refined after reviewing the first design preview.
 
 ### Typography
+
 **Fraunces** (variable, italic, SOFT/WONK/opsz axes) for display and headings, over
 **Inter** for body and UI. Both loaded through `next/font/google`.
 
 ### Initial Components
+
 - Primary button
 - Secondary button
 - Text input
@@ -598,6 +656,7 @@ These values may be refined after reviewing the first design preview.
 The first local application page should be an **Assessment Intelligence** page rather than a generic dashboard.
 
 ### Required Sections
+
 - Edvance product header
 - Assessment question
 - Concepts being tested
@@ -615,6 +674,7 @@ The first local application page should be an **Assessment Intelligence** page r
 **Assessment Question:** "What are the five components of the PROMPT framework?"
 
 **Course Evidence:**
+
 - Purpose
 - Role
 - Objective
@@ -635,9 +695,11 @@ The first local application page should be an **Assessment Intelligence** page r
 ## 20. Non-Functional Requirements
 
 ### Usability
+
 The interface should be understandable without technical knowledge.
 
 ### Accessibility
+
 - Readable typography
 - Strong contrast
 - Visible focus states
@@ -645,6 +707,7 @@ The interface should be understandable without technical knowledge.
 - Mobile-friendly layout where practical
 
 ### Privacy
+
 - Use test data for Lesson 6
 - Do not commit API keys
 - Do not commit tokens
@@ -652,9 +715,11 @@ The interface should be understandable without technical knowledge.
 - Do not commit secret `.env` files
 
 ### Reliability
+
 Future source references must accurately correspond to the cited material.
 
 ### Transparency
+
 Clearly distinguish evidence-backed information, inferred information, and insufficient evidence.
 
 ---
@@ -662,6 +727,7 @@ Clearly distinguish evidence-backed information, inferred information, and insuf
 ## 21. Success Metrics
 
 Longer-term metrics:
+
 - Assessment questions successfully mapped to course sources
 - Accuracy of source references
 - Validated inconsistency detections
@@ -670,6 +736,7 @@ Longer-term metrics:
 - User-reported confidence before assessments
 
 Lesson 6 prototype success:
+
 - Product value is understandable from one screen
 - Signature assessment-intelligence flow is visible
 - Page opens locally
@@ -680,21 +747,22 @@ Lesson 6 prototype success:
 
 ## 22. Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|---|---|---|
-| Becomes generic AI study assistant | High | Keep evidence and assessment intelligence central |
-| AI invents unsupported information | High | Evidence-first responses and uncertainty labels |
-| Source references are inaccurate | High | Validate mappings before display |
-| Too many MVP features | High | Maintain narrow first wedge |
-| Sensitive uploaded materials | High | Clear privacy and storage controls |
-| Inconsistency flag is over-trusted | Medium | Show evidence and preserve human judgment |
-| Architecture becomes too complex | Medium | Build one phase at a time |
+| Risk                               | Impact | Mitigation                                        |
+| ---------------------------------- | ------ | ------------------------------------------------- |
+| Becomes generic AI study assistant | High   | Keep evidence and assessment intelligence central |
+| AI invents unsupported information | High   | Evidence-first responses and uncertainty labels   |
+| Source references are inaccurate   | High   | Validate mappings before display                  |
+| Too many MVP features              | High   | Maintain narrow first wedge                       |
+| Sensitive uploaded materials       | High   | Clear privacy and storage controls                |
+| Inconsistency flag is over-trusted | Medium | Show evidence and preserve human judgment         |
+| Architecture becomes too complex   | Medium | Build one phase at a time                         |
 
 ---
 
 ## 23. Definition of MVP Success
 
 The full MVP is successful when a learner can:
+
 1. Add course material.
 2. Add an assessment question.
 3. See what concepts the question requires.
@@ -728,6 +796,7 @@ The full MVP is successful when a learner can:
 **Status:** Confirmed by Product Owner — Active Architecture Decision
 
 ### Steering Question
+
 Before implementation began, the Product Owner asked the AI builder to compare two approaches for Edvance's database/backend at the current development stage:
 
 - **Option A (hosted):** Use a hosted service such as Supabase for the database/backend.
@@ -736,13 +805,16 @@ Before implementation began, the Product Owner asked the AI builder to compare t
 The comparison covered: cost, development complexity, control, local development workflow, vendor dependency, future scalability, migration/deployment later, and the requirements of the current Lesson 6 assessment.
 
 ### Alternatives Considered
+
 - **Option A — Supabase (hosted):** Managed database, auth, storage, and realtime out of the box; a free tier exists. It adds a hosted dependency before the concept is proven, carries free-tier limits and potential pricing changes, and its auth/storage abstractions would conflict with the PRD-specified Better Auth and Cloudflare R2 stack. Lesson 6 requires no real database tests, so it offers no benefit at this stage.
 - **Option B — Local PostgreSQL:** No external dependency and near-zero cost, keeps the Lesson 6 deliverable strictly local, provides full control over schema and migrations, and leaves a clear path to any managed Postgres host later.
 
 ### Decision
+
 Use **PostgreSQL locally** during the current Edvance development stage.
 
 ### Reason
+
 - The application is currently being built and tested locally.
 - The Lesson 6 assessment does not require public deployment.
 - We do not want an unnecessary hosted dependency during the prototype stage.
@@ -750,6 +822,7 @@ Use **PostgreSQL locally** during the current Edvance development stage.
 - The architecture should remain migration-friendly.
 
 ### Impact on Implementation Plan
+
 - `docs/IMPLEMENTATION_PLAN.md` names PostgreSQL as the database.
 - PostgreSQL is documented as running locally for now; cloud database deployment is deferred (Phase 4+).
 - Phase 1 (Lesson 6 prototype) requires no hosted database and no real database tests.
@@ -757,6 +830,7 @@ Use **PostgreSQL locally** during the current Edvance development stage.
 - Phase 1 will use `design.html` and a separate Assessment Intelligence page with mock/test data only. No PostgreSQL functionality is implemented in this phase.
 
 ### Verification
+
 - [x] Implementation plan names PostgreSQL
 - [x] PRD states app and database run locally
 - [x] Phase 1 prototype does not require a hosted database
@@ -770,7 +844,9 @@ Use **PostgreSQL locally** during the current Edvance development stage.
 **Status:** Completed — Implemented in `design.html`
 
 ### Initial Observation
+
 The first design preview was a sound starting point, but the Product Owner identified that:
+
 - Hierarchy between the page title, section headings, and body text was not distinct enough.
 - The primary action button did not stand out from surrounding content.
 - Input borders and focus states were too subtle to notice quickly.
@@ -781,7 +857,9 @@ The first design preview was a sound starting point, but the Product Owner ident
 - The page risked reading as a generic AI dashboard rather than an evidence product.
 
 ### Requested Refinement
+
 The Product Owner asked the AI builder to:
+
 1. Make the hierarchy between page titles, section headings, and body text clearer.
 2. Increase the visual prominence of the primary action button without making the interface loud.
 3. Make input borders and focus states easier to identify.
@@ -794,6 +872,7 @@ The Product Owner asked the AI builder to:
 10. Make the page feel like an intelligent learning/evidence product, not a generic AI dashboard.
 
 ### Changes Made in `design.html`
+
 - **Hierarchy:** The hero page title is now the Display style (800, 40px); section headings set to 24px and joined with numbered uppercase kickers ("01 &middot; Foundation", etc.); lede and caption text sit clearly below headings. Body headings force `neutral-950`, with secondary text on `neutral-600`.
 - **Primary button:** Now font-weight 700 with larger padding and an elevated, subtle cake-layered shadow (inset highlight + drop shadow tinted primary), plus a gentle hover lift. Secondary button remains flat/outlined so the primary clearly dominates without adding loudness.
 - **Inputs:** Borders thickened to `2px` using a `--color-neutral-500` border at rest, hover shifts to `primary-500`, and focus uses a `primary-700` border with a 4px translucent ring. Placeholder text is full-strength `neutral-600` (no opacity reduction).
@@ -804,12 +883,14 @@ The Product Owner asked the AI builder to:
 - **Evidence focus:** Added an Assessment → Concepts → Evidence → Consistency → Mastery → Revision pipeline strip to the hero to reinforce the evidence-first product framing. No gradients or decorative effects were introduced; the design stays flat, calm, and token-based.
 
 ### Impact on Design System
+
 - The system now has a clearer type ramp (page title > section heading > body > caption > label) that will apply consistently to the app pages.
 - Status communication is no longer color-only: badges carry text labels on tinted surfaces, improving accessibility and information density.
 - The primary-button and input-focus patterns define reusable interaction tokens for the Assessment Intelligence page.
 - The consistency banner and mastery table establish the visual language for the signature experience and can be lifted directly into Phase 1.
 
 ### Verification
+
 - [x] Refinement is documented here
 - [x] Updated `design.html` visibly reflects it
 
@@ -822,12 +903,15 @@ The Product Owner asked the AI builder to:
 **Status:** Planned for Phase 1
 
 ### Reason
+
 Lesson 6 only requires a single working local page. Building authentication, production database integration, live AI calls, or the entire Edvance platform now would add unnecessary complexity.
 
 ### Decision
+
 The first working page focuses only on the **Assessment Intelligence** experience using mock/test data.
 
 ### Deferred
+
 - Authentication
 - Production database logic
 - Live AI APIs
@@ -843,10 +927,13 @@ The first working page focuses only on the **Assessment Intelligence** experienc
 **Status:** Completed in Phase 1
 
 ### Reason
+
 Phase 1 work is complete. The project documentation must accurately reflect the current phase and must not imply that deferred functionality already works.
 
 ### Decision
+
 Document the current project state:
+
 - **Current phase:** Phase 1 — Design System & Assessment Intelligence Prototype.
 - **Completed:** implementation plan created; architecture reviewed (Decision 1); local PostgreSQL selected for later data integration; `design.html` created; design refinements completed (Change 2); initial Assessment Intelligence page built (`assessment-intelligence.html`); local prototype tested with mock data.
 - **Not yet implemented:** Better Auth; PostgreSQL application integration; Cloudflare R2; real course ingestion; live AI APIs; source-processing pipeline; production deployment.
@@ -855,6 +942,7 @@ Document the current project state:
 `README.md` now includes simple instructions for running the local prototype.
 
 ### Impact on this document
+
 Added §16.1 Current Status; updated the document status header; updated appendix checklists. No functionality claims beyond what is implemented.
 
 ---
@@ -866,10 +954,13 @@ Added §16.1 Current Status; updated the document status header; updated appendi
 **Status:** Completed in Phase 2
 
 ### Reason
+
 A single Assessment Intelligence page is not enough to explore a course. The learner needs a structured workspace around a course and its evidence.
 
 ### Decision
+
 Build Phase 2 as a Next.js + TypeScript app (App Router) that runs locally:
+
 - Course workspace with create/open (created workspaces persist in the browser via `localStorage`).
 - Navigation between Courses, Sources, Assessments, and Mastery.
 - Sources section, Assessments section (list and add questions), and Mastery section, all rendering from mock data.
@@ -877,9 +968,11 @@ Build Phase 2 as a Next.js + TypeScript app (App Router) that runs locally:
 - No authentication, no database, no live AI, no deployment.
 
 ### Verification
+
 `npm run build` passes type-checking and compilation. `npm start` (or `npm run dev`) serves the app at `http://localhost:3000`; routes `/`, `/courses`, and each `/courses/[courseId]` section return 200.
 
 ### Impact on this document
+
 §16.1 updated to Phase 2 complete; next phase identified as Phase 3. No functionality claims beyond what is implemented.
 
 ---
@@ -891,10 +984,13 @@ Build Phase 2 as a Next.js + TypeScript app (App Router) that runs locally:
 **Status:** Completed as a Phase 2 steering addition
 
 ### Reason
+
 The Product Owner expected the product to begin on a landing page with hero and supporting sections, followed by sign-in/sign-up that leads into the application — not a direct entry into the course workspace. The existing `/` redirected straight to `/courses`, which did not match that expectation.
 
 ### Decision
+
 Build the entry experience as a demo-flow addition on top of the Phase 2 app:
+
 - Landing page at `/` with hero, the four central questions, feature highlights, how-it-works steps, and an honest demo-status section.
 - Sign-in (`/signin`) and sign-up (`/signup`) pages that create a **local demo session** in `localStorage` and enter the app at `/courses`.
 - Gated app routes: `/courses` and workspace pages redirect to `/signin` when no session exists, then return via the `next` query parameter.
@@ -902,9 +998,11 @@ Build the entry experience as a demo-flow addition on top of the Phase 2 app:
 - Explicitly **not** Better Auth — no real identity, no database, no secrets. Real accounts and persistence remain Phase 3 (and PostgreSQL integration Phase 4).
 
 ### Verification
+
 `npm run typecheck` and `npm run build` pass. Routes `/`, `/signin`, `/signup`, and `/courses` return 200 on the dev server.
 
 ### Impact on this document
+
 §16.1 updated to describe the landing page and demo sign-in; README run instructions updated. No functionality claims beyond what is implemented.
 
 ---
@@ -916,10 +1014,13 @@ Build the entry experience as a demo-flow addition on top of the Phase 2 app:
 **Status:** Completed as a Phase 2 steering addition (design only — no functionality claims change)
 
 ### Reason
+
 The Product Owner supplied three reference designs — a glassmorphism welcome screen, a deep-green feature band with earthy tinted tiles, and a warm artisan editorial page with serif display type and stamp badges — and asked that their elements be fused to elevate the project's design.
 
 ### Decision
+
 Fuse the three references into one coherent system, named **"Field Guide"**:
+
 - **Palette:** deep forest green (structure, primary actions, dark bands), warm paper/cream (study surfaces), coral (the flag colour for inconsistencies and calls to act), gold and oak (support tones).
 - **Type:** Fraunces (soft display serif with SOFT/WONK axes) for display and headings, Inter for body and UI — self-hosted via `next/font`.
 - **Atmosphere:** glassmorphism panels (frosted evidence card, glass sidebar, glass quote card on the auth screen) over radial-gradient tints with subtle film-grain texture.
@@ -928,9 +1029,11 @@ Fuse the three references into one coherent system, named **"Field Guide"**:
 - Also fixed during verification: the header now re-reads the demo session on client-side route changes, so signing in from `/signin` immediately shows the user and Sign out in the header.
 
 ### Verification
+
 `npm run typecheck` and `npm run build` pass. Routes `/`, `/signin`, `/signup`, `/courses`, and the `ai-foundry` workspace pages return 200. Landing, sign-in, courses, and mastery screens reviewed in the browser at 1440px.
 
 ### Impact on this document
+
 §16.1 updated to record the redesign. Scope remains the same: demo data, demo sessions, no backend. No functionality claims beyond what is implemented.
 
 ---
@@ -942,9 +1045,11 @@ Fuse the three references into one coherent system, named **"Field Guide"**:
 **Status:** Completed — Phase 3
 
 ### Reason
+
 The approved implementation plan places real accounts (Better Auth) in Phase 3, with PostgreSQL running locally per Decision 1. The Product Owner granted blanket permission for normal local development operations, including installing tools and configuring the local environment.
 
 ### Decision
+
 - **Local PostgreSQL provisioned** via the PostgreSQL 18 installer (winget, elevated with Product Owner approval): Windows service `postgresql-edvance` on `127.0.0.1:5432`, database `edvance`, dev-only superuser password (kept out of Git in `.env`).
 - **Better Auth 1.7** with the Kysely adapter on `pg` + `Pool` over `DATABASE_URL`; `emailAndPassword.enabled`; `nextCookies()` plugin last so server actions can set cookies. Handler mounted at `/api/auth/[...all]` via `toNextJsHandler` (Next.js 16 proxy-style notes followed from Better Auth's Next.js guide).
 - **Schema** created with `npx auth migrate` (`user`, `session`, `account`, `verification`).
@@ -955,9 +1060,11 @@ The approved implementation plan places real accounts (Better Auth) in Phase 3, 
 - **Env**: `.env` (git-ignored) holds `DATABASE_URL`, `BETTER_AUTH_SECRET` (32-char base64), `BETTER_AUTH_URL`; committed `.env.example` documents the shape without values.
 
 ### Verification
+
 `npm run typecheck` and `npm run build` pass (`/api/auth/[...all]` and `/courses` now server-rendered). API-level: `POST /api/auth/sign-up/email` creates the user; `get-session` with the cookie returns the session; `GET /courses` without a session → 307 to `/signin?next=/courses`, with a session → 200. PostgreSQL contains the created users and hashed credential accounts. Browser-level: real sign-up (Amara Okafor) lands on `/courses` with the header showing the account name and Sign out; workspace pages render scoped data. Sign-up form errors (short password, duplicate email) surface inline.
 
 ### Impact on this document
+
 §16.1 updated to Phase 3 complete; next phase Phase 4. No functionality claims beyond what is implemented.
 
 ---
@@ -969,10 +1076,12 @@ The approved implementation plan places real accounts (Better Auth) in Phase 3, 
 **Status:** Completed
 
 ### Reason
+
 Phase 2's "Field Guide" system was a forest/paper palette with a glass evidence card. The Product Owner supplied an artisan-poster reference — vintage illustration, teal/cream/rust palette, italic serif display type, a dark band of product tiles, circular icon medallions, pill controls — and asked for a redesign in that spirit, executed with Apple-grade craft, plus a logo. A product without a mark cannot be presented or remembered, so the identity was treated as a deliverable rather than a decoration.
 
 ### Decision
-- **Palette shifted**: forest green → **deep teal** (`#0D2327`–`#2C6E70`); coral → **rust** (`#C9502E`); paper → **cream** (`#FBF6EA`); **sage** added for growth/mastery. The existing semantics were preserved deliberately — rust still means *flag*, teal still means *structure/evidence* — so the redesign changed the voice without changing what any colour means. Legacy token names remain as aliases, which retinted every workspace surface without touching workspace components.
+
+- **Palette shifted**: forest green → **deep teal** (`#0D2327`–`#2C6E70`); coral → **rust** (`#C9502E`); paper → **cream** (`#FBF6EA`); **sage** added for growth/mastery. The existing semantics were preserved deliberately — rust still means _flag_, teal still means _structure/evidence_ — so the redesign changed the voice without changing what any colour means. Legacy token names remain as aliases, which retinted every workspace surface without touching workspace components.
 - **A real logo was designed, not decorated**: the mark is a seal containing an "E" built from three stacked source bars with the middle bar rust-highlighted. It encodes the product's single idea (highlight the evidence, flag the source that disagrees) and stays legible at 16px. Delivered as `components/logo.tsx`, `public/logo.svg`, and `app/icon.svg` (Next.js file-convention favicon), with lockup rules documented on the `design.html` brand sheet.
 - **Landing page restructured to the reference's rhythm**: a two-panel printed poster hero (cream paper panel with the words, hand-drawn SVG poster with the illustration), a dark teal band with three captioned illustration tiles, a cream band of four medallions with stitched rims, a sand editorial spread with step chips, and a dark teal honest-status band.
 - **Header and footer rebuilt**: logo lockup left, centred anchor navigation, circular tool buttons right (the reference's medallion controls); the footer moved from forest-dark to cream with a real status note.
@@ -980,9 +1089,11 @@ Phase 2's "Field Guide" system was a forest/paper palette with a glass evidence 
 - **Honesty fix**: the footer previously claimed "no backend involved", which Change 8 made false. It now states that accounts and sessions are real (local PostgreSQL + Better Auth) while course analysis is still mock data.
 
 ### Verification
+
 `npm run typecheck` and `npm run build` pass; all routes build as before (`/`, `/_not-found`, `/signin`, `/signup`, `/courses*`, `/api/auth/[...all]`) plus the new `/icon.svg`. Browser-verified at 1440×980: header shows the logo lockup and centred nav with no horizontal overflow; the poster renders with the illustration panel's composition confirmed numerically (sun, sailboat, headland, lighthouse, and the document card all inside the frame at the intended coordinates); the medallion icons measure 76×76 after a selector fix; `/signin` shows the teal panel with the cream logo; `/courses` and `/courses/ai-foundry/mastery` render with teal navigation, teal mastery bars, and rust weak bars. A sweep for zero-size decorative SVGs returns none.
 
 ### Impact on this document
+
 §16.1 updated; §17 palette, typography, and brand sections rewritten to the implemented system. No route, data, or authentication behaviour changed. No functionality claims beyond what is implemented.
 
 ---
@@ -994,9 +1105,11 @@ Phase 2's "Field Guide" system was a forest/paper palette with a glass evidence 
 **Status:** Completed
 
 ### Reason
-After Changes 7 and 9, `design.html` had become a *brand sheet*: a reasonable-looking page that restated the palette, type scale, buttons, and medallions **by hand**. That made it a second, unverified source of visual truth. It could (and did) show components the app rendered differently, and it said nothing about the screens a learner actually uses. The Product Owner asked for it to show the project as it currently is.
+
+After Changes 7 and 9, `design.html` had become a _brand sheet_: a reasonable-looking page that restated the palette, type scale, buttons, and medallions **by hand**. That made it a second, unverified source of visual truth. It could (and did) show components the app rendered differently, and it said nothing about the screens a learner actually uses. The Product Owner asked for it to show the project as it currently is.
 
 ### Decision
+
 - **The sheet now renders the product's own screens**: landing page (`/`), sign-in (`/signin`), course directory (`/courses`), course overview, sources, assessments, and mastery — with the real markup, the real class names, and the seeded demo content, each labelled with its route.
 - **It no longer restates CSS.** The application stylesheet is inlined as a **verbatim snapshot** of `app/globals.css` between explicit `APP-CSS:BEGIN` / `APP-CSS:END` markers, so the sheet is correct by construction and self-contained (folders are not served alongside it when it is opened or previewed). Refreshing it is a deliberate, visible copy step rather than an invisible drift.
 - **Inlined rather than linked** because the environments that open this file — the filesystem, a static server, and the Freebuff Preview tab (which serves that single HTML file and returns 404 for every sibling asset) — cannot resolve an external `app/globals.css`. A linked sheet rendered as unstyled HTML in two of the three.
@@ -1005,9 +1118,11 @@ After Changes 7 and 9, `design.html` had become a *brand sheet*: a reasonable-lo
 - **Brand and token reference retained**, but demoted to the last section and rendered with the application's real classes instead of private duplicates.
 
 ### Verification
+
 Rendered at 1440×980 and measured in the browser: body background `rgb(251,246,234)`; hero title 72px italic Fraunces with `SOFT`/`WONK`/`opsz` variation settings applied; the four medallion discs 148px with 76×76 icons; poster grid `1.04fr .96fr` with the evidence card docked inside the illustration panel; footer cream `rgb(246,239,221)`; workspace nav-active `rgb(34,84,90)`; weak mastery bar `rgb(220,99,56)`; section order `poster-hero → band--ink → band--cream → band--sand → band--ink`; 7 frames, 7 headers, 7 footers, no leftover template slots; no clipped text and **no horizontal overflow** at any point on the page; a sweep for decorative SVGs under 8px returns none. These are the same values the live application reports, because the stylesheet is the same bytes.
 
 ### Impact on this document
+
 §16.1 and §17 updated to describe the sheet accurately. No app code, route, data, or authentication behaviour changed — only `design.html` and the documentation that points at it.
 
 ---
@@ -1019,13 +1134,16 @@ Rendered at 1440×980 and measured in the browser: body background `rgb(251,246,
 **Status:** Completed — Phase 4
 
 ### Reason
+
 The approved plan places persistent course and learner records in Phase 4, and the single live gap in the Product Owner's assessment feedback was that the workspace still ran on seeded browser data rather than real storage. Until course records live in the database, Phase 5 ingestion has nowhere to write its materials, and the evidence pipeline has nothing durable to reason over.
 
 ### Alternatives Considered
+
 - **An ORM (Drizzle or Prisma):** offers typed queries and generated migrations. Rejected for now: it adds a schema-definition layer and a generation step on top of a model the PRD already states directly in SQL terms, and the project is deliberately dependency-light. The `pg` client is already in the stack (Better Auth uses it), so plain SQL migrations plus a repository module achieve the same result with less machinery to keep in sync.
 - **Keeping `localStorage` and syncing later:** rejected. It would have left two sources of truth and made Phase 5's uploads unwritable.
 
 ### Decision
+
 - **Plain SQL migrations, applied by a small runner.** `db/migrations/0001_course_data.sql` creates the §15 model; `scripts/migrate.mjs` (`npm run migrate`) applies each pending file once, in filename order, inside a transaction, and records it in a `schema_migrations` ledger. Re-running reports "Database already up to date."
 - **Schema faithful to the PRD, with two additions:** `course.institution` and `course.lesson` carry the fields the existing UI already collects, and `concept.ordinal` preserves the authored order of concepts (ordering by name would have scrambled the PROMPT-framework sequence). Identifiers are `text`, so seeded workspaces keep readable UUID-based ids.
 - **Repository layer is the only SQL.** `lib/repo/courses.ts` maps rows to the `Course` domain type: it bulk-loads materials, concepts (left-joined to the learner's `mastery_state`), questions, and the latest consistency finding for the courses requested, rather than issuing a query per course.
@@ -1035,9 +1153,11 @@ The approved plan places persistent course and learner records in Phase 4, and t
 - **Honesty:** the course directory and the add-question form previously said workspaces were "stored locally on this device (demo data only)". They now state the data is stored in the local PostgreSQL database. `source_mapping` is deliberately not surfaced in the UI yet — it is populated in the intelligence phases — so it is not claimed as a working feature.
 
 ### Verification
+
 `npm run typecheck` and `npm run build` pass; the build lists the three new dynamic `/api/courses…` routes. Migration applied once and a second `npm run migrate` reported no pending files. End to end with real sessions: `POST /api/auth/sign-in/email` then `GET /api/courses` returned the seeded workspaces; `GET /api/courses/:id` returned one course; `POST /api/courses` created a course; `POST /api/courses/:id/assessments` added a question that read back on the next request; unauthenticated `GET /api/courses` returned 401; a second learner saw only their own course ids; `/courses` returned 200 with a session and 307 → `/signin?next=/courses` without one. Row counts confirmed the data reached PostgreSQL, and a `source_mapping` insert/select/delete round-tripped against the schema. The throwaway test course was removed afterwards.
 
 ### Impact on this document
+
 §16.1 updated to Phase 4 complete; next phase Phase 5. The data model in §15 is now implemented rather than planned. No live AI, file storage, or ingestion is claimed.
 
 ---
@@ -1049,24 +1169,29 @@ The approved plan places persistent course and learner records in Phase 4, and t
 **Status:** Implemented — end-to-end verification pending R2 credentials
 
 ### Reason
+
 Phases 2–4 built the workspace and its database, but course materials were still seeded demo rows with no bytes behind them. Until real files can be stored and cited, the evidence-first pipeline (assessment-to-source mapping, inconsistency detection, mastery) has nothing authentic to reason over. Phase 5 gives `learning_material` a stored object and a `storageReference`, and puts a working upload in front of the learner.
 
 ### Alternatives Considered
+
 - **An S3 SDK (`@aws-sdk/client-s3`):** the conventional route, with built-in SigV4. Rejected: it is a large dependency for three operations (put, delete, presigned get), and this project deliberately carries no ORM and few dependencies. R2 is S3-compatible, and SigV4 over Node's `crypto` is small and testable.
 - **Presigned browser-to-R2 uploads:** avoids streaming file bytes through the server. Deferred: it needs per-bucket CORS configuration and a second "finalise" request, which is more moving parts than a self-contained upload for documents of this size. Server-side upload keeps the flow to one request and one place that enforces validation.
 - **An in-memory or filesystem-only store:** rejected — it would not be Cloudflare R2 and would not survive a deploy, contradicting the plan.
 
 ### Decision
+
 - **Store in R2, then write the row.** Ownership is checked first, the bytes are sent to R2, and only then is the `learning_material` row inserted with the object key as `storage_reference`. A failed insert removes the just-written object.
 - **Object keys are owner-scoped:** `<user id>/<course id>/<material id>/<safe filename>`, so a bucket listing cannot cross learners, and download authorisation is a join back to the owning course.
 - **Validation is duplicated on purpose:** the form gives immediate feedback; the route is authoritative. Both share one definition in `lib/materials.ts`.
 - **The upload fails honestly when unconfigured.** With no R2 environment variables the route returns 503 with the exact variable names, and the form shows it — rather than writing a half-broken row or pretending to succeed.
 
 ### Verification
+
 `npm run typecheck` and `npm run build` pass; the build lists the two new routes `POST /api/courses/[courseId]/materials` and `GET /api/courses/[courseId]/materials/[materialId]/download`. `npm run migrate` applied `0002_material_storage.sql` once (0001 skipped as already applied). Live, against the running dev server with a real session: unauthenticated `POST …/materials` → 401; `.exe` upload → 415; multipart body with no `file` field → 400; upload against a course the learner does not own → 404. The throwaway test account was removed afterwards. **Not yet verified:** a real file upload and download through R2, which requires credentials; the route reports this state (503) until they are set.
 
 ### Impact on this document
-§16.1 updated to Phase 5 implemented (verification pending credentials); next phase Phase 6. "Cloudflare R2 file storage" moved out of *not yet implemented*; the source-processing pipeline remains explicitly unimplemented and is not claimed.
+
+§16.1 updated to Phase 5 implemented (verification pending credentials); next phase Phase 6. "Cloudflare R2 file storage" moved out of _not yet implemented_; the source-processing pipeline remains explicitly unimplemented and is not claimed.
 
 ---
 
@@ -1077,6 +1202,7 @@ Phases 2–4 built the workspace and its database, but course materials were sti
 **Status:** Implemented and verified end to end
 
 ### Reason
+
 **Cloudflare R2 had previously been selected** (Decision 1, Change 12). The R2 implementation was written — a dependency-free SigV4 client — but it was **never successfully connected or tested**: no R2 credentials were ever configured, so no file was ever uploaded or downloaded through it. The Product Owner already had a Supabase account and free development setup available, so Storage could be exercised for real immediately. R2 was therefore replaced with Supabase Storage.
 
 This is **storage only**. It does **not** mean Edvance migrated its database or its authentication to Supabase:
@@ -1086,11 +1212,13 @@ This is **storage only**. It does **not** mean Edvance migrated its database or 
 - **Infisical remains the secrets manager.** `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and `SUPABASE_STORAGE_BUCKET` live in the Infisical `dev` environment beside the existing secrets.
 
 ### Alternatives Considered
+
 - **Keep and finally configure Cloudflare R2:** viable, but it required the Product Owner to create and wire R2 credentials before any of Phase 5 could be verified, and verification — not features — was the blocker.
 - **A local filesystem or in-memory store:** rejected — it would not survive a deploy and would not prove the real storage path.
 - **Supabase for the database and auth too:** explicitly rejected — it would discard the PostgreSQL repository and the Better Auth integration that Phases 3–4 built and verified, for no benefit to the storage problem.
 
 ### Decision
+
 - **Supabase Storage becomes the active file-storage provider**, in a **private** bucket (`edvance-materials`). The bucket is never made public.
 - **Server-only access.** `lib/supabase-storage.ts` creates the client with `SUPABASE_URL` and `SUPABASE_SECRET_KEY`, disables session persistence, and is imported only by route handlers. The browser never receives the secret key; downloads are authorised by Edvance and then handed a short-lived **signed URL** (300 seconds).
 - **Ownership-safe object key:** `users/{userId}/courses/{courseId}/materials/{materialId}/{safe filename}`. The filename is sanitised and is only ever the final path segment; the path cannot be steered by client input.
@@ -1099,6 +1227,7 @@ This is **storage only**. It does **not** mean Edvance migrated its database or 
 - **Superseded R2 code was removed** (`lib/r2.ts`, the `R2_*` requirements and wording). The historical record of R2 in this appendix is kept deliberately; Git history preserves the implementation.
 
 ### Verification
+
 Verified live against the private Supabase bucket through the real application (dev server on port 3250, started via `infisical run`, throwaway accounts), then the throwaway data was deleted and the database returned to baseline (`user` 3, `course` 4, `learning_material` 20, `session` 8; zero objects left in the bucket):
 
 - **Configuration:** `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET` all PRESENT in Infisical `dev` (names only; no value was read into the transcript).
@@ -1110,6 +1239,7 @@ Verified live against the private Supabase bucket through the real application (
 - **Typecheck:** `npx tsc --noEmit` exit 0.
 
 ### Impact on this document
+
 - §14 File Storage names Supabase Storage; §16.2 Phase 5 names Supabase Storage.
 - §16.1: Phase 5 is **complete and verified**; next phase Phase 6.
 - `docs/IMPLEMENTATION_PLAN.md`, `README.md`, and `conversation.md` updated to match.
@@ -1124,9 +1254,11 @@ Verified live against the private Supabase bucket through the real application (
 **Status:** Implemented and verified end to end
 
 ### Reason
+
 Phase 5 made files storable but left them opaque: `learning_material` rows pointed at objects in Supabase Storage with nothing behind them the evidence pipeline could reason over. Every later Edvance feature — assessment-to-source mapping, inconsistency detection, mastery — depends on being able to cite **where** in a real material a claim came from. Phase 5.6 exists so that Phase 6 has trustworthy, location-tagged evidence to analyse, without any AI yet.
 
 ### Alternatives Considered
+
 - **A background job platform (queue/worker):** rejected for this local prototype. Ingestion is synchronous so the Sources UI is immediately truthful and the pipeline stays debuggable; a queue can be introduced later behind the same `lib/extraction` boundary.
 - **A large document-processing framework:** rejected. The task calls for focused parsers, so the phase uses three maintained, permissively-licensed libraries plus hand-written plain-text parsers, rather than one heavyweight framework.
 - **Chunk boundaries at fixed character counts:** rejected — it cuts sentences and loses source boundaries. Chunks never split a sentence and never span two source locations, so each chunk's citation is exact.
@@ -1134,6 +1266,7 @@ Phase 5 made files storable but left them opaque: `learning_material` rows point
 - **Deleting a material whose extraction fails:** rejected — a parser failure is not the learner's fault, so the file is kept and only the job is marked failed with a retry action.
 
 ### Decision
+
 - **Dependencies added** (all server-only, Node-compatible, permissively licensed): `pdfjs-dist` 6.3.289 (Apache-2.0) for PDF page text, `mammoth` 1.13.0 (BSD-2-Clause) for DOCX, `jszip` 3.10.2 (MIT) for reading the PPTX Open XML package. TXT, Markdown, WebVTT, and SRT are hand-written. The three server libraries are listed in `serverExternalPackages` so Next serves them from `node_modules` instead of bundling their worker/wasm assets.
 - **One normalised shape.** Every extractor returns blocks of `{ text, location: { type, label, … } }` where `type` is `page` | `slide` | `timestamp` | `section` | `line` and `label` is the human-readable form a learner will see. `lib/extraction/index.ts` dispatches on the file extension from the stored object key.
 - **Deterministic chunking.** `lib/extraction/chunk.ts` splits each block's text at sentence boundaries toward a ~900-character target (hard limit 1600), merges uselessly small tails, and never lets a chunk cross a source location. Ordinals are assigned in order at storage time.
@@ -1143,6 +1276,7 @@ Phase 5 made files storable but left them opaque: `learning_material` rows point
 - **Real state in the UI.** The Sources page shows "Ready for analysis" (not "Analyzed"), "Processing…", or "Extraction failed" with a Retry button, plus **only** derived metadata (e.g. "PDF · 14 pages", "Transcript · 37 cues", chunk count). Seeded sources carry a **Demo source** flag and are never presented as if derived from a real upload.
 
 ### Verification
+
 Verified live against the real application (dev server on port 3250 started via `infisical run`, throwaway accounts, in-memory fixtures with unique known text, no copyrighted material), then all test data was deleted and the database returned to baseline (`user` 3, `course` 4, `learning_material` 20, `concept` 20, `assessment_question` 8, `mastery_state` 20, `session` 8; `material_ingestion_job` 0, `material_chunk` 0; zero objects left in the bucket). `scripts/test-ingestion.mjs` reports **91 passed, 0 failed**:
 
 - **Extraction — all seven formats PASS:** PDF, TXT, Markdown, DOCX, PPTX, WebVTT, SRT. Each upload returned completed ingestion, wrote an ingestion job, and stored chunks whose text matched the known fixture text.
@@ -1157,6 +1291,7 @@ Verified live against the real application (dev server on port 3250 started via 
 - **Typecheck PASS:** `npx tsc --noEmit` exit 0. **Secret scan PASS:** the staged-changes Infisical scan exited 0.
 
 ### Impact on this document
+
 - §15 data model gains `material_ingestion_job` and `material_chunk` (realised in migration `0003`).
 - §16.1: Phase 5.6 is **complete and verified**; next phase Phase 6. "Source-processing pipeline" is no longer listed as not-yet-implemented; **AI** concept extraction remains explicitly unimplemented.
 - `docs/IMPLEMENTATION_PLAN.md`, `README.md`, and `conversation.md` updated to match.
@@ -1169,9 +1304,11 @@ Verified live against the real application (dev server on port 3250 started via 
 **Status:** Implemented and verified end to end, including a real Google Gemini call
 
 ### Reason
+
 Phase 5.6 produced trustworthy, location-tagged evidence but nothing yet reasoned over it. Edvance's product promise — what is being tested, where it was taught, whether the evidence agrees — begins with knowing what a course actually teaches and where. Phase 6 turns `material_chunk` into that structured intelligence, without ever inventing a citation.
 
 ### Alternatives Considered
+
 - **Supporting legacy binary `.doc`/`.ppt`:** rejected for the MVP. There is no reliable server-side text extractor for the binary Office formats, so keeping them would let a learner upload a file Edvance can never read. Edvance now accepts only formats it can extract: `.pdf`, `.txt`, `.md`, `.docx`, `.pptx`, `.vtt`, `.srt`.
 - **Multiple AI providers / provider routing:** rejected by the directive and by the dependency policy. One provider (Google Gemini) keeps the surface small.
 - **A schema-only guarantee:** rejected. Structured output constrains generation but does not guarantee truth, so the response is re-validated at runtime and every citation is resolved against the real evidence.
@@ -1180,6 +1317,7 @@ Phase 5.6 produced trustworthy, location-tagged evidence but nothing yet reasone
 - **A vector database or embeddings:** rejected as out of scope; bounded evidence and one prompt are sufficient at this stage.
 
 ### Decision
+
 - **One provider, server-only.** Google Gemini through the official `@google/genai` server SDK (`^2.25.0`, pinned below `3.0.0`). `lib/ai/gemini.ts` is the only module that reaches a provider; the key (`GEMINI_API_KEY`, optional `GEMINI_MODEL`) is read from Infisical, never logged and never sent to the browser.
 - **Layout.** `lib/ai/types.ts`, `schemas.ts`, `prompts.ts`, `gemini.ts`, `course-intelligence.ts`.
 - **Strict validation.** `schemas.ts` holds the structured-output JSON Schema and a runtime validator; `resolveReferences` proves every cited chunk id is one that was actually sent, all of which were loaded scoped to this learner and this course. Unknown, cross-course and cross-user ids are rejected and the whole response — never a partial one — is discarded.
@@ -1194,6 +1332,7 @@ Phase 5.6 produced trustworthy, location-tagged evidence but nothing yet reasone
 - **Provider resilience.** The SDK's retry policy is pinned explicitly (three attempts, initial 1s, capped at 8s) rather than left at its multi-minute default, so a transient capacity 503 or rate-limit 429 is retried a bounded number of times within one learner action and a non-transient error fails immediately. The live call is exercised by `scripts/verify-gemini-live.mjs`.
 
 ### Verification
+
 Typecheck (`npx tsc --noEmit`) exit 0. `scripts/test-course-intelligence.mjs` reports **59 passed, 0 failed** against a dev server (port 3260) started with the deterministic provider; the Phase 5.6 regression (`scripts/test-ingestion.mjs`) reports **91 passed, 0 failed** on the same server. The database was returned to baseline afterwards (`concept_evidence` 0, `concept_relationship` 0, `course_analysis` 0, `material_chunk` 0, `material_ingestion_job` 0; users, courses, materials, concepts and assessments unchanged) and the bucket was emptied.
 
 - **Golden fixture PASS:** an original fictional six-part framework — the **FATHOM** framework (Frame, Assemble, Trace, Hold, Order, Move) — was uploaded as one material and all six components were extracted, each with its own evidence and a `Section: …` location. This fixture is reused in Phase 7 for the six-versus-five inconsistency.
@@ -1213,6 +1352,7 @@ Typecheck (`npx tsc --noEmit`) exit 0. `scripts/test-course-intelligence.mjs` re
 The live provider was reached through the running app's `POST /api/courses/[courseId]/analyse` — never directly from a client — so the call also proves the authentication, ownership and persistence path against a real model.
 
 ### Impact on this document
+
 - §15 data model gains `course_analysis`, `concept_evidence` and `concept_relationship`, and `concept` gains `origin`, `evidence_status` and `confidence` (migration `0004`).
 - §16.1: Phase 6 is implemented and verified end to end — against a deterministic provider for every branch, and against the live Google Gemini API for the real model output. AI is no longer "not yet implemented" — the provider is Google Gemini only.
 - `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `.env.example` updated to match; `GEMINI_API_KEY` documented as a server-only secret.
@@ -1227,9 +1367,11 @@ The live provider was reached through the running app's `POST /api/courses/[cour
 **Status:** Implemented and verified end to end, including a real Google Gemini call
 
 ### Reason
+
 Phase 6 established what a course teaches and where. An assessment question is only useful to a learner if Edvance can say what it actually tests — and, crucially, whether the question agrees with the course's own evidence. A question that asks for "the five components" of a six-part framework is exactly the failure this phase exists to catch, and it must be caught by pointing at the evidence, not by opinion.
 
 ### Alternatives Considered
+
 - **Judging a question against the raw material again:** rejected. Re-reading every chunk per question would spend a model call on work the course analysis already did, and would let the question and the course disagree about what the course teaches. The question is judged against the concepts the evidence already established.
 - **Analysing questions automatically when one is added:** rejected for the same reason course analysis is manual — it spends money without the learner asking, and the course may not be analysed yet.
 - **Comparing word counts and numbers mechanically:** rejected. "Five" versus six components is a real signal, but deciding it in code would produce confident nonsense on prose. The model makes the judgement; Edvance only checks that the judgement is grounded in concepts it actually has.
@@ -1237,6 +1379,7 @@ Phase 6 established what a course teaches and where. An assessment question is o
 - **Keeping the seeded course-level narrative alongside real analysis:** rejected. Writing a real signature removes the demo finding, so seeded prose is never shown as if it were evidence.
 
 ### Decision
+
 - **One provider, still server-only.** Assessment intelligence uses the same Google Gemini provider and the same `lib/ai/` layer. `lib/ai/assessment-intelligence.ts` is pure: it takes the question and the course's analysed concepts and returns a verdict, so it is unit-testable with no database.
 - **Schema.** Migration `0005_assessment_intelligence.sql` adds `assessment_analysis` (per-question `status`, safe `error_code`/`error_summary`, evidence fingerprint, tested-concept count, safe provider metadata, timestamps), a unique index giving each question at most one `consistency_finding`, and a unique index preventing duplicate source mappings for the same concept and location. Existing tables carry the rest: `source_mapping` (question → concept → material → location → confidence) and `consistency_finding` (status, description, next action).
 - **`source_mapping` is now used.** It was created in Phase 4 and unused through Phase 6; Phase 7 writes it from the validated verdict and reads it to build each question's signature.
@@ -1247,6 +1390,7 @@ Phase 6 established what a course teaches and where. An assessment question is o
 - **The course verdict is honest too.** The course-level consistency is the most severe, most recent finding, so a single inconsistent question is never hidden by a later, milder result.
 
 ### Verification
+
 Typecheck (`npx tsc --noEmit`) exit 0. `scripts/test-assessment-intelligence.mjs` reports **76 passed, 0 failed** against a dev server (port 3260) started with the deterministic provider; the Phase 6 suite reports **59 passed, 0 failed** and the Phase 5.6 regression **91 passed, 0 failed** on the same server. The live provider (`scripts/verify-gemini-live.mjs`, model `gemini-3.5-flash`) reports **34 passed, 0 failed**. The database and bucket were returned to baseline afterwards (`assessment_analysis` 0, `source_mapping` 0, `course_analysis` 0, `concept_evidence` 0, `material_chunk` 0; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments unchanged; bucket 0 objects).
 
 - **Six-versus-five PASS (deterministic):** the FATHOM fixture with the question "What are the five components of the FATHOM framework?" produced `possible-inconsistency` with a reason naming both numbers, six tested concepts, and six real `source_mapping` rows pointing at six real `Section: …` locations.
@@ -1260,6 +1404,7 @@ Typecheck (`npx tsc --noEmit`) exit 0. `scripts/test-assessment-intelligence.mjs
 - **Demo honesty PASS:** a seeded workspace's questions start `not-analyzed` with no concepts, and are refused until the course is analysed.
 
 ### Impact on this document
+
 - §15 data model: `assessment_analysis` is added (migration `0005`); `source_mapping` and `consistency_finding` move from schema-only to populated.
 - §16.1: Phase 7 is complete and verified end to end against both the deterministic provider and the live Google Gemini API.
 - `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
@@ -1274,9 +1419,11 @@ Typecheck (`npx tsc --noEmit`) exit 0. `scripts/test-assessment-intelligence.mjs
 **Status:** Implemented and verified end to end (deterministic provider; no model call)
 
 ### Reason
+
 Phases 6–7 established what a course teaches and what each question tests. Neither says anything about the learner. A mastery profile is only trustworthy if it is earned: if a status could be produced by the AI, or seeded as if it were a result, the learner would be looking at an assertion rather than evidence of their own work. Phase 8 makes mastery a pure function of what the learner actually did.
 
 ### Alternatives Considered
+
 - **Letting the model grade an answer and set a status:** rejected. That is exactly the "AI-set mastery" the directive forbids; it would make the profile an opinion, cost a model call per attempt, and cannot be reproduced. Mastery is derived in code from recorded attempts.
 - **Deriving mastery on every read from the full attempt history only:** rejected as the sole mechanism, because the database would then have no materialised profile to read cheaply or reason about over time, and the Phase 4 `mastery_state` contract would go unused. Attempts remain the source of truth; `mastery_state` is recomputed from them on each write.
 - **Counting a single correct answer as mastery:** rejected. One lucky answer is not mastery; the rule requires a minimum number of attempts before the top state is reachable.
@@ -1284,6 +1431,7 @@ Phases 6–7 established what a course teaches and what each question tests. Nei
 - **A model-written "why" explanation of a computed status:** deferred. It would add a model call and a quota dependency for no new information; the attempt trail itself is the explanation (`explainMastery` renders it in words).
 
 ### Decision
+
 - **`practice_attempt` is the source of truth.** Migration `0006_practice_mastery.sql` adds it (learner, course, concept and/or assessment question, the answer text, correctness, timestamp) with an invariant that an attempt is always about a concept, a question, or both, plus indexes for the per-learner-per-concept read. It also adds `attempt_count`, `correct_count` and `last_attempt_at` to `mastery_state` so the materialised row shows the practice behind it; the defaults keep seeded demo rows valid.
 - **One deterministic rule.** `lib/mastery.ts` is pure and unit-testable: no attempts → **Untested**; fewer than half correct → **Weak**; at least half correct but not yet earned → **Developing**; at least 80% correct over at least three attempts → **Mastered**. `score` is the percentage of correct attempts (0 for Untested). The same history always yields the same result, and a single answer can never reach Mastered.
 - **Never AI-set.** No model is called anywhere in this phase. An attempt is the learner's own record of what they did; the status is computed from those records and nothing else.
@@ -1293,6 +1441,7 @@ Phases 6–7 established what a course teaches and what each question tests. Nei
 - **The UI shows the trail.** The Mastery tab states that a concept with no attempts stays Untested, shows each concept's attempts and correct count, offers a practice panel (checked questions and single concepts, with an optional answer and a right/wrong record), and lists recent practice with the question and the learner's own answer.
 
 ### Verification
+
 Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. `scripts/test-mastery-intelligence.mjs` reports **48 passed, 0 failed** against a dev server (port 3260) started with the deterministic provider; the Phase 7 suite reports **76 passed, 0 failed**, Phase 6 **59 passed, 0 failed**, and the Phase 5.6 regression **91 passed, 0 failed** on the same server. The secret scan is clean, and the database and bucket were returned to baseline afterwards (`practice_attempt` 0; `mastery_state` 20 unchanged; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments unchanged; bucket 0 objects). No model call was made.
 
 - **Honest baseline PASS:** before any practice every concept is **Untested**, no attempt rows exist, and no practice counts are invented.
@@ -1305,6 +1454,7 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. `s
 - **Demo honesty PASS:** a seeded workspace still renders its demo mastery with no real attempts, and a demo question cannot be practised before the course is analysed (409).
 
 ### Impact on this document
+
 - §15 data model: `practice_attempt` is added (migration `0006`); `mastery_state` gains attempt counts and a last-practised timestamp.
 - §16.1: Phase 8 is complete and verified end to end with no model call.
 - `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
@@ -1319,9 +1469,11 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. `s
 **Status:** Implemented and verified end to end (deterministic provider)
 
 ### Reason
+
 By Phase 8 the learner knows which concepts are weak, but not what to do about it. A mastery profile that stops at a status list leaves the learner to choose their own next step, which is exactly the gap Edvance exists to close. Phase 9 turns evidence and mastery into the smallest useful next action — and practice written for the weak areas, not drawn at random from the course.
 
 ### Alternatives Considered
+
 - **Letting the model decide what to revise:** rejected. Which concepts are weak is a fact about the learner's own recorded practice, so it is derived deterministically and needs no model. Only the practice questions need one.
 - **Generating practice for the whole course:** rejected outright by the acceptance criteria. The model is given only the weak/untested concepts and the evidence that teaches them, so a question can only be written for a real gap.
 - **Recommending by lowest score only:** rejected. The ordering is by weakest evidence of mastery — **Weak** (attempted and mostly wrong) first, then **Developing** (nearest to mastery), then **Untested** (needs a first measurement) — because a failed attempt needs remediation before a fresh one needs starting. A **Mastered** concept is never recommended.
@@ -1329,6 +1481,7 @@ By Phase 8 the learner knows which concepts are weak, but not what to do about i
 - **Storing generated practice beside hand-written assessment questions:** rejected. Generated practice is a distinct, disposable artefact tied to the current weak areas, so it lives in its own table and is replaced on each generation.
 
 ### Decision
+
 - **The recommendation is deterministic.** `lib/revision.ts` builds the focus (weak → developing → untested, Mastered excluded) and the single next action from mastery and the course's evidence. It runs on every read, so the recommendation is always current and costs nothing.
 - **Schema.** Migration `0007_targeted_revision.sql` adds `practice_question` (the question, its concept, a rationale, and the real material/location it was grounded in) and `revision_plan` (per-course generation state, mirroring `course_analysis` and `assessment_analysis`, including a `generated_for` weak-area fingerprint).
 - **Only the weak areas are sent.** `getConceptEvidenceChunks` loads exactly the chunks that teach the focus concepts, scoped to this learner and course. The prompt offers only those concepts and that evidence, so the model never sees the rest of the course.
@@ -1339,18 +1492,20 @@ By Phase 8 the learner knows which concepts are weak, but not what to do about i
 - **A new Revision tab** shows the next action, the focus with its evidence, the generation state, and the targeted practice with a right/wrong record per question.
 
 ### Verification
+
 Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. `scripts/test-targeted-revision.mjs` reports **72 passed, 0 failed** against a dev server (port 3260) started with the deterministic provider; the Phase 8 suite reports **48 passed, 0 failed**, Phase 7 **76**, Phase 6 **59**, and the Phase 5.6 regression **91**. The secret scan is clean, and the database and bucket were returned to baseline afterwards (`practice_question` 0, `revision_plan` 0; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments / 20 mastery rows unchanged; bucket 0 objects).
 
 - **Recommendation PASS:** on the six-part FATHOM fixture with no practice, all six Untested concepts were in focus and the next action named the first one and its real `Section: …` evidence — with no model call and no `revision_plan` row.
 - **Targeted generation PASS:** the model produced one question per weak concept, each naming a supplied concept, citing a real `Section: …` location, and stored with the plan's weak-area fingerprint and safe provider metadata. No question ever pointed at another course's concept.
 - **Cost control PASS:** a second generation returned `up-to-date` and did not duplicate the stored questions.
-- **Re-targeting PASS:** mastering *Frame* and failing *Assemble* moved the recommendation — *Frame* left the focus, *Assemble* became the recommended first action, the stored plan became `needs-reanalysis`, and regeneration wrote five questions with none for the Mastered concept and replaced the stored set.
+- **Re-targeting PASS:** mastering _Frame_ and failing _Assemble_ moved the recommendation — _Frame_ left the focus, _Assemble_ became the recommended first action, the stored plan became `needs-reanalysis`, and regeneration wrote five questions with none for the Mastered concept and replaced the stored set.
 - **Nothing-to-revise PASS:** with all six concepts Mastered the focus emptied and a generation recorded `nothing-to-revise` with zero questions.
 - **Rejection PASS:** an invalid concept id, an invalid chunk id, malformed output and a provider failure each produced 502, zero stored questions, a `failed` plan and a safe error summary that never echoed raw output.
 - **Insufficient evidence PASS:** a model that returned no questions recorded `insufficient-evidence` honestly with no questions invented.
 - **Gate and isolation PASS:** generation before the course is analysed is refused with 409; another learner gets 404 and an unauthenticated request 401. A seeded demo course refuses generation until it is analysed.
 
 ### Impact on this document
+
 - §15 data model: `practice_question` and `revision_plan` are added (migration `0007`).
 - §16.1: Phase 9 is complete and verified end to end.
 - `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
@@ -1365,17 +1520,20 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. `s
 **Status:** Implemented and verified end to end, including a production build
 
 ### Reason
+
 Phases 5–9 built a working, evidence-first pipeline, but a product a real learner can rely on also needs the unglamorous parts: being able to fix and remove what you created, to leave, and to trust that the service is defended. Phase 10 completes those and proves the whole thing survives a production build rather than only a dev server.
 
 ### Alternatives Considered
+
 - **Delete-only, no edit:** rejected. A typo in an assessment question should not force deletion, and editing is cheap once the invalidation rule is right.
-- **Editing a checked question while keeping its verdict:** rejected outright. The stored signature judged the *old* wording; keeping it would present a judgement the learner never asked for. Editing discards the check so it must be run again.
+- **Editing a checked question while keeping its verdict:** rejected outright. The stored signature judged the _old_ wording; keeping it would present a judgement the learner never asked for. Editing discards the check so it must be run again.
 - **A distributed rate limiter (Redis) or a third-party one:** rejected as scope and dependency creep. Edvance runs as a single process, so an in-memory fixed-window limiter is honest; the call sites do not change if the store later moves.
 - **Faking email delivery when Resend is unconfigured:** rejected. Edvance reports that email is not configured rather than claiming a message was sent.
-- **Reformatting the whole repository to add a linter/formatter:** rejected for now. It would rewrite unrelated, deliberately untouched files and obscure this phase's diff; static guarantees come from `tsc --noEmit`, the unit suite and the end-to-end suites, and ESLint/Prettier are noted as a deliberate gap.
+- **Reformatting the whole repository to add a linter/formatter:** rejected for phase 10 — it would have rewritten unrelated, deliberately untouched files and obscured that phase's diff; static guarantees came from `tsc --noEmit`, the unit suite and the end-to-end suites. The gap was closed afterwards in a dedicated change: ESLint (flat config) and Prettier are configured, the formatting pass landed separately from feature work, and both now gate CI.
 - **Avoiding a production build until deployment:** rejected. The build is the only check that catches server/client boundary and prerender problems, so it is run now.
 
 ### Decision
+
 - **Edit and delete.** `PATCH`/`DELETE` on `/api/courses/[courseId]` rename or remove a course; the delete cascades in PostgreSQL and its stored files are removed best-effort afterwards. `PATCH`/`DELETE` on `/api/courses/[courseId]/assessments/[assessmentId]` edit or remove a question. Editing a question deletes its `source_mapping`, per-question `consistency_finding` and `assessment_analysis`, returning it to `not-analyzed`. Destructive actions require the word DELETE typed.
 - **Account lifecycle.** An `/account` page shows the signed-in identity, changes the password (revoking other sessions through Better Auth), and deletes the account. Deletion removes the `user` row, from which every course, material, chunk, concept, evidence, assessment, finding, attempt, practice question and plan cascades, then removes the stored objects.
 - **Transactional email.** `lib/email.ts` sends through Resend's HTTPS API using `RESEND_API_KEY`, never logging the key, and returns a not-configured outcome rather than throwing. It is used for the account-deletion confirmation; the API reports `emailSent` truthfully.
@@ -1387,6 +1545,7 @@ Phases 5–9 built a working, evidence-first pipeline, but a product a real lear
 - **Unit test layer.** `npm run test:unit` runs a `node:test` suite (no new dependencies) over the pure modules; `npm run check` runs the typecheck and the unit suite together.
 
 ### Verification
+
 Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. Unit suite **24 passed, 0 failed**. `scripts/test-product-hardening.mjs` reports **43 passed, 0 failed** against a dev server (port 3260) with the deterministic provider; Phases 9/8/7/6/5.6 report **72 / 48 / 76 / 59 / 91** passed, 0 failed. `next build` completes a production build (TypeScript checked, 13 static pages generated, every route compiled). The secret scan is clean, and the database and bucket were returned to baseline (`practice_attempt`/`practice_question`/`revision_plan` 0; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments / 20 mastery rows; bucket 0 objects).
 
 - **Health PASS:** `/api/health` returned 200 with `database: ok`, reported each integration's configured state, and leaked no key or secret.
@@ -1395,9 +1554,10 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. Un
 - **Course edit/delete PASS:** renaming updated the course, an empty name was refused (400), an unknown course returned 404, and deleting a course removed its row, its stored object, and returned 404 afterwards.
 - **Question edit/delete PASS:** editing a checked question updated the wording, discarded the stale check (`not-analyzed`) and cleared its source mappings; an empty question was refused; deleting removed the question and its row.
 - **Account lifecycle PASS:** unauthenticated deletion was refused (401); deleting an account removed the user, cascaded away its courses, deleted its stored object, reported `emailSent: false` honestly, and killed the session (subsequent request 401).
-- **Not claimed:** ESLint and Prettier are not yet configured, and rate limiting is per-process rather than distributed. Both are documented limitations, not silent gaps.
+- **Not claimed:** rate limiting is per-process rather than distributed — a documented limitation, not a silent gap. (ESLint and Prettier, unconfigured at the time of this phase, were configured later and now gate CI.)
 
 ### Impact on this document
+
 - §14/§16.4: security headers, rate limiting, quotas, error/not-found/health routes, and the account lifecycle are implemented.
 - §16.1: Phase 10 is complete and verified end to end, including a production build.
 - `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
@@ -1411,16 +1571,19 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. Un
 **Status:** Deployment specification completed and documented; the deploy itself is blocked on a human action
 
 ### Reason
+
 Phase 10 produced a passing production build, which is the last thing that can be proven locally. A real deployment needs an account and credentials on the target platform, and it creates external infrastructure — a managed PostgreSQL instance and a public HTTPS endpoint — so it is the one step that genuinely cannot be completed autonomously and must not be guessed at.
 
 ### Alternatives Considered
+
 - **Deploying with whatever the specification already contained:** rejected. `specific.hcl` declared only `PORT`, `NODE_ENV`, `DATABASE_URL`, `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET`. A deploy from it would have started successfully and then silently offered a product **without AI analysis and without file storage** — the two things every earlier phase depends on. That is worse than not deploying.
 - **Inventing the platform's secret-setting commands:** rejected. The `specific` CLI is not available in this checkout, so the procedure names the steps and directs the operator to `specific --help` rather than fabricating flags.
-- **Committing the credentials needed for a deploy:** rejected. Secrets are supplied through the platform's secret store; the repository declares the secret *names* only.
+- **Committing the credentials needed for a deploy:** rejected. Secrets are supplied through the platform's secret store; the repository declares the secret _names_ only.
 - **Enabling billing to obtain a bigger tier:** rejected. The directive requires a free tier, and nothing in the app needs more than that.
 - **Running a deploy to "see if it works":** rejected. It creates real external resources and must be authorised by the account owner first.
 
 ### Decision
+
 - **The spec is now complete.** `specific.hcl` declares every secret the app reads — `gemini_api_key`, `supabase_url`, `supabase_secret_key`, `supabase_storage_bucket`, and the optional `resend_api_key`/`email_from` — wires them into the service environment, pins `GEMINI_MODEL`, and keeps `better_auth_secret` platform-generated. Every `secret.*` reference has a matching declaration (verified).
 - **The health check is real.** The endpoint's `health_check` now points at `/api/health` (added in Phase 10) rather than `/`, so the platform sees an unhealthy instance when the database is unreachable.
 - **Migrations run before rollout.** The existing `pre_deploy` step applies `db/migrations/*.sql` once each against the deployed database; re-running is a no-op.
@@ -1428,11 +1591,13 @@ Phase 10 produced a passing production build, which is the last thing that can b
 - **Degradation stays honest.** With the optional integrations unset the app still runs, but reports "not configured" for analysis, storage or email rather than failing obscurely — and the documentation states plainly that AI and storage are required for a usable deployment.
 
 ### Verification
+
 Every `secret.*` reference in `specific.hcl` has a matching `secret` declaration. The local production build the platform runs is verified: `infisical run --env=dev -- npx next build` succeeds (TypeScript checked, 13 static pages generated, every route compiled). No deploy was performed, and no external infrastructure was created.
 
 - **Not performed:** the deploy itself, migrations against a remote database, and the deployed smoke test — all blocked on platform credentials and authorisation.
 
 ### Impact on this document
+
 - §16.5: the deployment specification and procedure are complete; execution is pending human authorisation.
 - `README.md`, `docs/IMPLEMENTATION_PLAN.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
 
@@ -1445,14 +1610,17 @@ Every `secret.*` reference in `specific.hcl` has a matching `secret` declaration
 **Status:** Complete — Edvance is declared submission ready, with deployment as one pending human action
 
 ### Reason
+
 The product is built and hardened; the remaining risk is not missing code but misplaced confidence — a stale claim, a fake feature, or a failure the UI hides. Phase 12 exists to try to break that confidence on purpose before anyone else does.
 
 ### Alternatives Considered
+
 - **Declaring readiness from the passing test suites alone:** rejected. Suites verify the paths the author thought of; an adversarial pass is what finds the claim nobody re-read after the architecture changed.
-- **Grepping only for TODO/FIXME and treating that as the audit:** rejected. The sweep also had to prove the *positive* claims: that the mock provider cannot reach production, that no client component imports a server-only module, and that no secret is exposed.
+- **Grepping only for TODO/FIXME and treating that as the audit:** rejected. The sweep also had to prove the _positive_ claims: that the mock provider cannot reach production, that no client component imports a server-only module, and that no secret is exposed.
 - **Leaving the deployment out of the report because it was not executed:** rejected outright. A submission report that omits an unperformed step is exactly the kind of comfortable gap this phase is meant to remove; it is stated plainly instead.
 
 ### Decision
+
 - **Adversarial audit.** Every honesty guarantee was attacked directly — a fabricated citation, a fabricated concept, an unjustified contradiction, a cross-user read, an untrusted origin — and each held. The guarantees are enforced in code (`resolveReferences`, `resolveAssessmentReferences`, `resolveRevisionReferences`, owner-scoped queries) rather than asserted in prose.
 - **No-fake-feature sweep.** A grep for `mock|demo|hardcoded|todo|fixme|placeholder|fake|seed` returns only legitimate hits (the env-gated test provider, the seeded demo dataset, the demo account, HTML placeholders); there are no TODO/FIXME/HACK markers, no client component importing a server-only module, and no `NEXT_PUBLIC_` or hardcoded secret.
 - **The audit found one real defect, and it was fixed.** The landing page, footer and header still claimed that course analysis was "not yet live" and that analysis "still runs on mock data", and flagged the product as "Demo · mock data". All four statements have been false since Phases 6–9; they were corrected to describe the product as it now is. This is the clearest justification for the phase.
@@ -1461,9 +1629,11 @@ The product is built and hardened; the remaining risk is not missing code but mi
 - **Deployment is carried, not claimed.** The report states that the deploy has not been run and why, rather than implying a live service.
 
 ### Verification
+
 Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. Unit suite **24 passed**. End-to-end suites **43 / 72 / 48 / 76 / 59 / 91 passed, 0 failed**. Live provider `scripts/verify-gemini-live.mjs` **34 passed, 0 failed** against `gemini-3.5-flash`, including the real six-versus-five detection. Production `next build` passes (13 static pages). Secret scan clean. Database and bucket restored to baseline.
 
 ### Impact on this document
+
 - §16.1 / §23: every MVP success criterion is met and verified; the deployment is the one outstanding human action.
 - `docs/SUBMISSION_REPORT.md` is added as the submission deliverable; `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
 
@@ -1476,9 +1646,11 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. Un
 **Status:** Complete — **Edvance is deployed live at <https://white-whale.spcf.app>** and the full learner journey is verified on it
 
 ### Reason
+
 Phase 11 was specified but deliberately not executed, and the Product Owner authorised the deploy. The build could no longer be verified only locally: the platform builder runs with no secrets, the deployed provider is the real Gemini API rather than a mock, and the remote environment is the only place the managed PostgreSQL, private storage, HTTPS and security headers actually run together.
 
 ### Alternatives Considered
+
 - **Deploying from native Windows:** rejected by evidence. The Specific CLI fails at tarball creation (`specific.hcl not found in project directory`) and crashes; the deploy runs from **WSL Ubuntu**, where the CLI is authenticated as a claimed agent account.
 - **Putting a placeholder-free build on the platform:** impossible. The builder has no runtime secrets and `lib/auth.ts`/`lib/db.ts` read config at import, so the build fails with `Missing required environment variable DATABASE_URL`; the `build` block supplies harmless build-only placeholders instead.
 - **Leaving `GEMINI_MODEL` at the `-latest` alias:** rejected. The free tier is **20 requests/day/model** (confirmed from the raw 429 quota failure), and the alias pointed at an exhausted model; the spec pins `gemini-3-flash-preview`, which the key can serve.
@@ -1486,14 +1658,17 @@ Phase 11 was specified but deliberately not executed, and the Product Owner auth
 - **Adding payments:** rejected — explicitly out of scope for this phase.
 
 ### Decision
+
 - **Deployed.** Project `edvance` (`proj_0vqsej2psy3sy4tr`), environment `prod`, active deployment `depl_02f4368hqt4n86q6`. All 8 migrations applied by `pre_deploy`; `/api/health` returns `200` with the database healthy and AI/storage configured (`email: not-configured`).
 - **Remote verification is a first-class artifact.** `scripts/verify-remote-deployment.mjs` drives the live app over HTTP only (it never touches the production database or bucket directly): it signs up throwaway learners and exercises HTTPS/TLS, the health probe, security headers, the no-fake-claim sweep, sign-up, upload and **synchronous ingestion into evidence chunks**, course analysis, an assessment check, mastery, revision, cross-learner isolation and secret non-exposure, then deletes what it created.
 - **Honest degradation holds in production.** With `RESEND_API_KEY` unset, account deletion reports `emailSent: false`; the mock provider is refused under `NODE_ENV=production`.
 
 ### Verification
+
 `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` → **69 passed / 0 failed** against the real provider (`gemini-3-flash-preview`). Headers verified live (CSP, HSTS, `X-Frame-Options: DENY`, nosniff, Referrer-Policy, Permissions-Policy; no `X-Powered-By`); 404 on unknown routes; 401 on unauthenticated account deletion; no secret in any HTML or JSON payload. Committed as `feat(deploy): deploy Edvance and verify the live app end to end`.
 
 ### Impact on this document
+
 - §16.5 / §18: the deployment is executed, and the remote evidence covers the whole learner journey; the deployment is no longer a pending human action.
 - `docs/SUBMISSION_REPORT.md` records the live URL, deployment id and remote run; `README.md`, `docs/IMPLEMENTATION_PLAN.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
 
@@ -1502,6 +1677,7 @@ Phase 11 was specified but deliberately not executed, and the Product Owner auth
 # Appendix B — Lesson 6 Verification Checklist
 
 ## Task 1 — Implementation Plan
+
 - [x] AI builder has read this PRD
 - [x] Ordered implementation phases exist
 - [x] Framework named: Next.js + TypeScript
@@ -1513,6 +1689,7 @@ Phase 11 was specified but deliberately not executed, and the Product Owner auth
 - [x] At least one architecture choice was questioned and documented
 
 ## Task 2 — Design Preview
+
 - [x] `design.html` exists
 - [x] Colors are visible
 - [x] Typography is visible
@@ -1524,6 +1701,7 @@ Phase 11 was specified but deliberately not executed, and the Product Owner auth
 - [x] Refinement is documented in Appendix A
 
 ## Task 3 — Prototype & Demo
+
 - [x] Initial application page opens locally
 - [x] App page is separate from `design.html`
 - [x] Mock/test data only is used

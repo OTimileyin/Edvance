@@ -8,10 +8,7 @@ const CONCEPT_LABELS: Record<ConceptStatus, { label: string; className: string }
   Untested: { label: "Untested", className: "badge-neutral" },
 };
 
-const CONSISTENCY_LABELS: Record<
-  ConsistencyStatus,
-  { label: string; className: string }
-> = {
+const CONSISTENCY_LABELS: Record<ConsistencyStatus, { label: string; className: string }> = {
   consistent: { label: "Consistent", className: "badge-success" },
   "possible-inconsistency": {
     label: "Possible inconsistency",

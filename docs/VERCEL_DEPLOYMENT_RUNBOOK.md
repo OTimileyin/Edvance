@@ -4,7 +4,7 @@ A first-time deployer's runbook. Follow it top to bottom; every command and clic
 is named exactly. Total time: about 20 minutes, most of it waiting on builds.
 
 Edvance is already deployed on **Specific** at <https://white-whale.spcf.app>.
-This runbook produces a *second, independent* deployment on Vercel from the same
+This runbook produces a _second, independent_ deployment on Vercel from the same
 repository. The two share integration keys but have separate databases and
 separate session secrets, so rotating or breaking one never affects the other.
 
@@ -70,15 +70,15 @@ In the import screen (or later under **Project → Settings → Environment
 Variables**), add each variable from `.env.vercel.local`, and **set every one for
 Production, Preview and Development**.
 
-| Variable | Value | Notes |
-|---|---|---|
-| `GEMINI_API_KEY` | from `.env.vercel.local` | Server-only; AI analysis and practice. |
-| `SUPABASE_URL` | from `.env.vercel.local` | Private object storage. |
-| `SUPABASE_SECRET_KEY` | from `.env.vercel.local` | Server-only service key. |
-| `SUPABASE_STORAGE_BUCKET` | from `.env.vercel.local` | e.g. `edvance-materials`. |
-| `GEMINI_MODEL` | `gemini-3-flash-preview` | Pinned, matching Specific. |
-| `BETTER_AUTH_SECRET` | from `.env.vercel.local` | Signs sessions. Keep it secret. |
-| `BETTER_AUTH_URL` | **leave unset for now** | Set in Step 5, once the URL exists. |
+| Variable                  | Value                    | Notes                                  |
+| ------------------------- | ------------------------ | -------------------------------------- |
+| `GEMINI_API_KEY`          | from `.env.vercel.local` | Server-only; AI analysis and practice. |
+| `SUPABASE_URL`            | from `.env.vercel.local` | Private object storage.                |
+| `SUPABASE_SECRET_KEY`     | from `.env.vercel.local` | Server-only service key.               |
+| `SUPABASE_STORAGE_BUCKET` | from `.env.vercel.local` | e.g. `edvance-materials`.              |
+| `GEMINI_MODEL`            | `gemini-3-flash-preview` | Pinned, matching Specific.             |
+| `BETTER_AUTH_SECRET`      | from `.env.vercel.local` | Signs sessions. Keep it secret.        |
+| `BETTER_AUTH_URL`         | **leave unset for now**  | Set in Step 5, once the URL exists.    |
 
 **Do not set `DATABASE_URL`.** The Vercel Postgres integration (Step 4) injects
 the connection string automatically. Edvance accepts it under either
@@ -182,22 +182,23 @@ created. Expect **`69 passed, 0 failed`**.
 
 ## Troubleshooting
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| Build fails: "No database connection string is set" | No database connected yet, or env scoped to the wrong environment | Complete Step 4; confirm the Postgres vars are set for **Production**. |
-| Build fails: "Missing required environment variable BETTER_AUTH_SECRET" | Env vars not applied to the environment being built | Add it for Production **and** Preview; redeploy. |
-| Health returns `database: "error"` | Bad/paused Postgres, or migrations never ran | Recheck the integration; redeploy so the migrate step runs. |
-| Sign-up or sign-in fails, origin errors | `BETTER_AUTH_URL` unset or not equal to the deployment URL | Set it to the exact URL (no trailing slash) and redeploy. |
-| Works on Production but not Preview | Preview URLs differ from `BETTER_AUTH_URL` | Set `BETTER_AUTH_URL` per the URL you are testing, or accept Production-only auth. |
-| `ai`/`storage` show `not-configured` | Missing/invalid integration keys | Re-add `GEMINI_API_KEY` / Supabase vars, then redeploy. |
-| Custom domain added | `BETTER_AUTH_URL` still points at `*.vercel.app` | Update `BETTER_AUTH_URL` to the custom domain and redeploy. |
+| Symptom                                                                 | Cause                                                             | Fix                                                                                |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Build fails: "No database connection string is set"                     | No database connected yet, or env scoped to the wrong environment | Complete Step 4; confirm the Postgres vars are set for **Production**.             |
+| Build fails: "Missing required environment variable BETTER_AUTH_SECRET" | Env vars not applied to the environment being built               | Add it for Production **and** Preview; redeploy.                                   |
+| Health returns `database: "error"`                                      | Bad/paused Postgres, or migrations never ran                      | Recheck the integration; redeploy so the migrate step runs.                        |
+| Sign-up or sign-in fails, origin errors                                 | `BETTER_AUTH_URL` unset or not equal to the deployment URL        | Set it to the exact URL (no trailing slash) and redeploy.                          |
+| Works on Production but not Preview                                     | Preview URLs differ from `BETTER_AUTH_URL`                        | Set `BETTER_AUTH_URL` per the URL you are testing, or accept Production-only auth. |
+| `ai`/`storage` show `not-configured`                                    | Missing/invalid integration keys                                  | Re-add `GEMINI_API_KEY` / Supabase vars, then redeploy.                            |
+| Custom domain added                                                     | `BETTER_AUTH_URL` still points at `*.vercel.app`                  | Update `BETTER_AUTH_URL` to the custom domain and redeploy.                        |
 
 ---
 
 ## Changing the code
 
 The repository does not accept direct pushes — `main` is protected and every change must arrive
-as a pull request whose **`typecheck + unit tests`** and **`production build`** checks are green.
+as a pull request whose **`typecheck + unit tests`**, **`lint + formatting`** and
+**`production build`** checks are green.
 The build check runs the real migrate + build against a Postgres service container, so a migration
 break or a Next.js build break fails in CI rather than mid-deploy. Branches must be up to date with
 `main` before merging.
@@ -209,7 +210,7 @@ git push -u origin fix/my-fix
 gh pr create        # or open the pull-request link GitHub prints
 ```
 
-Merge once both checks are green. If a direct push is rejected with "protected branch hook
+Merge once all three checks are green. If a direct push is rejected with "protected branch hook
 declined", that is this policy working as intended.
 
 ---

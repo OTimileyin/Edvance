@@ -21,12 +21,7 @@ const target = join(here, "..", ".env.vercel.local");
 // integration injects into the project itself (as DATABASE_URL or POSTGRES_URL —
 // the app accepts either). BETTER_AUTH_URL is filled in once Vercel has told us
 // the deployment's URL.
-const SHARED = [
-  "GEMINI_API_KEY",
-  "SUPABASE_URL",
-  "SUPABASE_SECRET_KEY",
-  "SUPABASE_STORAGE_BUCKET",
-];
+const SHARED = ["GEMINI_API_KEY", "SUPABASE_URL", "SUPABASE_SECRET_KEY", "SUPABASE_STORAGE_BUCKET"];
 
 const lines = [
   "# Vercel deployment — Environment Variables",

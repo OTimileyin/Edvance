@@ -24,42 +24,84 @@ async function readError(response: Response, fallback: string): Promise<string> 
   }
 }
 
+/** Fetches the learner's courses, or null while auth is still resolving. */
+async function fetchCourses(authReady: boolean): Promise<Course[] | null> {
+  if (!authReady) return null;
+  const response = await fetch("/api/courses", { cache: "no-store" });
+  return response.ok ? ((await response.json()) as { courses: Course[] }).courses : [];
+}
+
+/** Fetches one course; undefined means "loaded but absent". */
+async function fetchCourse(
+  courseId: string,
+  authReady: boolean,
+): Promise<Course | undefined | null> {
+  if (!authReady) return null;
+  const response = await fetch(`/api/courses/${courseId}`, { cache: "no-store" });
+  return response.ok ? ((await response.json()) as { course: Course }).course : undefined;
+}
+
 export function useCourses(): { courses: Course[]; ready: boolean; reload: () => Promise<void> } {
   const authReady = useAuthReady();
   const [courses, setCourses] = useState<Course[]>([]);
   const [ready, setReady] = useState(false);
 
   const reload = useCallback(async () => {
-    if (!authReady) return;
-    const response = await fetch("/api/courses", { cache: "no-store" });
-    setCourses(response.ok ? ((await response.json()) as { courses: Course[] }).courses : []);
-    setReady(true);
+    const loaded = await fetchCourses(authReady);
+    if (loaded !== null) {
+      setCourses(loaded);
+      setReady(true);
+    }
   }, [authReady]);
 
+  // Fetching happens in the effect through a state-free helper; only the
+  // resolution callback touches state, and it is skipped once the effect is
+  // superseded (auth re-resolution or unmount) so a stale response can't land.
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let live = true;
+    void fetchCourses(authReady).then((loaded) => {
+      if (live && loaded !== null) {
+        setCourses(loaded);
+        setReady(true);
+      }
+    });
+    return () => {
+      live = false;
+    };
+  }, [authReady]);
 
   return { courses, ready, reload };
 }
 
-export function useCourse(
-  courseId: string,
-): { course: Course | undefined; ready: boolean; reload: () => Promise<void> } {
+export function useCourse(courseId: string): {
+  course: Course | undefined;
+  ready: boolean;
+  reload: () => Promise<void>;
+} {
   const authReady = useAuthReady();
   const [course, setCourse] = useState<Course | undefined>(undefined);
   const [ready, setReady] = useState(false);
 
   const reload = useCallback(async () => {
-    if (!authReady) return;
-    const response = await fetch(`/api/courses/${courseId}`, { cache: "no-store" });
-    setCourse(response.ok ? ((await response.json()) as { course: Course }).course : undefined);
-    setReady(true);
+    const loaded = await fetchCourse(courseId, authReady);
+    if (loaded !== null) {
+      setCourse(loaded);
+      setReady(true);
+    }
   }, [authReady, courseId]);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let live = true;
+    void fetchCourse(courseId, authReady).then((loaded) => {
+      if (live && loaded !== null) {
+        setCourse(loaded);
+        setReady(true);
+      }
+    });
+    return () => {
+      live = false;
+    };
+  }, [authReady, courseId]);
 
   return { course, ready, reload };
 }
@@ -105,10 +147,9 @@ export async function uploadMaterial(courseId: string, file: File): Promise<Sour
  * with a display message on failure.
  */
 export async function retryIngestion(courseId: string, materialId: string): Promise<SourceItem> {
-  const response = await fetch(
-    `/api/courses/${courseId}/materials/${materialId}/ingest`,
-    { method: "POST" },
-  );
+  const response = await fetch(`/api/courses/${courseId}/materials/${materialId}/ingest`, {
+    method: "POST",
+  });
   if (!response.ok) {
     throw new Error(await readError(response, "Could not reprocess the material."));
   }
@@ -147,16 +188,14 @@ export async function analyseCourse(courseId: string): Promise<Course> {
  * learner action; it never runs on a page refresh. Throws with a display
  * message on failure.
  */
-export async function analyseAssessment(
-  courseId: string,
-  assessmentId: string,
-): Promise<Course> {
-  const response = await fetch(
-    `/api/courses/${courseId}/assessments/${assessmentId}/analyse`,
-    { method: "POST" },
-  );
+export async function analyseAssessment(courseId: string, assessmentId: string): Promise<Course> {
+  const response = await fetch(`/api/courses/${courseId}/assessments/${assessmentId}/analyse`, {
+    method: "POST",
+  });
   if (!response.ok) {
-    throw new Error(await readError(response, "Question analysis did not finish. Please try again."));
+    throw new Error(
+      await readError(response, "Question analysis did not finish. Please try again."),
+    );
   }
   return ((await response.json()) as { course: Course }).course;
 }
@@ -190,7 +229,9 @@ export async function recordPractice(
 export async function generateRevision(courseId: string): Promise<Course> {
   const response = await fetch(`/api/courses/${courseId}/revision`, { method: "POST" });
   if (!response.ok) {
-    throw new Error(await readError(response, "Practice generation did not finish. Please try again."));
+    throw new Error(
+      await readError(response, "Practice generation did not finish. Please try again."),
+    );
   }
   return ((await response.json()) as { course: Course }).course;
 }

@@ -12,12 +12,7 @@ export type RelationshipKind = "prerequisite" | "part_of" | "related_to" | "cont
  * not a failure.
  */
 export type AnalysisStatus =
-  | "not-analyzed"
-  | "analyzing"
-  | "ready"
-  | "failed"
-  | "insufficient-evidence"
-  | "needs-reanalysis";
+  "not-analyzed" | "analyzing" | "ready" | "failed" | "insufficient-evidence" | "needs-reanalysis";
 
 /** One piece of real evidence behind a concept: a chunk of a real material. */
 export interface ConceptEvidenceRef {

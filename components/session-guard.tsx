@@ -21,11 +21,19 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
   }, [isPending, data, pathname, router]);
 
   if (isPending) {
-    return <p className="page-lede" aria-live="polite">Loading…</p>;
+    return (
+      <p className="page-lede" aria-live="polite">
+        Loading…
+      </p>
+    );
   }
 
   if (!data?.user) {
-    return <p className="page-lede" aria-live="polite">Redirecting to sign in…</p>;
+    return (
+      <p className="page-lede" aria-live="polite">
+        Redirecting to sign in…
+      </p>
+    );
   }
 
   return <>{children}</>;

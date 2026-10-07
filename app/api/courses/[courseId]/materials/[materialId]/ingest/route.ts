@@ -22,10 +22,7 @@ export async function POST(
 
   const { materialId } = await params;
   if (!isStorageConfigured()) {
-    return NextResponse.json(
-      { error: "Object storage is not configured." },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: "Object storage is not configured." }, { status: 503 });
   }
 
   const outcome = await ingestMaterial(user.id, materialId);

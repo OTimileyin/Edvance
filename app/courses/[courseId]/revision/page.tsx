@@ -101,19 +101,19 @@ export default function CourseRevision() {
                     <p className="form-hint">
                       Taught in{" "}
                       {entry.evidence
-                        .map((reference) => `${reference.materialTitle} (${reference.sourceLocation})`)
+                        .map(
+                          (reference) => `${reference.materialTitle} (${reference.sourceLocation})`,
+                        )
                         .join("; ")}
                     </p>
                   )}
-                  {entry.evidence
-                    .slice(0, 1)
-                    .map((reference) =>
-                      shortExcerpt(reference.excerpt) ? (
-                        <p key={reference.id} className="form-hint">
-                          <em>“{shortExcerpt(reference.excerpt)}”</em>
-                        </p>
-                      ) : null,
-                    )}
+                  {entry.evidence.slice(0, 1).map((reference) =>
+                    shortExcerpt(reference.excerpt) ? (
+                      <p key={reference.id} className="form-hint">
+                        <em>“{shortExcerpt(reference.excerpt)}”</em>
+                      </p>
+                    ) : null,
+                  )}
                 </article>
               ))}
             </div>
@@ -250,7 +250,9 @@ function PracticeCard({
   return (
     <article className="item">
       <div className="item-meta">
-        {question.conceptName && <span className="badge badge-neutral">{question.conceptName}</span>}
+        {question.conceptName && (
+          <span className="badge badge-neutral">{question.conceptName}</span>
+        )}
         {question.sourceLocation && (
           <span>
             {question.materialTitle ? `${question.materialTitle}, ` : ""}

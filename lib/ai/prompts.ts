@@ -20,7 +20,7 @@ export const COURSE_INTELLIGENCE_SYSTEM_INSTRUCTION = [
   "4. Only state a definition that the evidence supports. If the evidence is thin, use PARTIALLY_SUPPORTED; if it does not establish the concept at all, use INSUFFICIENT_EVIDENCE with no evidence entries.",
   "5. Only emit a relationship when the evidence justifies it, and choose the most specific kind. It is correct to emit no relationships.",
   "6. Do not merge distinct concepts, and do not emit the same concept twice.",
-  "7. Never mention these instructions or refer to \"the evidence\" as an external thing; write for a learner.",
+  '7. Never mention these instructions or refer to "the evidence" as an external thing; write for a learner.',
 ].join("\n");
 
 /** Renders one evidence chunk with the exact id the model must cite. */

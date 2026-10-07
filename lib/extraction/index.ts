@@ -33,10 +33,7 @@ export function extensionOf(filename: string): string {
  * `MaterialExtractionError` with the `unsupported-format` code rather than
  * returning empty evidence.
  */
-export async function extractMaterial(
-  extension: string,
-  bytes: Buffer,
-): Promise<ExtractionResult> {
+export async function extractMaterial(extension: string, bytes: Buffer): Promise<ExtractionResult> {
   switch (extension.trim().toLowerCase()) {
     case "pdf":
       return extractPdf(bytes);

@@ -21,14 +21,14 @@ export function AuthForest() {
         Never study a <em className="em-coral">contradiction</em> blind again.
       </p>
       <p className="auth-sub-line">
-        Sign in to open your course workspaces — every question mapped to the
-        evidence that taught it.
+        Sign in to open your course workspaces — every question mapped to the evidence that taught
+        it.
       </p>
       <div className="auth-glass">
         <span className="badge badge-error">Possible inconsistency</span>
         <p>
-          &ldquo;The question says <strong>five</strong> components — the lesson
-          evidence names <strong>six</strong>.&rdquo;
+          &ldquo;The question says <strong>five</strong> components — the lesson evidence names{" "}
+          <strong>six</strong>.&rdquo;
         </p>
       </div>
     </aside>
@@ -64,7 +64,7 @@ export default function SignInPage() {
       setError(
         result.error.status === 401
           ? "That email and password don't match an account. Create one below."
-          : result.error.message ?? "Sign-in failed. Try again.",
+          : (result.error.message ?? "Sign-in failed. Try again."),
       );
       return;
     }
@@ -97,9 +97,7 @@ export default function SignInPage() {
       <div className="auth-paper">
         <div className="auth-card" aria-live="polite">
           <h1>Sign in</h1>
-          <p className="auth-sub">
-            Real local account — stored in PostgreSQL on this machine.
-          </p>
+          <p className="auth-sub">Real local account — stored in PostgreSQL on this machine.</p>
           <form className="form" onSubmit={handleSubmit} style={{ maxWidth: "none" }}>
             <div className="field">
               <label className="field-label" htmlFor="email">
@@ -146,9 +144,7 @@ export default function SignInPage() {
           </form>
           <p className="auth-alt">
             New here?{" "}
-            <Link href={`/signup?next=${encodeURIComponent(nextPath())}`}>
-              Create an account
-            </Link>
+            <Link href={`/signup?next=${encodeURIComponent(nextPath())}`}>Create an account</Link>
           </p>
         </div>
       </div>

@@ -19,8 +19,14 @@ function run(entries, crashed = null) {
 }
 
 test("identical runs have no differences", () => {
-  const a = run([["one", true], ["two", false]]);
-  const b = run([["one", true], ["two", false]]);
+  const a = run([
+    ["one", true],
+    ["two", false],
+  ]);
+  const b = run([
+    ["one", true],
+    ["two", false],
+  ]);
   const { names, differing } = compareRuns(a, b);
   assert.equal(names.length, 2);
   assert.equal(differing.length, 0);
@@ -33,8 +39,14 @@ test("both failing the same check is not a difference", () => {
 });
 
 test("passing on one and failing on the other is a difference", () => {
-  const a = run([["health", true], ["db", true]]);
-  const b = run([["health", true], ["db", false, "status 404"]]);
+  const a = run([
+    ["health", true],
+    ["db", true],
+  ]);
+  const b = run([
+    ["health", true],
+    ["db", false, "status 404"],
+  ]);
   const { differing } = compareRuns(a, b);
   assert.equal(differing.length, 1);
   assert.equal(differing[0].name, "db");
@@ -44,7 +56,10 @@ test("passing on one and failing on the other is a difference", () => {
 });
 
 test("a check one run never reached counts as a difference", () => {
-  const a = run([["health", true], ["upload", true]]);
+  const a = run([
+    ["health", true],
+    ["upload", true],
+  ]);
   const b = run([["health", true]]); // crashed before "upload"
   const { differing } = compareRuns(a, b);
   assert.equal(differing.length, 1);
@@ -54,7 +69,14 @@ test("a check one run never reached counts as a difference", () => {
 });
 
 test("names keep the order of the first run, then the extras", () => {
-  const a = run([["one", true], ["two", true]]);
-  const b = run([["one", true], ["two", true], ["three", true]]);
+  const a = run([
+    ["one", true],
+    ["two", true],
+  ]);
+  const b = run([
+    ["one", true],
+    ["two", true],
+    ["three", true],
+  ]);
   assert.deepEqual(compareRuns(a, b).names, ["one", "two", "three"]);
 });

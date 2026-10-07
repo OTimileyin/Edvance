@@ -116,8 +116,8 @@ export default function CourseSources() {
 
       {course.sources.length === 0 ? (
         <div className="empty-state">
-          No sources in this workspace yet. Upload a slide deck, notes, PDF, or transcript to
-          start the evidence trail.
+          No sources in this workspace yet. Upload a slide deck, notes, PDF, or transcript to start
+          the evidence trail.
         </div>
       ) : (
         <section className="section" aria-label="Sources list">
@@ -173,11 +173,13 @@ export default function CourseSources() {
                       {removingId === source.id ? "Removing…" : "Remove"}
                     </button>
                   </div>
-                  {stored && source.ingestion?.status === "failed" && source.ingestion.errorSummary && (
-                    <p className="form-hint" role="status">
-                      {source.ingestion.errorSummary}
-                    </p>
-                  )}
+                  {stored &&
+                    source.ingestion?.status === "failed" &&
+                    source.ingestion.errorSummary && (
+                      <p className="form-hint" role="status">
+                        {source.ingestion.errorSummary}
+                      </p>
+                    )}
                 </article>
               );
             })}

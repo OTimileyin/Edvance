@@ -23,8 +23,8 @@ export default function PrivacyPage() {
         <ul>
           <li>
             <strong>Your account.</strong> Your email address and a securely hashed password,
-            managed by Better Auth in the deployment&apos;s PostgreSQL database. Sessions are
-            stored as HTTP-only cookies.
+            managed by Better Auth in the deployment&apos;s PostgreSQL database. Sessions are stored
+            as HTTP-only cookies.
           </li>
           <li>
             <strong>Your course content.</strong> The courses, materials, assessment questions and
@@ -52,9 +52,9 @@ export default function PrivacyPage() {
       <section className="section">
         <h2 className="section-heading">Removing your data</h2>
         <p>
-          You can delete any course, material or question from within the app. Deleting your
-          account removes your courses, their materials and their stored files. Deletion is
-          immediate and cannot be undone.
+          You can delete any course, material or question from within the app. Deleting your account
+          removes your courses, their materials and their stored files. Deletion is immediate and
+          cannot be undone.
         </p>
         <p style={{ marginTop: 16 }}>
           <Link className="btn btn-secondary" href="/account">

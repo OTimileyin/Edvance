@@ -135,7 +135,11 @@ export function groupParagraphs(text: string, maxChars: number): LineGroup[] {
     for (const segment of splitIntoSegments(group.text)) {
       for (const piece of hardSplit(segment, maxChars)) {
         if (length > 0 && length + 1 + piece.length > maxChars) {
-          groups.push({ text: current.join(" "), lineStart: group.lineStart, lineEnd: group.lineEnd });
+          groups.push({
+            text: current.join(" "),
+            lineStart: group.lineStart,
+            lineEnd: group.lineEnd,
+          });
           current = [];
           length = 0;
         }

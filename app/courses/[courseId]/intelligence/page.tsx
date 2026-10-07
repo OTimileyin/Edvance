@@ -86,8 +86,8 @@ export default function CourseIntelligencePage() {
         <span className="kicker">Course intelligence</span>
         <h1 className="page-title">What this course teaches</h1>
         <p className="page-lede">
-          Concepts extracted from your uploaded materials, each one grounded in the exact evidence it
-          came from. Edvance never invents a citation: a concept with no evidence is reported as
+          Concepts extracted from your uploaded materials, each one grounded in the exact evidence
+          it came from. Edvance never invents a citation: a concept with no evidence is reported as
           insufficient evidence.
         </p>
       </section>
@@ -119,16 +119,19 @@ export default function CourseIntelligencePage() {
           )}
           {intelligence.status === "failed" && (
             <p role="alert">
-              {intelligence.errorSummary ??
-                "Course analysis did not finish. You can try again."}
+              {intelligence.errorSummary ?? "Course analysis did not finish. You can try again."}
             </p>
           )}
           {intelligence.status === "ready" && (
             <p>
-              {intelligence.conceptCount}{" "}
-              {intelligence.conceptCount === 1 ? "concept" : "concepts"} extracted from{" "}
+              {intelligence.conceptCount} {intelligence.conceptCount === 1 ? "concept" : "concepts"}{" "}
+              extracted from{" "}
               {course.sources.filter((source) => (source.ingestion?.chunkCount ?? 0) > 0).length}{" "}
-              evidence {course.sources.filter((source) => (source.ingestion?.chunkCount ?? 0) > 0).length === 1 ? "material" : "materials"}
+              evidence{" "}
+              {course.sources.filter((source) => (source.ingestion?.chunkCount ?? 0) > 0).length ===
+              1
+                ? "material"
+                : "materials"}
               {analysedAt ? `. Analysed ${analysedAt}.` : "."}
             </p>
           )}
@@ -160,8 +163,8 @@ export default function CourseIntelligencePage() {
 
       {intelligence.concepts.length === 0 ? (
         <div className="empty-state">
-          No concepts extracted yet. Once the course has been analysed, each concept appears here with
-          the material and location it came from.
+          No concepts extracted yet. Once the course has been analysed, each concept appears here
+          with the material and location it came from.
         </div>
       ) : (
         <section className="section" aria-labelledby="concepts-heading">

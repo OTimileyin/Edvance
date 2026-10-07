@@ -75,11 +75,7 @@ function logFailure(operation: string, key: string, error: unknown): void {
 }
 
 /** Uploads bytes under `key` with the server-derived content type. Throws on failure. */
-export async function putObject(
-  key: string,
-  body: Buffer,
-  contentType: string,
-): Promise<void> {
+export async function putObject(key: string, body: Buffer, contentType: string): Promise<void> {
   const { error } = await client()
     .storage.from(bucket())
     .upload(key, body, { contentType, upsert: false });

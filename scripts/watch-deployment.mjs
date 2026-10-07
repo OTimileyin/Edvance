@@ -58,7 +58,8 @@ for (let index = 0; index < argv.length; index += 1) {
 }
 
 const target = positional[0] ?? process.env.BASE_URL;
-if (!target) fail("give a deployment URL, e.g. npm run watch:deploy -- https://your-app.vercel.app");
+if (!target)
+  fail("give a deployment URL, e.g. npm run watch:deploy -- https://your-app.vercel.app");
 if (!/^https?:\/\//.test(target)) fail(`expected an http(s) URL, got "${target}"`);
 const baseUrl = normalizeUrl(target);
 
@@ -69,8 +70,10 @@ if (baseline !== undefined && !/^https?:\/\//.test(baseline)) {
 
 const timeoutSeconds = Number(flags.get("timeout") ?? 900);
 const intervalSeconds = Number(flags.get("interval") ?? 15);
-if (!Number.isFinite(timeoutSeconds) || timeoutSeconds <= 0) fail("--timeout must be a positive number of seconds");
-if (!Number.isFinite(intervalSeconds) || intervalSeconds <= 0) fail("--interval must be a positive number of seconds");
+if (!Number.isFinite(timeoutSeconds) || timeoutSeconds <= 0)
+  fail("--timeout must be a positive number of seconds");
+if (!Number.isFinite(intervalSeconds) || intervalSeconds <= 0)
+  fail("--interval must be a positive number of seconds");
 
 // --- polling ---------------------------------------------------------------
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -99,7 +102,9 @@ function runNode(args) {
 }
 
 async function main() {
-  console.log(`Watching ${baseUrl}/api/health every ${intervalSeconds}s (timeout ${timeoutSeconds}s)\n`);
+  console.log(
+    `Watching ${baseUrl}/api/health every ${intervalSeconds}s (timeout ${timeoutSeconds}s)\n`,
+  );
   const deadline = Date.now() + timeoutSeconds * 1000;
 
   let ready = false;
@@ -131,9 +136,7 @@ async function main() {
   if (flags.get("noSuite")) return;
 
   const suite = join(here, "verify-remote-deployment.mjs");
-  const args = baseline
-    ? [suite, "--diff", normalizeUrl(baseline), baseUrl]
-    : [suite, baseUrl];
+  const args = baseline ? [suite, "--diff", normalizeUrl(baseline), baseUrl] : [suite, baseUrl];
   console.log(`Running the remote suite${baseline ? " as a two-deployment diff" : ""}...\n`);
   process.exitCode = await runNode(args);
 }

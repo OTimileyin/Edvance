@@ -25,8 +25,8 @@ export default function TermsPage() {
             without permission.
           </li>
           <li>
-            <strong>Keep your account secure.</strong> You are responsible for your password and
-            for the activity on your account.
+            <strong>Keep your account secure.</strong> You are responsible for your password and for
+            the activity on your account.
           </li>
           <li>
             <strong>Use it fairly.</strong> Do not attempt to disrupt the service or exceed its

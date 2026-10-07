@@ -13,15 +13,15 @@ remote end-to-end verification of the complete learner journey (**69 checks, 0 f
 
 ## 0. Live deployment
 
-| | |
-|---|---|
-| **URL** | https://white-whale.spcf.app (managed HTTPS, HSTS) |
-| **Platform** | Specific (`specific.hcl`); project `edvance` (`proj_0vqsej2psy3sy4tr`), environment `prod` |
-| **Active deployment** | `depl_02f4368hqt4n86q6` |
-| **Database** | Managed PostgreSQL; all 8 migrations applied (`schema_migrations` = 8) |
-| **Health** | `GET /api/health` → `200 {"status":"ok","database":"ok","integrations":{"ai":"configured","storage":"configured","email":"not-configured"}}` |
-| **Model** | `gemini-3-flash-preview` (pinned in `specific.hcl`) |
-| **Remote verification** | `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` → **69 passed / 0 failed** |
+|                         |                                                                                                                                              |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **URL**                 | https://white-whale.spcf.app (managed HTTPS, HSTS)                                                                                           |
+| **Platform**            | Specific (`specific.hcl`); project `edvance` (`proj_0vqsej2psy3sy4tr`), environment `prod`                                                   |
+| **Active deployment**   | `depl_02f4368hqt4n86q6`                                                                                                                      |
+| **Database**            | Managed PostgreSQL; all 8 migrations applied (`schema_migrations` = 8)                                                                       |
+| **Health**              | `GET /api/health` → `200 {"status":"ok","database":"ok","integrations":{"ai":"configured","storage":"configured","email":"not-configured"}}` |
+| **Model**               | `gemini-3-flash-preview` (pinned in `specific.hcl`)                                                                                          |
+| **Remote verification** | `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` → **69 passed / 0 failed**                                 |
 
 ### Second deployment target — Vercel (prepared, not yet live)
 
@@ -87,8 +87,6 @@ source.
   burst can still surface as an honest, retryable provider failure, and a very heavy day can exhaust
   the model's quota. The model is a one-line change in `specific.hcl`; a key with quota removes the
   limit entirely.
-- **ESLint and Prettier are not configured.** Static guarantees are `tsc --noEmit`, the unit suite,
-  and the end-to-end suites.
 - **Rate limiting is in-memory per process**; a multi-instance deployment would need a shared store.
 - **Ingestion is synchronous**, so a large file holds the upload request open.
 - **Scanned/image-only PDFs fail** as `empty-content` — there is no OCR.
@@ -107,28 +105,28 @@ source.
 
 ## 3. Verification
 
-| Check | Command | Result |
-|---|---|---|
-| Typecheck | `rm -f tsconfig.tsbuildinfo && npx tsc --noEmit` | **exit 0** |
-| Unit tests | `npm run test:unit` | **24 passed / 0 failed** |
-| Phase 10 — product & hardening | `npm run test:hardening` | **43 passed / 0 failed** |
-| Phase 9 — targeted revision | `npm run test:revision` | **72 passed / 0 failed** |
-| Phase 8 — mastery | `npm run test:mastery` | **48 passed / 0 failed** |
-| Phase 7 — assessment intelligence | `npm run test:assessment` | **76 passed / 0 failed** |
-| Phase 6 — course intelligence | `npm run test:intelligence` | **59 passed / 0 failed** |
-| Phase 5.6 — ingestion | `npm run test:ingestion` | **91 passed / 0 failed** |
-| Live provider | `node scripts/verify-gemini-live.mjs` | **34 passed / 0 failed** (`gemini-3.5-flash`) |
-| **Remote (deployed)** | `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` | **69 passed / 0 failed** (`gemini-3-flash-preview`) |
-| Production build | `infisical run --env=dev -- npx next build` | **passes** (13 static pages) |
-| Production build (no env) | `npx next build` with only the `specific.hcl` build args | **passes** — the env-free builder succeeds |
-| Secret scan | `infisical scan --redact` | **no leaks found** |
-| Baseline | database + bucket | restored (`practice_attempt`/`practice_question`/`revision_plan` 0; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments / 20 mastery rows; bucket 0 objects) |
+| Check                             | Command                                                                           | Result                                                                                                                                                                    |
+| --------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Typecheck                         | `rm -f tsconfig.tsbuildinfo && npx tsc --noEmit`                                  | **exit 0**                                                                                                                                                                |
+| Unit tests                        | `npm run test:unit`                                                               | **24 passed / 0 failed**                                                                                                                                                  |
+| Phase 10 — product & hardening    | `npm run test:hardening`                                                          | **43 passed / 0 failed**                                                                                                                                                  |
+| Phase 9 — targeted revision       | `npm run test:revision`                                                           | **72 passed / 0 failed**                                                                                                                                                  |
+| Phase 8 — mastery                 | `npm run test:mastery`                                                            | **48 passed / 0 failed**                                                                                                                                                  |
+| Phase 7 — assessment intelligence | `npm run test:assessment`                                                         | **76 passed / 0 failed**                                                                                                                                                  |
+| Phase 6 — course intelligence     | `npm run test:intelligence`                                                       | **59 passed / 0 failed**                                                                                                                                                  |
+| Phase 5.6 — ingestion             | `npm run test:ingestion`                                                          | **91 passed / 0 failed**                                                                                                                                                  |
+| Live provider                     | `node scripts/verify-gemini-live.mjs`                                             | **34 passed / 0 failed** (`gemini-3.5-flash`)                                                                                                                             |
+| **Remote (deployed)**             | `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` | **69 passed / 0 failed** (`gemini-3-flash-preview`)                                                                                                                       |
+| Production build                  | `infisical run --env=dev -- npx next build`                                       | **passes** (13 static pages)                                                                                                                                              |
+| Production build (no env)         | `npx next build` with only the `specific.hcl` build args                          | **passes** — the env-free builder succeeds                                                                                                                                |
+| Secret scan                       | `infisical scan --redact`                                                         | **no leaks found**                                                                                                                                                        |
+| Baseline                          | database + bucket                                                                 | restored (`practice_attempt`/`practice_question`/`revision_plan` 0; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments / 20 mastery rows; bucket 0 objects) |
 
 Every suite creates its own fixtures in memory (no copyrighted material) and deletes everything it
 creates.
 
-**The live run.** Against the real API, the golden FATHOM fixture — which teaches *six* components
-while the seeded question asks for *five* — produced:
+**The live run.** Against the real API, the golden FATHOM fixture — which teaches _six_ components
+while the seeded question asks for _five_ — produced:
 
 > **possible-inconsistency** — "The question assumes there are five components of the FATHOM
 > framework, but the course evidence shows there are six components: Frame, Assemble, Trace, Hold,
@@ -254,15 +252,15 @@ surfaces as an honest retryable failure rather than a crash or a fabricated resu
 
 ## Appendix — Commit history
 
-| Phase | Commit | Summary |
-|---|---|---|
-| 5.5 | `0e33c80` | Supabase Storage |
-| 5.6 | `f45ad5a` | Text extraction & evidence chunking |
-| 6 | `2bce681` | Evidence-grounded course intelligence |
-| 7 | `2d51d6f` | Evidence-grounded assessment intelligence |
-| 8 | `aa6f014` | Practice-based mastery intelligence |
-| 9 | `3d7b818` | Targeted revision workflow |
-| 10 | `fb96dc2` | Product completion & hardening |
-| 11 | `18db198` | Deployment specification & documentation |
-| 12 | `b97cd0d` | Submission readiness report & stale-claim fixes |
+| Phase  | Commit        | Summary                                                               |
+| ------ | ------------- | --------------------------------------------------------------------- |
+| 5.5    | `0e33c80`     | Supabase Storage                                                      |
+| 5.6    | `f45ad5a`     | Text extraction & evidence chunking                                   |
+| 6      | `2bce681`     | Evidence-grounded course intelligence                                 |
+| 7      | `2d51d6f`     | Evidence-grounded assessment intelligence                             |
+| 8      | `aa6f014`     | Practice-based mastery intelligence                                   |
+| 9      | `3d7b818`     | Targeted revision workflow                                            |
+| 10     | `fb96dc2`     | Product completion & hardening                                        |
+| 11     | `18db198`     | Deployment specification & documentation                              |
+| 12     | `b97cd0d`     | Submission readiness report & stale-claim fixes                       |
 | Deploy | _this commit_ | Execute the deployment, pin a servable model, add remote verification |

@@ -13,18 +13,14 @@
  * does not always inject it and may expose the connection only as
  * `POSTGRES_URL` (or Prisma's `POSTGRES_PRISMA_URL`), so both are accepted.
  */
-const POOLED_DATABASE_URL_NAMES = [
-  "DATABASE_URL",
-  "POSTGRES_URL",
-  "POSTGRES_PRISMA_URL",
-] as const;
+const POOLED_DATABASE_URL_NAMES = ["DATABASE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"] as const;
 
 function missingEnvMessage(name: string): string {
   return (
     `Missing required environment variable ${name}. Edvance reads its ` +
     "configuration from Infisical — run `npm run dev` (which wraps " +
     "`infisical run --env=dev`), or provide the variable another way. " +
-    "See README.md, \"Secrets (Infisical)\"."
+    'See README.md, "Secrets (Infisical)".'
   );
 }
 
@@ -33,7 +29,7 @@ function missingAnyEnvMessage(names: readonly string[]): string {
     `Missing a database connection string. Set one of ${names.join(", ")}. ` +
     "Edvance reads its configuration from Infisical — run `npm run dev` " +
     "(which wraps `infisical run --env=dev`) — or, on Vercel, let the Postgres " +
-    "integration inject it. See README.md, \"Secrets (Infisical)\"."
+    'integration inject it. See README.md, "Secrets (Infisical)".'
   );
 }
 

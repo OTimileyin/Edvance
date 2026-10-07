@@ -146,7 +146,7 @@ function mockConceptsFor(evidence: EvidenceChunk[]) {
     groups.set(label.toLowerCase(), list);
   }
 
-  return [...groups.entries()].map(([key, chunks], index) => ({
+  return [...groups.values()].map((chunks, index) => ({
     key: `c${index + 1}`,
     name: labelFor(chunks[0]),
     instructorTerm: labelFor(chunks[0]),
@@ -157,13 +157,21 @@ function mockConceptsFor(evidence: EvidenceChunk[]) {
       chunkId: chunk.id,
       rationale: `The ${chunk.sourceLocation} chunk states this.`,
     })),
-    _key: key,
   }));
 }
 
 /** Maps the first spelled-out or numeric quantity in a question, e.g. "five" → 5. */
 const NUMBER_WORDS: Record<string, number> = {
-  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
 };
 
 function quantityIn(question: string): number | null {
@@ -178,7 +186,11 @@ function quantityIn(question: string): number | null {
  * that asks for a number of items the evidence does not establish. Because it
  * only ever names supplied concept ids, the pipeline's validators accept it.
  */
-function mockAssessment(request: AiRequest, scenario: string, usage: AiResponse["usage"]): AiResponse {
+function mockAssessment(
+  request: AiRequest,
+  scenario: string,
+  usage: AiResponse["usage"],
+): AiResponse {
   const concepts = request.concepts ?? [];
   const question = request.question ?? "";
   const json = (value: unknown) => ({ text: JSON.stringify(value), usage });
@@ -239,7 +251,11 @@ function mockAssessment(request: AiRequest, scenario: string, usage: AiResponse[
  * concept, each citing a real supplied chunk. Every id it returns was given to
  * it, which is what the pipeline's validators then check.
  */
-function mockRevision(request: AiRequest, scenario: string, usage: AiResponse["usage"]): AiResponse {
+function mockRevision(
+  request: AiRequest,
+  scenario: string,
+  usage: AiResponse["usage"],
+): AiResponse {
   const concepts = request.concepts ?? [];
   const evidence = request.evidence ?? [];
   const json = (value: unknown) => ({ text: JSON.stringify(value), usage });
@@ -375,7 +391,7 @@ function mockGenerate(request: AiRequest): AiResponse {
 
   return {
     text: JSON.stringify({
-      concepts: concepts.map(({ _key: _ignored, ...concept }) => concept),
+      concepts,
       relationships,
       overallEvidenceStatus: concepts.length > 0 ? "SUPPORTED" : "INSUFFICIENT_EVIDENCE",
     }),

@@ -73,9 +73,9 @@ Phases 1–10 are complete, plus four steering additions (landing page/demo sign
 
 **Phase 8 (mastery intelligence) is implemented.** Mastery is derived from the learner's own recorded practice, never assigned by a model. Recording an attempt — practising an assessment question (credited to every concept that question was checked against) or a single concept — re-derives the affected concepts from the complete attempt history by one deterministic rule: no attempts is **Untested**, fewer than half correct is **Weak**, at least half correct is **Developing**, and at least 80% correct over at least three attempts is **Mastered**. A single lucky answer can never earn mastery. The Mastery tab states the rule plainly, shows each concept's attempts and correct count, offers a practice panel, and lists recent practice with the learner's own answer, so every status is traceable to the attempts behind it. A question can only be practised once it has been checked against the course's evidence, and the practice endpoint is always an explicit learner action.
 
-**Phase 9 (targeted revision) is implemented.** The Mastery tab says *what* is weak; the **Revision** tab says what to do about it. The recommendation is derived deterministically from mastery and the course's own evidence — weakest evidence of mastery first (**Weak**, then **Developing**, then **Untested**; a Mastered concept is never recommended) — and names the single smallest next action with where the course teaches it. Generating practice is an explicit action that sends the model only the weak concepts and the evidence that teaches them, so every question targets a real gap and cites a real `Section: …` location; a question naming an unsupplied concept or citing unsupplied evidence rejects the whole response. Generated practice can be recorded right or wrong straight back into mastery, which re-derives the recommendation and marks the stored practice stale. When nothing is weak, a course is fully mastered, or a weak area has no evidence, Edvance records that honestly without spending a model call.
+**Phase 9 (targeted revision) is implemented.** The Mastery tab says _what_ is weak; the **Revision** tab says what to do about it. The recommendation is derived deterministically from mastery and the course's own evidence — weakest evidence of mastery first (**Weak**, then **Developing**, then **Untested**; a Mastered concept is never recommended) — and names the single smallest next action with where the course teaches it. Generating practice is an explicit action that sends the model only the weak concepts and the evidence that teaches them, so every question targets a real gap and cites a real `Section: …` location; a question naming an unsupplied concept or citing unsupplied evidence rejects the whole response. Generated practice can be recorded right or wrong straight back into mastery, which re-derives the recommendation and marks the stored practice stale. When nothing is weak, a course is fully mastered, or a weak area has no evidence, Edvance records that honestly without spending a model call.
 
-**Phase 10 (product completion & hardening) is implemented.** Courses, materials and assessment questions can now be edited and deleted (deleting cleans up stored files, and editing a question discards its stale check so it must be re-checked); an **/account** page shows who is signed in, changes the password, and deletes the account and everything it owns. The deployment is hardened with security headers and a strict Content-Security-Policy, an in-memory per-learner rate limiter over model calls, uploads, practice and account actions, and per-course upload quotas; it ships `error.tsx`/`not-found.tsx`/a `/api/health` probe and `/privacy` and `/terms` pages. Transactional email goes through **Resend** when `RESEND_API_KEY` is configured, and Edvance says so honestly when it is not. A dependency-free unit suite joins the end-to-end suites, and a production `next build` passes. ESLint and Prettier are not yet configured — static checks are `tsc --noEmit` plus the test suites.
+**Phase 10 (product completion & hardening) is implemented.** Courses, materials and assessment questions can now be edited and deleted (deleting cleans up stored files, and editing a question discards its stale check so it must be re-checked); an **/account** page shows who is signed in, changes the password, and deletes the account and everything it owns. The deployment is hardened with security headers and a strict Content-Security-Policy, an in-memory per-learner rate limiter over model calls, uploads, practice and account actions, and per-course upload quotas; it ships `error.tsx`/`not-found.tsx`/a `/api/health` probe and `/privacy` and `/terms` pages. Transactional email goes through **Resend** when `RESEND_API_KEY` is configured, and Edvance says so honestly when it is not. A dependency-free unit suite joins the end-to-end suites, and a production `next build` passes. ESLint and Prettier are configured and gate CI: static checks are `tsc --noEmit`, `npm run lint` (the flat config in `eslint.config.mjs` — `eslint-config-next` plus typescript-eslint, with `eslint-config-prettier` deferring to Prettier), `npm run format:check` (Prettier, `printWidth: 100`) and the test suites.
 
 Material parsing uses three focused, server-only libraries — `pdfjs-dist` (PDF), `mammoth` (DOCX), and `jszip` (PPTX); TXT, Markdown, WebVTT, and SRT are parsed in-repo. Course intelligence uses the official `@google/genai` server SDK. Two end-to-end suites run against a running dev server and verify their work in PostgreSQL — `scripts/test-ingestion.mjs` for extraction (text, locations, chunk order, ownership isolation) and `scripts/test-course-intelligence.mjs` for analysis (concepts, instructor terminology, evidence resolution, rejection of unknown chunk ids, staleness, and cross-user isolation):
 
@@ -140,16 +140,17 @@ It reports **34 passed, 0 failed**: six concepts with instructor terminology pre
 
 The Edvance mark is a seal containing an "E" built from three stacked source bars — the middle bar is rust because Edvance highlights the evidence that matters and flags the source that disagrees.
 
-| Asset | Purpose |
-|---|---|
-| `components/logo.tsx` | `LogoMark` and `Logo` components used by the app (header, footer, auth) |
-| `app/icon.svg` | Favicon / app icon (Next.js file convention) |
-| `public/logo.svg` | Full lockup for sharing and docs |
-| `design.html` | Interface sheet: the shipped screens plus logo rules, palette, and components |
+| Asset                 | Purpose                                                                       |
+| --------------------- | ----------------------------------------------------------------------------- |
+| `components/logo.tsx` | `LogoMark` and `Logo` components used by the app (header, footer, auth)       |
+| `app/icon.svg`        | Favicon / app icon (Next.js file convention)                                  |
+| `public/logo.svg`     | Full lockup for sharing and docs                                              |
+| `design.html`         | Interface sheet: the shipped screens plus logo rules, palette, and components |
 
 Palette: deep teal `#0D2327`–`#2C6E70` for structure, cream `#FBF6EA` for the page, rust `#C9502E` for flags, sage `#6B8A5E` for mastery. Tokens live in `app/globals.css`.
 
 ### Prerequisites (local)
+
 - Node.js + npm
 - PostgreSQL running locally. This repo expects a server on `127.0.0.1:5432` with a database named `edvance` (the dev machine runs it as the Windows service `postgresql-edvance`).
 - The **Infisical CLI**, authenticated, with this directory linked to the Edvance Infisical project. Secrets are injected through `infisical run`, which `npm run dev` and `npm run migrate` already wrap, so a local `.env` is no longer required. See [Secrets (Infisical)](#secrets-infisical).
@@ -178,6 +179,7 @@ One-time setup (per machine):
    ```
 
    The keys the app reads are `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`; for material uploads, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and `SUPABASE_STORAGE_BUCKET`; and — for course intelligence — `GEMINI_API_KEY` (optionally `GEMINI_MODEL`, which defaults to `gemini-flash-latest`). The `dev` environment pins `GEMINI_MODEL=gemini-3-flash-preview` because the `-latest` alias was intermittently capacity-limited (the free tier is 20 requests/day/model); the provider wrapper also retries a transient 429/5xx a bounded three times.
+
 3. Install the CLI — `winget install infisical` on Windows, or `brew install infisical/get-cli/infisical` on macOS (see the [CLI install docs](https://infisical.com/docs/cli/overview)).
 4. Log in. In WSL 2, a remote SSH session, or Codespaces there is no browser, so use the interactive login: `infisical login -i`. Otherwise `infisical login`.
 5. Link this directory to the project once: `infisical init` and pick the `edvance` project. This writes `.infisical.json`, which holds local project settings only — no secret values — and is safe to commit. It is interactive and needs a real terminal; there is no flag that selects a project for you.
@@ -254,6 +256,7 @@ in `schema_migrations`).
 arrives as a pull request, and the `check` workflow must be green before it can merge:
 
 - **`typecheck + unit tests`** — `tsc --noEmit` plus the dependency-free unit suite (`npm run check`).
+- **`lint + formatting`** — `npm run lint` (ESLint) and `npm run format:check` (Prettier).
 - **`production build`** — applies `db/migrations/*.sql` against a real Postgres service container,
   then runs `next build`, mirroring the Vercel build command exactly — so a migration break or a
   Next.js build break fails in CI, not on deploy.
@@ -272,15 +275,15 @@ any service from the project's exclusion list (vector databases, Kafka/Redis, Ku
 
 ### Secrets to set before deploying
 
-| Secret name (`specific.hcl`) | Required | What it is for |
-|---|---|---|
-| `gemini_api_key` | yes | Course/assessment analysis and targeted practice. From Google AI Studio. |
-| `supabase_url` | yes | Supabase project URL for private file storage. |
-| `supabase_secret_key` | yes | Supabase service-role key (server-only; never exposed to the browser). |
-| `supabase_storage_bucket` | yes | The private bucket name (e.g. `edvance-materials`). |
-| `resend_api_key` | optional | Transactional email for the account-deletion confirmation. Unset ⇒ the API reports `emailSent: false` honestly. |
-| `email_from` | optional | Verified sender address; defaults to Resend's onboarding sender. |
-| `better_auth_secret` | auto | Generated and stored by the platform; signs sessions. |
+| Secret name (`specific.hcl`) | Required | What it is for                                                                                                  |
+| ---------------------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
+| `gemini_api_key`             | yes      | Course/assessment analysis and targeted practice. From Google AI Studio.                                        |
+| `supabase_url`               | yes      | Supabase project URL for private file storage.                                                                  |
+| `supabase_secret_key`        | yes      | Supabase service-role key (server-only; never exposed to the browser).                                          |
+| `supabase_storage_bucket`    | yes      | The private bucket name (e.g. `edvance-materials`).                                                             |
+| `resend_api_key`             | optional | Transactional email for the account-deletion confirmation. Unset ⇒ the API reports `emailSent: false` honestly. |
+| `email_from`                 | optional | Verified sender address; defaults to Resend's onboarding sender.                                                |
+| `better_auth_secret`         | auto     | Generated and stored by the platform; signs sessions.                                                           |
 
 `GEMINI_MODEL` is pinned to `gemini-3-flash-preview` in the spec. The Gemini free tier allows **20
 requests/day/model**, so the pin is a model the operator's key can actually serve; change it to any
@@ -326,13 +329,13 @@ build fails with `Missing required environment variable DATABASE_URL`.
 ### Verify the deployment
 
 - `GET https://<deployment-url>/api/health` returns **200** with `database: "ok"` and
-each integration reported as `configured`.
+  each integration reported as `configured`.
 - The response carries the security headers from `next.config.ts` (`content-security-policy`,
-`x-frame-options: DENY`, `x-content-type-options: nosniff`, `referrer-policy`).
+  `x-frame-options: DENY`, `x-content-type-options: nosniff`, `referrer-policy`).
 - Sign up a throwaway account, create a course, upload a small text file, analyse the course, add and
-check a question, record practice, and generate revision practice — the full loop.
+  check a question, record practice, and generate revision practice — the full loop.
 - Confirm `NODE_ENV=production` means the deterministic mock provider is refused: analysis must either
-use the real Gemini key or report that analysis is not configured.
+  use the real Gemini key or report that analysis is not configured.
 - Re-run `specific deploy` and confirm migrations are a no-op and data survives.
 - Re-run the deployed smoke test end to end:
   `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs`. It signs up
@@ -344,6 +347,7 @@ use the real Gemini key or report that analysis is not configured.
 ## Running the Local Prototype
 
 ### Main app (Phase 2 + landing/demo sign-in)
+
 The app is a Next.js + TypeScript project and runs locally with Node.js. `npm run dev` is wrapped with `infisical run`, so it needs the one-time Infisical setup above; secrets arrive as environment variables exactly as before.
 
 ```
@@ -354,6 +358,7 @@ npm run dev        # infisical run --env=dev -- next dev
 Open `http://localhost:3000` in a browser. The app opens on the landing page; **Get started** (sign-up) or **Sign in** creates/uses a real local account (password must be 8+ characters) and enters the course workspace at `/courses`. Workspaces are scoped to the signed-in user in PostgreSQL — every query is keyed by the account id, and a new account is seeded with demo workspaces on first visit so it is never empty. **Continue with a demo account** provisions and signs in a local `demo@edvance.app` account. Unauthenticated visits to `/courses` (and below) redirect to the sign-in page server-side.
 
 ### Static previews (Phase 1)
+
 Phase 1 pages are plain HTML/CSS with no build tooling. Open them directly in a browser (double-click the files):
 
 1. `design.html` — interface sheet. Renders the shipped screens from the real markup against a verbatim snapshot of `app/globals.css`: the landing page, sign-in, course directory, overview, sources, assessments, and mastery, with the logo rules, palette, and controls at the end. It is self-contained (no build step, no sibling files) and links inside the frames are inert — run the app for the interactive version.

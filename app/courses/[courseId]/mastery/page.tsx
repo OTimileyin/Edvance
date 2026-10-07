@@ -101,9 +101,9 @@ export default function CourseMastery() {
             <section className="section" aria-label="Before practising">
               <div className="alert alert-neutral">
                 <p>
-                  No practice has been recorded yet, so every concept is{" "}
-                  <strong>Untested</strong>. Record an attempt below — Edvance derives the status
-                  from your attempts and shows the trail, and never invents a result.
+                  No practice has been recorded yet, so every concept is <strong>Untested</strong>.
+                  Record an attempt below — Edvance derives the status from your attempts and shows
+                  the trail, and never invents a result.
                 </p>
               </div>
             </section>
@@ -153,7 +153,9 @@ export default function CourseMastery() {
             </div>
           </section>
 
-          {targets.length > 0 && <PracticePanel courseId={course.id} targets={targets} onRecorded={reload} />}
+          {targets.length > 0 && (
+            <PracticePanel courseId={course.id} targets={targets} onRecorded={reload} />
+          )}
 
           <RecentAttempts attempts={course.attempts} />
         </>

@@ -15,13 +15,7 @@ import {
  * are caught here for immediate feedback, and the same rules are enforced again
  * by the upload route so an unsupported file never reaches object storage.
  */
-export function AddMaterialForm({
-  courseId,
-  onAdded,
-}: {
-  courseId: string;
-  onAdded: () => void;
-}) {
+export function AddMaterialForm({ courseId, onAdded }: { courseId: string; onAdded: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);

@@ -23,7 +23,9 @@ const BASE_URL = (process.env.BASE_URL ?? "http://localhost:3250").replace(/\/$/
 const TRUSTED_ORIGIN = process.env.BETTER_AUTH_URL ?? BASE_URL;
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
-  console.error("DATABASE_URL is not set. Run with: infisical run --env=dev -- node scripts/test-ingestion.mjs");
+  console.error(
+    "DATABASE_URL is not set. Run with: infisical run --env=dev -- node scripts/test-ingestion.mjs",
+  );
   process.exit(1);
 }
 
@@ -113,7 +115,10 @@ async function makePptx(slides) {
   zip.file(
     "[Content_Types].xml",
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>${slides
-      .map((_, i) => `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`)
+      .map(
+        (_, i) =>
+          `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`,
+      )
       .join("")}</Types>`,
   );
   zip
@@ -201,9 +206,21 @@ async function buildFixtures() {
       ]),
     },
     vtt: { name: "captions.vtt", type: "text/vtt", bytes: Buffer.from(VTT_FIXTURE, "utf8") },
-    srt: { name: "captions.srt", type: "application/x-subrip", bytes: Buffer.from(SRT_FIXTURE, "utf8") },
-    corruptPdf: { name: "broken.pdf", type: "application/pdf", bytes: Buffer.from("not a pdf at all", "utf8") },
-    malformedVtt: { name: "broken.vtt", type: "text/vtt", bytes: Buffer.from("this is not webvtt content", "utf8") },
+    srt: {
+      name: "captions.srt",
+      type: "application/x-subrip",
+      bytes: Buffer.from(SRT_FIXTURE, "utf8"),
+    },
+    corruptPdf: {
+      name: "broken.pdf",
+      type: "application/pdf",
+      bytes: Buffer.from("not a pdf at all", "utf8"),
+    },
+    malformedVtt: {
+      name: "broken.vtt",
+      type: "text/vtt",
+      bytes: Buffer.from("this is not webvtt content", "utf8"),
+    },
     blankTxt: { name: "blank.txt", type: "text/plain", bytes: Buffer.from("   \n\n   \n", "utf8") },
   };
 }
@@ -303,12 +320,18 @@ const EXPECTED = {
   },
   md: {
     locationIncludes: ["Section: Introduction to PROMPT", "Section: Parameters"],
-    contentIncludes: ["The PROMPT framework has six components", "Constrain parameters when precision matters"],
+    contentIncludes: [
+      "The PROMPT framework has six components",
+      "Constrain parameters when precision matters",
+    ],
     unit: "section",
   },
   docx: {
     locationIncludes: ["Section: Introduction to PROMPT", "Section: Parameters"],
-    contentIncludes: ["The framework has six components", "Constrain parameters when precision matters"],
+    contentIncludes: [
+      "The framework has six components",
+      "Constrain parameters when precision matters",
+    ],
     unit: "section",
   },
   pptx: {
@@ -354,7 +377,11 @@ async function main() {
 
     const courseRes = await learnerA.fetch("/api/courses", {
       method: "POST",
-      body: JSON.stringify({ name: "Ingestion test course", institution: "Test", lesson: "Extraction" }),
+      body: JSON.stringify({
+        name: "Ingestion test course",
+        institution: "Test",
+        lesson: "Extraction",
+      }),
     });
     const courseId = (await courseRes.json()).course?.id;
     check("course created", Boolean(courseId), `status ${courseRes.status}`);
@@ -362,7 +389,11 @@ async function main() {
 
     const courseB = await learnerB.fetch("/api/courses", {
       method: "POST",
-      body: JSON.stringify({ name: "Ingestion test course B", institution: "Test", lesson: "Extraction" }),
+      body: JSON.stringify({
+        name: "Ingestion test course B",
+        institution: "Test",
+        lesson: "Extraction",
+      }),
     });
     const courseIdB = (await courseB.json()).course?.id;
     check("course B created", Boolean(courseIdB), `status ${courseB.status}`);
@@ -372,7 +403,11 @@ async function main() {
       const fixture = fixtures[format];
       const { status, body } = await upload(learnerA, courseId, fixture);
       const material = body.material;
-      check(`${format}: upload accepted (201)`, status === 201, `status ${status} ${JSON.stringify(body.error ?? "")}`);
+      check(
+        `${format}: upload accepted (201)`,
+        status === 201,
+        `status ${status} ${JSON.stringify(body.error ?? "")}`,
+      );
       if (!material) continue;
       uploads.push({ materialId: material.id, session: learnerA, courseId });
       check(
@@ -382,7 +417,11 @@ async function main() {
       );
 
       const job = await loadJob(db, material.id);
-      check(`${format}: ingestion job completed`, job?.status === "completed", `job ${job?.status}`);
+      check(
+        `${format}: ingestion job completed`,
+        job?.status === "completed",
+        `job ${job?.status}`,
+      );
 
       const chunks = await loadChunks(db, material.id);
       const expected = EXPECTED[format];
@@ -405,15 +444,20 @@ async function main() {
         allContent.slice(0, 200),
       );
       if (expected.unit) {
-        check(`${format}: metadata unit recorded`, job?.metadata?.unit === expected.unit, JSON.stringify(job?.metadata));
+        check(
+          `${format}: metadata unit recorded`,
+          job?.metadata?.unit === expected.unit,
+          JSON.stringify(job?.metadata),
+        );
       }
       if (expected.count !== undefined) {
-        check(`${format}: metadata count recorded`, job?.metadata?.count === expected.count, JSON.stringify(job?.metadata));
+        check(
+          `${format}: metadata count recorded`,
+          job?.metadata?.count === expected.count,
+          JSON.stringify(job?.metadata),
+        );
       }
-      check(
-        `${format}: chunks belong to the correct material`,
-        chunks.length > 0,
-      );
+      check(`${format}: chunks belong to the correct material`, chunks.length > 0);
     }
 
     // --- Re-ingestion replaces chunks deterministically -------------------
@@ -422,7 +466,10 @@ async function main() {
       const materialId = body.material.id;
       uploads.push({ materialId, session: learnerA, courseId });
       const before = await loadChunks(db, materialId);
-      const retry = await learnerA.fetch(`/api/courses/${courseId}/materials/${materialId}/ingest`, { method: "POST" });
+      const retry = await learnerA.fetch(
+        `/api/courses/${courseId}/materials/${materialId}/ingest`,
+        { method: "POST" },
+      );
       check("retry: accepted on a completed material", retry.ok, `status ${retry.status}`);
       const after = await loadChunks(db, materialId);
       check(
@@ -443,12 +490,20 @@ async function main() {
       const download = await learnerB.fetch(
         `/api/courses/${courseId}/materials/${foreign.materialId}/download`,
       );
-      check("isolation: another learner cannot download", download.status === 404, `status ${download.status}`);
+      check(
+        "isolation: another learner cannot download",
+        download.status === 404,
+        `status ${download.status}`,
+      );
       const retry = await learnerB.fetch(
         `/api/courses/${courseId}/materials/${foreign.materialId}/ingest`,
         { method: "POST" },
       );
-      check("isolation: another learner cannot trigger ingestion", retry.status === 404, `status ${retry.status}`);
+      check(
+        "isolation: another learner cannot trigger ingestion",
+        retry.status === 404,
+        `status ${retry.status}`,
+      );
       const { rows } = await db.query(
         `select count(*)::int as n from material_chunk ch
            join learning_material m on m.id = ch.material_id
@@ -466,10 +521,17 @@ async function main() {
       const materialId = body.material?.id;
       if (materialId) {
         uploads.push({ materialId, session: learnerA, courseId });
-        check("corrupt PDF: upload reports failed ingestion", body.material.ingestion?.status === "failed");
+        check(
+          "corrupt PDF: upload reports failed ingestion",
+          body.material.ingestion?.status === "failed",
+        );
         const job = await loadJob(db, materialId);
         check("corrupt PDF: job marked failed", job?.status === "failed", job?.status);
-        check("corrupt PDF: safe error code stored", job?.error_code === "corrupt-file", job?.error_code);
+        check(
+          "corrupt PDF: safe error code stored",
+          job?.error_code === "corrupt-file",
+          job?.error_code,
+        );
         const chunks = await loadChunks(db, materialId);
         check("corrupt PDF: no chunks stored", chunks.length === 0, `${chunks.length}`);
       }
@@ -481,7 +543,11 @@ async function main() {
         uploads.push({ materialId, session: learnerA, courseId });
         const job = await loadJob(db, materialId);
         check("malformed VTT: job failed", job?.status === "failed", job?.status);
-        check("malformed VTT: safe error code stored", job?.error_code === "malformed-transcript", job?.error_code);
+        check(
+          "malformed VTT: safe error code stored",
+          job?.error_code === "malformed-transcript",
+          job?.error_code,
+        );
       }
     }
     {
@@ -492,13 +558,24 @@ async function main() {
         uploads.push({ materialId, session: learnerA, courseId });
         const job = await loadJob(db, materialId);
         check("blank txt: job failed", job?.status === "failed", job?.status);
-        check("blank txt: safe error code stored", job?.error_code === "empty-content", job?.error_code);
+        check(
+          "blank txt: safe error code stored",
+          job?.error_code === "empty-content",
+          job?.error_code,
+        );
       }
     }
     {
       const form = new FormData();
-      form.append("file", new Blob([Buffer.from("binary", "utf8")], { type: "application/octet-stream" }), "thing.xyz");
-      const response = await learnerA.fetch(`/api/courses/${courseId}/materials`, { method: "POST", body: form });
+      form.append(
+        "file",
+        new Blob([Buffer.from("binary", "utf8")], { type: "application/octet-stream" }),
+        "thing.xyz",
+      );
+      const response = await learnerA.fetch(`/api/courses/${courseId}/materials`, {
+        method: "POST",
+        body: form,
+      });
       check("unsupported file: rejected", response.status === 415, `status ${response.status}`);
     }
 

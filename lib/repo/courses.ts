@@ -233,7 +233,8 @@ const DEFAULT_REVISION: RevisionPlan = {
   errorSummary: null,
   generatedAt: null,
   provider: null,
-  nextAction: "Analyse the course to extract the concepts your materials teach, then record some practice.",
+  nextAction:
+    "Analyse the course to extract the concepts your materials teach, then record some practice.",
   focus: [],
   practiceQuestions: [],
 };
@@ -840,7 +841,13 @@ export async function createCourse(
   await pool.query(
     `insert into consistency_finding (id, course_id, status, description, next_action)
      values ($1, $2, $3, $4, $5)`,
-    [newId("finding"), id, DEFAULT_CONSISTENCY.status, DEFAULT_CONSISTENCY.reason, DEFAULT_CONSISTENCY.nextAction],
+    [
+      newId("finding"),
+      id,
+      DEFAULT_CONSISTENCY.status,
+      DEFAULT_CONSISTENCY.reason,
+      DEFAULT_CONSISTENCY.nextAction,
+    ],
   );
   return (await getCourse(userId, id))!;
 }
@@ -958,9 +965,15 @@ export async function updateAssessment(
     );
     // The old verdict was about the old wording; discard it rather than let it
     // imply a judgement the learner never asked for.
-    await client.query("delete from source_mapping where assessment_question_id = $1", [assessmentId]);
-    await client.query("delete from consistency_finding where assessment_question_id = $1", [assessmentId]);
-    await client.query("delete from assessment_analysis where assessment_question_id = $1", [assessmentId]);
+    await client.query("delete from source_mapping where assessment_question_id = $1", [
+      assessmentId,
+    ]);
+    await client.query("delete from consistency_finding where assessment_question_id = $1", [
+      assessmentId,
+    ]);
+    await client.query("delete from assessment_analysis where assessment_question_id = $1", [
+      assessmentId,
+    ]);
     await client.query("commit");
   } catch (error) {
     await client.query("rollback");
@@ -1024,10 +1037,9 @@ export async function deleteAccount(
       where c.user_id = $1 and m.storage_reference is not null`,
     [userId],
   );
-  const account = await pool.query<{ email: string }>(
-    'select email from "user" where id = $1',
-    [userId],
-  );
+  const account = await pool.query<{ email: string }>('select email from "user" where id = $1', [
+    userId,
+  ]);
   const result = await pool.query('delete from "user" where id = $1', [userId]);
   if (result.rowCount === 0) return undefined;
   return {
@@ -1315,10 +1327,7 @@ export async function markIngestionProcessing(jobId: string): Promise<void> {
   );
 }
 
-export async function completeIngestion(
-  jobId: string,
-  metadata: IngestionMetadata,
-): Promise<void> {
+export async function completeIngestion(jobId: string, metadata: IngestionMetadata): Promise<void> {
   await pool.query(
     `update material_ingestion_job
         set status = 'completed', completed_at = now(), updated_at = now(),
@@ -1828,7 +1837,14 @@ export async function saveCourseIntelligence(
            (id, course_id, from_concept_id, to_concept_id, kind, justification)
          values ($1, $2, $3, $4, $5, $6)
          on conflict (course_id, from_concept_id, to_concept_id, kind) do nothing`,
-        [newId("relationship"), courseId, fromId, toId, relationship.kind, relationship.justification],
+        [
+          newId("relationship"),
+          courseId,
+          fromId,
+          toId,
+          relationship.kind,
+          relationship.justification,
+        ],
       );
     }
 
@@ -1946,11 +1962,12 @@ export async function saveAssessmentIntelligence(
       `delete from consistency_finding where course_id = $1 and assessment_question_id is null`,
       [courseId],
     );
-    await client.query(`delete from source_mapping where assessment_question_id = $1`, [questionId]);
-    await client.query(
-      `delete from consistency_finding where assessment_question_id = $1`,
-      [questionId],
-    );
+    await client.query(`delete from source_mapping where assessment_question_id = $1`, [
+      questionId,
+    ]);
+    await client.query(`delete from consistency_finding where assessment_question_id = $1`, [
+      questionId,
+    ]);
 
     for (const concept of tested) {
       const trail: (ConceptEvidenceRef | null)[] =

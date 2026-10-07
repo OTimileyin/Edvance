@@ -68,14 +68,13 @@ export const COURSE_INTELLIGENCE_JSON_SCHEMA = {
   properties: {
     concepts: {
       type: "array",
-      description:
-        "Every distinct concept the course evidence teaches, one entry per concept.",
+      description: "Every distinct concept the course evidence teaches, one entry per concept.",
       items: {
         type: "object",
         properties: {
           key: {
             type: "string",
-            description: "A short unique local id for this concept, e.g. \"c1\".",
+            description: 'A short unique local id for this concept, e.g. "c1".',
           },
           name: {
             type: "string",
@@ -88,8 +87,7 @@ export const COURSE_INTELLIGENCE_JSON_SCHEMA = {
           },
           definition: {
             type: "string",
-            description:
-              "A one or two sentence definition grounded only in the supplied evidence.",
+            description: "A one or two sentence definition grounded only in the supplied evidence.",
           },
           evidenceStatus: {
             type: "string",
@@ -147,7 +145,8 @@ export const COURSE_INTELLIGENCE_JSON_SCHEMA = {
           },
           justification: {
             type: "string",
-            description: "One short sentence, grounded in the evidence, explaining the relationship.",
+            description:
+              "One short sentence, grounded in the evidence, explaining the relationship.",
           },
         },
         required: ["fromKey", "toKey", "kind", "justification"],
@@ -321,7 +320,8 @@ export const REVISION_INTELLIGENCE_JSON_SCHEMA = {
           },
           sourceChunkId: {
             type: "string",
-            description: "An exact chunk id from the supplied evidence list, where the answer is taught.",
+            description:
+              "An exact chunk id from the supplied evidence list, where the answer is taught.",
           },
         },
         required: ["conceptId", "question", "rationale", "sourceChunkId"],
@@ -502,7 +502,10 @@ export function parseCourseIntelligence(raw: string): ModelCourseIntelligence {
 
     const rawEvidence = entry.evidence;
     if (!Array.isArray(rawEvidence)) {
-      throw new ModelOutputError("malformed-output", `concepts[${index}].evidence must be an array.`);
+      throw new ModelOutputError(
+        "malformed-output",
+        `concepts[${index}].evidence must be an array.`,
+      );
     }
     const evidence = rawEvidence.map((item, evidenceIndex) => {
       if (!isRecord(item)) {
@@ -512,8 +515,16 @@ export function parseCourseIntelligence(raw: string): ModelCourseIntelligence {
         );
       }
       return {
-        chunkId: requireString(item.chunkId, `concepts[${index}].evidence[${evidenceIndex}].chunkId`, 200),
-        rationale: optionalString(item.rationale, `concepts[${index}].evidence[${evidenceIndex}].rationale`, 500),
+        chunkId: requireString(
+          item.chunkId,
+          `concepts[${index}].evidence[${evidenceIndex}].chunkId`,
+          200,
+        ),
+        rationale: optionalString(
+          item.rationale,
+          `concepts[${index}].evidence[${evidenceIndex}].rationale`,
+          500,
+        ),
       };
     });
 
@@ -522,7 +533,11 @@ export function parseCourseIntelligence(raw: string): ModelCourseIntelligence {
       name: requireString(entry.name, `concepts[${index}].name`, 200),
       instructorTerm: requireString(entry.instructorTerm, `concepts[${index}].instructorTerm`, 200),
       definition: optionalString(entry.definition, `concepts[${index}].definition`, 1200),
-      evidenceStatus: requireEnum(entry.evidenceStatus, EVIDENCE_STATUSES, `concepts[${index}].evidenceStatus`),
+      evidenceStatus: requireEnum(
+        entry.evidenceStatus,
+        EVIDENCE_STATUSES,
+        `concepts[${index}].evidenceStatus`,
+      ),
       confidence: requireConfidence(entry.confidence, `concepts[${index}].confidence`),
       evidence,
     };
@@ -540,7 +555,11 @@ export function parseCourseIntelligence(raw: string): ModelCourseIntelligence {
       fromKey: requireString(entry.fromKey, `relationships[${index}].fromKey`, 64),
       toKey: requireString(entry.toKey, `relationships[${index}].toKey`, 64),
       kind: requireEnum(entry.kind, RELATIONSHIP_KINDS, `relationships[${index}].kind`),
-      justification: optionalString(entry.justification, `relationships[${index}].justification`, 600),
+      justification: optionalString(
+        entry.justification,
+        `relationships[${index}].justification`,
+        600,
+      ),
     };
   });
 

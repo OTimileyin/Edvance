@@ -8,43 +8,43 @@
 
 :root {
   /* Teal — structure & primary actions (the poster's deep band) */
-  --teal-950: #0D2327;
+  --teal-950: #0d2327;
   --teal-900: #123236;
-  --teal-800: #1A4245;
-  --teal-700: #22545A;
-  --teal-600: #2C6E70;
-  --teal-500: #3D8C8A;
-  --teal-300: #9AC8BE;
-  --teal-100: #DCEAE3;
-  --teal-50: #EEF5F0;
+  --teal-800: #1a4245;
+  --teal-700: #22545a;
+  --teal-600: #2c6e70;
+  --teal-500: #3d8c8a;
+  --teal-300: #9ac8be;
+  --teal-100: #dceae3;
+  --teal-50: #eef5f0;
 
   /* Cream — the page surface */
-  --cream-50: #FBF6EA;
-  --cream-100: #F6EFDD;
-  --cream-200: #EDE2C9;
-  --cream-300: #DBC9A8;
+  --cream-50: #fbf6ea;
+  --cream-100: #f6efdd;
+  --cream-200: #ede2c9;
+  --cream-300: #dbc9a8;
 
   /* Rust — the flag colour (inconsistencies, calls to act) */
-  --rust-700: #A03B1E;
-  --rust-600: #C9502E;
-  --rust-500: #DC6338;
-  --rust-100: #F9E3D6;
+  --rust-700: #a03b1e;
+  --rust-600: #c9502e;
+  --rust-500: #dc6338;
+  --rust-100: #f9e3d6;
 
   /* Sage — growth & mastery */
-  --sage-700: #4C6B4C;
-  --sage-600: #6B8A5E;
-  --sage-500: #83A072;
-  --sage-300: #AEC294;
-  --sage-100: #E4EBD6;
+  --sage-700: #4c6b4c;
+  --sage-600: #6b8a5e;
+  --sage-500: #83a072;
+  --sage-300: #aec294;
+  --sage-100: #e4ebd6;
 
   /* Gold & sand — warm support tones */
-  --gold-700: #8A6A28;
-  --gold-600: #C99A3C;
-  --gold-500: #D9A93F;
-  --gold-100: #F5ECD4;
-  --sand-600: #8A6A4F;
-  --sand-300: #D7C5A6;
-  --sand-100: #EFE6D7;
+  --gold-700: #8a6a28;
+  --gold-600: #c99a3c;
+  --gold-500: #d9a93f;
+  --gold-100: #f5ecd4;
+  --sand-600: #8a6a4f;
+  --sand-300: #d7c5a6;
+  --sand-100: #efe6d7;
 
   /* Legacy names → new palette.
      Kept so existing workspace/auth components retint without churn. */
@@ -74,7 +74,7 @@
   --color-primary-500: var(--teal-600);
   --color-primary-50: var(--teal-50);
 
-  --color-success-700: #2C5F44;
+  --color-success-700: #2c5f44;
   --color-success-600: var(--sage-600);
   --color-success-50: var(--sage-100);
 
@@ -86,15 +86,15 @@
   --color-error-600: var(--rust-600);
   --color-error-50: var(--rust-100);
 
-  --color-neutral-950: #23201A;
+  --color-neutral-950: #23201a;
   --color-neutral-700: #474134;
-  --color-neutral-600: #5A5344;
-  --color-neutral-500: #756D5B;
+  --color-neutral-600: #5a5344;
+  --color-neutral-500: #756d5b;
   --color-neutral-300: var(--cream-300);
   --color-neutral-200: var(--cream-200);
   --color-neutral-100: var(--sand-100);
   --color-neutral-50: var(--cream-50);
-  --color-surface: #FFFCF5;
+  --color-surface: #fffcf5;
 
   /* Type */
   --font-family: var(--font-inter-stack), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -189,7 +189,10 @@ h1,
 h2,
 .display {
   /* Optically sized, slightly wonky, soft — the poster voice */
-  font-variation-settings: "SOFT" 40, "WONK" 1, "opsz" 96;
+  font-variation-settings:
+    "SOFT" 40,
+    "WONK" 1,
+    "opsz" 96;
 }
 
 .display {
@@ -202,7 +205,10 @@ h2,
   font-family: var(--font-display);
   font-style: italic;
   font-weight: 600;
-  font-variation-settings: "SOFT" 70, "WONK" 1, "opsz" 96;
+  font-variation-settings:
+    "SOFT" 70,
+    "WONK" 1,
+    "opsz" 96;
   letter-spacing: -0.012em;
 }
 
@@ -430,7 +436,9 @@ svg {
   color: var(--color-neutral-600);
   padding: var(--space-1) var(--space-2);
   border-radius: 999px;
-  transition: color var(--transition-fast), background-color var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
 .nav-action:hover {
@@ -451,7 +459,9 @@ svg {
   background: var(--teal-800);
   color: var(--cream-50);
   box-shadow: 0 6px 16px -8px rgba(13, 35, 39, 0.55);
-  transition: transform var(--transition-fast), background-color var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
 .icon-btn:hover {
@@ -612,7 +622,10 @@ svg {
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.02em;
-  font-variation-settings: "SOFT" 70, "WONK" 1, "opsz" 144;
+  font-variation-settings:
+    "SOFT" 70,
+    "WONK" 1,
+    "opsz" 144;
   color: var(--teal-950);
   margin: var(--space-2) 0 var(--space-5);
   max-width: 12ch;
@@ -661,7 +674,9 @@ svg {
   border-radius: var(--radius-lg);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px) saturate(150%);
   -webkit-backdrop-filter: blur(16px) saturate(150%);
   padding: var(--space-5);
@@ -801,7 +816,7 @@ svg {
 }
 
 .band--ink .landing-leading {
-  color: #B4CCC6;
+  color: #b4ccc6;
 }
 
 .band--sand {
@@ -833,7 +848,10 @@ svg {
 
 .band-head .landing-heading {
   font-style: italic;
-  font-variation-settings: "SOFT" 70, "WONK" 1, "opsz" 96;
+  font-variation-settings:
+    "SOFT" 70,
+    "WONK" 1,
+    "opsz" 96;
   margin-bottom: var(--space-2);
 }
 
@@ -908,7 +926,7 @@ svg {
 }
 
 .ptile p {
-  color: #B4CCC6;
+  color: #b4ccc6;
   font-size: var(--text-sm);
   max-width: 42ch;
 }
@@ -1015,7 +1033,10 @@ svg {
 .editorial h2 {
   font-family: var(--font-display);
   font-style: italic;
-  font-variation-settings: "SOFT" 70, "WONK" 1, "opsz" 96;
+  font-variation-settings:
+    "SOFT" 70,
+    "WONK" 1,
+    "opsz" 96;
   font-size: clamp(34px, 4.4vw, 58px);
   font-weight: 600;
   line-height: 1;
@@ -1104,7 +1125,7 @@ svg {
 }
 
 .status-grid .alert p {
-  color: #C9DCD6;
+  color: #c9dcd6;
 }
 
 .status-grid .alert strong {
@@ -1163,23 +1184,28 @@ svg {
 }
 
 .auth-brand .logo-mark {
-  box-shadow: 0 10px 26px -14px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 10px 26px -14px rgba(0, 0, 0, 0.75),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
 }
 
 .auth-quote {
   font-family: var(--font-display);
   font-style: italic;
-  font-variation-settings: "SOFT" 70, "WONK" 1, "opsz" 96;
+  font-variation-settings:
+    "SOFT" 70,
+    "WONK" 1,
+    "opsz" 96;
   font-size: clamp(32px, 3.4vw, 48px);
   font-weight: 600;
   line-height: 1.02;
   letter-spacing: -0.02em;
-  color: #F2EFE3;
+  color: #f2efe3;
   max-width: 16ch;
 }
 
 .auth-sub-line {
-  color: #B4CCC6;
+  color: #b4ccc6;
   max-width: 44ch;
   font-size: var(--text-base);
 }
@@ -1197,7 +1223,7 @@ svg {
 .auth-glass p {
   margin-top: var(--space-3);
   font-size: var(--text-sm);
-  color: #D9E4D5;
+  color: #d9e4d5;
 }
 
 .auth-paper {
@@ -1309,7 +1335,7 @@ svg {
 
 .workspace-nav .nav-active {
   background: var(--forest-700);
-  color: #FDFBF5;
+  color: #fdfbf5;
 }
 
 .workspace-content {
@@ -1350,7 +1376,10 @@ svg {
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-slow), transform var(--transition-slow);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-slow),
+    transform var(--transition-slow);
 }
 
 .link-card:hover {
@@ -1386,7 +1415,12 @@ svg {
   border-radius: 999px;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .btn:hover {
@@ -1400,7 +1434,7 @@ svg {
 
 .btn-primary {
   background: var(--forest-700);
-  color: #FDFBF5;
+  color: #fdfbf5;
   box-shadow: 0 12px 26px -12px rgba(20, 53, 43, 0.6);
 }
 
@@ -1411,7 +1445,7 @@ svg {
 
 .btn-coral {
   background: var(--coral-600);
-  color: #FFF7F0;
+  color: #fff7f0;
   box-shadow: 0 12px 26px -12px rgba(166, 67, 31, 0.55);
 }
 
@@ -1579,7 +1613,7 @@ svg {
 }
 
 .alert-warning {
-  background: #FBF3DC;
+  background: #fbf3dc;
   border-color: var(--gold-600);
 }
 
@@ -1588,7 +1622,7 @@ svg {
 }
 
 .alert-success {
-  background: #E4F0E5;
+  background: #e4f0e5;
   border-color: var(--color-success-600);
 }
 
@@ -1840,7 +1874,10 @@ tr:last-child td {
   font-size: 23px;
   letter-spacing: -0.03em;
   color: var(--teal-950);
-  font-variation-settings: "SOFT" 50, "WONK" 1, "opsz" 96;
+  font-variation-settings:
+    "SOFT" 50,
+    "WONK" 1,
+    "opsz" 96;
   transition: color var(--transition-fast);
 }
 

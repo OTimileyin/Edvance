@@ -41,7 +41,7 @@ export default function SignUpPage() {
       setError(
         result.error.status === 422
           ? "An account with that email already exists — sign in instead."
-          : result.error.message ?? "Sign-up failed. Try again.",
+          : (result.error.message ?? "Sign-up failed. Try again."),
       );
       return;
     }
@@ -56,8 +56,8 @@ export default function SignUpPage() {
         <div className="auth-card" aria-live="polite">
           <h1>Create your account</h1>
           <p className="auth-sub">
-            Real local account — name, email, and a hashed password are stored in
-            PostgreSQL on this machine.
+            Real local account — name, email, and a hashed password are stored in PostgreSQL on this
+            machine.
           </p>
           <form className="form" onSubmit={handleSubmit} style={{ maxWidth: "none" }}>
             <div className="field">
@@ -110,9 +110,7 @@ export default function SignUpPage() {
           </form>
           <p className="auth-alt">
             Already have an account?{" "}
-            <Link href={`/signin?next=${encodeURIComponent(nextPath())}`}>
-              Sign in
-            </Link>
+            <Link href={`/signin?next=${encodeURIComponent(nextPath())}`}>Sign in</Link>
           </p>
         </div>
       </div>
