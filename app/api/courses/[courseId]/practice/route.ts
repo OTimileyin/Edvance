@@ -40,10 +40,7 @@ export async function POST(
   const { assessmentId, conceptId, answer, correct } = (body ?? {}) as Record<string, unknown>;
 
   if (typeof correct !== "boolean") {
-    return NextResponse.json(
-      { error: "Expected `correct` to be true or false." },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Expected `correct` to be true or false." }, { status: 400 });
   }
   const hasQuestion = typeof assessmentId === "string" && assessmentId.trim().length > 0;
   const hasConcept = typeof conceptId === "string" && conceptId.trim().length > 0;

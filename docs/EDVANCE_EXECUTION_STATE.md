@@ -26,9 +26,12 @@ and re-run the gate before claiming anything new.
 
 ## LAST VERIFIED COMMIT
 
-`756c4fb` — `feat(deploy): diff two deployments check by check and record the second target`. Branch `main`.
-The remote suite was run against this commit's script: Specific **69 passed / 0 failed**, and the
-two-deployment diff mode was exercised against the not-yet-live Vercel host (**16 passed / 53 failed**).
+`9468e85` — `chore(tooling): configure ESLint and Prettier and gate CI on them`. PR #2,
+squash-merged to `main`. Verified on this commit: `npm run lint` and `npm run format:check` exit 0,
+`npm run check` **38 passed / 0 failed**, production build passes, and the three required CI checks
+(`typecheck + unit tests`, `lint + formatting`, `production build`) are green. The remote suite was
+run against `756c4fb`'s script: Specific **69 passed / 0 failed**, and the two-deployment diff mode
+was exercised against the not-yet-live Vercel host (**16 passed / 53 failed**).
 Phase 12 was `b97cd0d`; the deployment commits were `ec06507`, `afef1b8`, `b3e3a98`.
 Phase 11 was `18db198`; Phase 10 was `fb96dc2`.
 Phase 9 was `3d7b818`; Phase 8 was `aa6f014`; Phase 7 was `2d51d6f`; Phase 6 was `2bce681`;
@@ -52,9 +55,9 @@ Phase 5.6 was `f45ad5a`; Phase 5.5 was `0e33c80`.
   block gained build-only placeholder env (see ENVIRONMENT NOTES); `GEMINI_MODEL` is pinned to
   `gemini-3-flash-preview`. Remote verification: **69 checks, 0 failures**.
 - Phase 12 — Submission Readiness. **Complete.** Edvance declared submission ready: adversarial
-audit held, no-fake-feature sweep clean, four stale product claims found and fixed, full gate green
-(typecheck, unit 24, end-to-end 43/72/48/76/59/91, live Gemini 34, production build, secret scan,
-baseline), `docs/SUBMISSION_REPORT.md` written.
+  audit held, no-fake-feature sweep clean, four stale product claims found and fixed, full gate green
+  (typecheck, unit 24, end-to-end 43/72/48/76/59/91, live Gemini 34, production build, secret scan,
+  baseline), `docs/SUBMISSION_REPORT.md` written.
 
 ## SECOND DEPLOYMENT TARGET
 
@@ -108,7 +111,7 @@ None — the deployment is live and everything verified. Two optional, non-block
 - **Deploy runs in WSL Ubuntu, not Windows.** `wsl.exe -d Ubuntu -- bash -lc 'cd /mnt/c/Users/ADMIN/Documents/Qubators/Edvance && specific deploy -e prod ...'`;
   the CLI lives at `/usr/local/bin/specific` there and is authenticated as a **claimed** agent
   account. The native-Windows CLI breaks at tarball creation (`specific.hcl not found in project
-  directory`), so always deploy through WSL.
+directory`), so always deploy through WSL.
 - Secrets reach the WSL deploy without touching a command line: export
   `WSLENV='GEMINI_API_KEY:SUPABASE_URL:SUPABASE_SECRET_KEY:SUPABASE_STORAGE_BUCKET'` and run the CLI
   under `infisical run --env=dev`, referencing `$GEMINI_API_KEY` etc. inside the WSL shell.
@@ -137,28 +140,28 @@ make the change, and re-run the gate before claiming anything:
 
 ## TEST STATUS
 
-| Check | Result |
-|---|---|
-| `npx tsc --noEmit` (after clearing `tsconfig.tsbuildinfo`) | exit 0 |
-| Unit — `npm run test:unit` (`tests/unit/*.test.mjs`) | **24 passed / 0 failed** |
-| Phase 10 — `scripts/test-product-hardening.mjs` | **43 passed / 0 failed** |
-| Phase 9 — `scripts/test-targeted-revision.mjs` | **72 passed / 0 failed** |
-| Phase 8 — `scripts/test-mastery-intelligence.mjs` | **48 passed / 0 failed** |
-| Phase 7 — `scripts/test-assessment-intelligence.mjs` | **76 passed / 0 failed** |
-| Phase 6 — `scripts/test-course-intelligence.mjs` | **59 passed / 0 failed** |
-| Phase 5.6 — `scripts/test-ingestion.mjs` | **91 passed / 0 failed** |
-| Live Gemini — `scripts/verify-gemini-live.mjs` | **34 passed / 0 failed** (`gemini-3.5-flash`) |
-| Remote deployed — `scripts/verify-remote-deployment.mjs` | **69 passed / 0 failed** (`gemini-3-flash-preview`, https://white-whale.spcf.app) |
-| Production build — `infisical run --env=dev -- npx next build` | **passes** (13 static pages) |
-| Secret scan | `infisical scan --redact` → no leaks found |
-| Database + bucket | baseline (bucket 0 objects; `practice_attempt`/`practice_question`/`revision_plan` 0; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments / 20 mastery rows) |
+| Check                                                          | Result                                                                                                                                                                    |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npx tsc --noEmit` (after clearing `tsconfig.tsbuildinfo`)     | exit 0                                                                                                                                                                    |
+| ESLint — `npm run lint`                                        | exit 0 (0 problems)                                                                                                                                                       |
+| Prettier — `npm run format:check`                              | exit 0 (all files formatted)                                                                                                                                              |
+| Unit — `npm run test:unit` (`tests/unit/*.test.mjs`)           | **38 passed / 0 failed**                                                                                                                                                  |
+| Phase 10 — `scripts/test-product-hardening.mjs`                | **43 passed / 0 failed**                                                                                                                                                  |
+| Phase 9 — `scripts/test-targeted-revision.mjs`                 | **72 passed / 0 failed**                                                                                                                                                  |
+| Phase 8 — `scripts/test-mastery-intelligence.mjs`              | **48 passed / 0 failed**                                                                                                                                                  |
+| Phase 7 — `scripts/test-assessment-intelligence.mjs`           | **76 passed / 0 failed**                                                                                                                                                  |
+| Phase 6 — `scripts/test-course-intelligence.mjs`               | **59 passed / 0 failed**                                                                                                                                                  |
+| Phase 5.6 — `scripts/test-ingestion.mjs`                       | **91 passed / 0 failed**                                                                                                                                                  |
+| Live Gemini — `scripts/verify-gemini-live.mjs`                 | **34 passed / 0 failed** (`gemini-3.5-flash`)                                                                                                                             |
+| Remote deployed — `scripts/verify-remote-deployment.mjs`       | **69 passed / 0 failed** (`gemini-3-flash-preview`, https://white-whale.spcf.app)                                                                                         |
+| Production build — `infisical run --env=dev -- npx next build` | **passes** (13 static pages)                                                                                                                                              |
+| Secret scan                                                    | `infisical scan --redact` → no leaks found                                                                                                                                |
+| Database + bucket                                              | baseline (bucket 0 objects; `practice_attempt`/`practice_question`/`revision_plan` 0; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments / 20 mastery rows) |
 
 ## KNOWN LIMITATIONS
 
 - **Deployed** at https://white-whale.spcf.app (Specific). The Gemini free tier is 20
   requests/day/model, so a burst can surface as an honest, retryable provider failure.
-- **ESLint and Prettier are not configured.** Static guarantees are `tsc --noEmit`, the unit suite
-  and the end-to-end suites.
 - Rate limiting is **in-memory per process**; a multi-instance deployment would need a shared store.
 - Ingestion is synchronous; scanned/image-only PDFs fail as `empty-content` (no OCR).
 - No embeddings or vector database; context is bounded.
@@ -170,9 +173,8 @@ make the change, and re-run the gate before claiming anything:
 
 ## UNCOMMITTED CHANGES
 
-Pre-existing, deliberately untouched: `.gitignore` (`.specific`, `specific.local`), `.freebuff/`,
-`db/migrations/0000_better_auth.sql`, `CLAUDE.md`, and the local `.tmp-scratch/` scratch directory.
-(`specific.hcl` is now tracked, committed with Phase 11.)
+None. Everything is committed; `.freebuff/` (agent tooling) and the local `.tmp-scratch/` scratch
+directory stay untracked by design, listed in `.gitignore`.
 
 ## FINAL SUBMISSION STATUS
 

@@ -23,7 +23,9 @@ const BASE_URL = (process.env.BASE_URL ?? "http://localhost:3260").replace(/\/$/
 const TRUSTED_ORIGIN = process.env.BETTER_AUTH_URL ?? BASE_URL;
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
-  console.error("DATABASE_URL is not set. Run with: infisical run --env=dev -- node scripts/verify-gemini-live.mjs");
+  console.error(
+    "DATABASE_URL is not set. Run with: infisical run --env=dev -- node scripts/verify-gemini-live.mjs",
+  );
   process.exit(1);
 }
 
@@ -48,10 +50,22 @@ const normalise = (text) => text.replace(/\s+/g, " ").trim().toLowerCase();
 // The same golden fixture the offline suite uses: the fictional six-part FATHOM
 // framework, one component per section, so a correct analysis extracts all six.
 const FATHOM_FRAMEWORK = [
-  { name: "Frame", body: "Frame the question before looking for evidence. Write down the exact question the material must answer." },
-  { name: "Assemble", body: "Assemble every source that could answer the question. Gather the materials that bear on it." },
-  { name: "Trace", body: "Trace each claim back to the exact place it appears, and record the page, slide or timestamp." },
-  { name: "Hold", body: "Hold uncertainty. When the evidence is thin, report that instead of guessing an answer." },
+  {
+    name: "Frame",
+    body: "Frame the question before looking for evidence. Write down the exact question the material must answer.",
+  },
+  {
+    name: "Assemble",
+    body: "Assemble every source that could answer the question. Gather the materials that bear on it.",
+  },
+  {
+    name: "Trace",
+    body: "Trace each claim back to the exact place it appears, and record the page, slide or timestamp.",
+  },
+  {
+    name: "Hold",
+    body: "Hold uncertainty. When the evidence is thin, report that instead of guessing an answer.",
+  },
   { name: "Order", body: "Order the findings by how strongly the evidence supports them." },
   { name: "Move", body: "Move to the next action the evidence actually justifies." },
 ];
@@ -61,7 +75,8 @@ const FATHOM_MARKDOWN = FATHOM_FRAMEWORK.map(
 ).join("\n\n");
 const FATHOM_NORMALISED = normalise(FATHOM_MARKDOWN);
 
-const TRACE_REMINDER = "## Trace\n\nTrace again: without a recorded location, a claim cannot be checked.";
+const TRACE_REMINDER =
+  "## Trace\n\nTrace again: without a recorded location, a claim cannot be checked.";
 
 class Session {
   constructor() {
@@ -108,15 +123,26 @@ async function main() {
 
     const created = await session.fetch("/api/courses", {
       method: "POST",
-      body: JSON.stringify({ name: "Evidence-first method (FATHOM)", institution: "Test University", lesson: "Evidence" }),
+      body: JSON.stringify({
+        name: "Evidence-first method (FATHOM)",
+        institution: "Test University",
+        lesson: "Evidence",
+      }),
     });
     const courseId = (await created.json().catch(() => ({}))).course?.id;
     check("course created", Boolean(courseId), `status ${created.status}`);
 
     // Upload the fixture and let the ingestion pipeline turn it into evidence.
     const form = new FormData();
-    form.append("file", new Blob([Buffer.from(FATHOM_MARKDOWN, "utf8")], { type: "text/markdown" }), "fathom-framework.md");
-    const uploaded = await session.fetch(`/api/courses/${courseId}/materials`, { method: "POST", body: form });
+    form.append(
+      "file",
+      new Blob([Buffer.from(FATHOM_MARKDOWN, "utf8")], { type: "text/markdown" }),
+      "fathom-framework.md",
+    );
+    const uploaded = await session.fetch(`/api/courses/${courseId}/materials`, {
+      method: "POST",
+      body: form,
+    });
     const uploadedBody = await uploaded.json().catch(() => ({}));
     const materialId = uploadedBody.material?.id;
     check(
@@ -143,14 +169,19 @@ async function main() {
       console.log(`  attempt ${attempt}: provider unavailable (${body.error ?? "502"}); waiting…`);
       await new Promise((resolve) => setTimeout(resolve, 15000));
     }
-    check("analyse accepted (200)", analysed.status === 200, `status ${analysed.status} ${JSON.stringify(body.error ?? "")}`);
+    check(
+      "analyse accepted (200)",
+      analysed.status === 200,
+      `status ${analysed.status} ${JSON.stringify(body.error ?? "")}`,
+    );
     check("outcome is analysed", body.outcome === "analysed", body.outcome);
 
     const intelligence = body.course?.intelligence;
     check("analysis state is ready", intelligence?.status === "ready", intelligence?.status);
     check(
       "a real model answered (not the mock)",
-      Boolean(intelligence?.provider?.model) && !String(intelligence.provider.model).startsWith("mock"),
+      Boolean(intelligence?.provider?.model) &&
+        !String(intelligence.provider.model).startsWith("mock"),
       JSON.stringify(intelligence?.provider),
     );
 
@@ -160,11 +191,15 @@ async function main() {
     const normalisedNames = names.map((name) => name.replace(/[^a-z ]/g, "").trim());
 
     console.log(`\nModel: ${intelligence?.provider?.model} in ${elapsed}s`);
-    console.log(`Tokens: input ${intelligence?.provider?.inputTokens ?? "?"}, output ${intelligence?.provider?.outputTokens ?? "?"}`);
+    console.log(
+      `Tokens: input ${intelligence?.provider?.inputTokens ?? "?"}, output ${intelligence?.provider?.outputTokens ?? "?"}`,
+    );
     console.log(`Concepts: ${concepts.length}, relationships: ${relationships.length}\n`);
 
     for (const concept of concepts) {
-      console.log(`• ${concept.name}  [${concept.evidenceStatus}]  confidence ${concept.confidence}`);
+      console.log(
+        `• ${concept.name}  [${concept.evidenceStatus}]  confidence ${concept.confidence}`,
+      );
       if (concept.instructorTerm && concept.instructorTerm !== concept.name) {
         console.log(`    instructor term: ${concept.instructorTerm}`);
       }
@@ -174,7 +209,9 @@ async function main() {
       }
     }
     for (const relationship of relationships) {
-      console.log(`  ${relationship.fromConcept} --${relationship.kind}--> ${relationship.toConcept}`);
+      console.log(
+        `  ${relationship.fromConcept} --${relationship.kind}--> ${relationship.toConcept}`,
+      );
     }
 
     // --- Honesty of the extraction ----------------------------------------
@@ -192,8 +229,14 @@ async function main() {
 
     // Terminology: each framework component keeps the course's own word.
     for (const component of FATHOM_FRAMEWORK) {
-      const concept = concepts.find((entry) => normalise(entry.instructorTerm ?? "") === component.name.toLowerCase());
-      check(`instructor terminology preserved: ${component.name}`, Boolean(concept), "term not found verbatim");
+      const concept = concepts.find(
+        (entry) => normalise(entry.instructorTerm ?? "") === component.name.toLowerCase(),
+      );
+      check(
+        `instructor terminology preserved: ${component.name}`,
+        Boolean(concept),
+        "term not found verbatim",
+      );
     }
 
     // Evidence status must agree with whether evidence was cited.
@@ -204,12 +247,22 @@ async function main() {
           ? (concept.evidence ?? []).length === 0
           : (concept.evidence ?? []).length > 0,
       ),
-      JSON.stringify(concepts.map((concept) => [concept.name, concept.evidenceStatus, (concept.evidence ?? []).length])),
+      JSON.stringify(
+        concepts.map((concept) => [
+          concept.name,
+          concept.evidenceStatus,
+          (concept.evidence ?? []).length,
+        ]),
+      ),
     );
 
     // Every citation resolves to a real stored chunk with a real location.
     const allEvidence = concepts.flatMap((concept) => concept.evidence ?? []);
-    check("every concept that is not insufficient has evidence", allEvidence.length > 0, `${allEvidence.length}`);
+    check(
+      "every concept that is not insufficient has evidence",
+      allEvidence.length > 0,
+      `${allEvidence.length}`,
+    );
     check(
       "every citation has a material, location and excerpt",
       allEvidence.every((ref) => ref.materialTitle && ref.sourceLocation && ref.excerpt),
@@ -223,7 +276,9 @@ async function main() {
     check(
       "no citation resolves outside the uploaded material",
       allEvidence.every((ref) => FATHOM_NORMALISED.includes(normalise(ref.excerpt ?? ""))),
-      allEvidence.map((ref) => ref.excerpt).find((excerpt) => excerpt && !FATHOM_NORMALISED.includes(normalise(excerpt))) ?? "",
+      allEvidence
+        .map((ref) => ref.excerpt)
+        .find((excerpt) => excerpt && !FATHOM_NORMALISED.includes(normalise(excerpt))) ?? "",
     );
 
     // Relationships must connect real concepts and use the allowed vocabulary.
@@ -239,7 +294,9 @@ async function main() {
           normalisedNames.includes(normalise(relationship.fromConcept ?? "")) &&
           normalisedNames.includes(normalise(relationship.toConcept ?? "")),
       ),
-      JSON.stringify(relationships.map((relationship) => [relationship.fromConcept, relationship.toConcept])),
+      JSON.stringify(
+        relationships.map((relationship) => [relationship.fromConcept, relationship.toConcept]),
+      ),
     );
 
     // --- Cost control: a second analyse must not spend another call --------
@@ -258,7 +315,10 @@ async function main() {
       const created = await session.fetch(`/api/courses/${courseId}/assessments`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ lesson: "Evidence", question: "What are the five components of the FATHOM framework?" }),
+        body: JSON.stringify({
+          lesson: "Evidence",
+          question: "What are the five components of the FATHOM framework?",
+        }),
       });
       const createdBody = await created.json().catch(() => ({}));
       const question = (createdBody.course?.assessments ?? []).find((entry) =>
@@ -276,7 +336,9 @@ async function main() {
         );
         questionBody = await analysedQuestion.json().catch(() => ({}));
         if (analysedQuestion.status !== 502) break;
-        console.log(`  attempt ${attempt}: provider unavailable (${questionBody.error ?? "502"}); waiting…`);
+        console.log(
+          `  attempt ${attempt}: provider unavailable (${questionBody.error ?? "502"}); waiting…`,
+        );
         await new Promise((resolve) => setTimeout(resolve, 15000));
       }
       check(
@@ -324,10 +386,21 @@ async function main() {
     // --- Staleness: new material invalidates the stored intelligence ------
     {
       const second = new FormData();
-      second.append("file", new Blob([Buffer.from(TRACE_REMINDER, "utf8")], { type: "text/markdown" }), "trace-reminder.md");
-      const secondUpload = await session.fetch(`/api/courses/${courseId}/materials`, { method: "POST", body: second });
+      second.append(
+        "file",
+        new Blob([Buffer.from(TRACE_REMINDER, "utf8")], { type: "text/markdown" }),
+        "trace-reminder.md",
+      );
+      const secondUpload = await session.fetch(`/api/courses/${courseId}/materials`, {
+        method: "POST",
+        body: second,
+      });
       const secondBody = await secondUpload.json().catch(() => ({}));
-      check("second material uploads", secondUpload.status === 201, `status ${secondUpload.status}`);
+      check(
+        "second material uploads",
+        secondUpload.status === 201,
+        `status ${secondUpload.status}`,
+      );
 
       const refreshed = await session.fetch(`/api/courses/${courseId}`);
       const refreshedBody = await refreshed.json().catch(() => ({}));
@@ -339,7 +412,10 @@ async function main() {
 
       // Clean up both materials.
       for (const id of [materialId, secondBody.material?.id]) {
-        if (id) await session.fetch(`/api/courses/${courseId}/materials/${id}`, { method: "DELETE" }).catch(() => {});
+        if (id)
+          await session
+            .fetch(`/api/courses/${courseId}/materials/${id}`, { method: "DELETE" })
+            .catch(() => {});
       }
     }
   } finally {

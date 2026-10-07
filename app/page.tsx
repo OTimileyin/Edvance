@@ -71,10 +71,22 @@ function PosterScene() {
         d="M0 302 L92 236 L178 288 L288 212 L392 276 L494 222 L598 284 L700 236 L760 266 L760 372 L0 372 Z"
         fill="#A9C6BF"
       />
-      <path d="M288 212 L316 246 L300 238 L288 252 L274 238 L256 246 Z" fill="#FBF6EA" opacity="0.85" />
-      <path d="M494 222 L520 254 L506 246 L494 260 L480 246 L464 254 Z" fill="#FBF6EA" opacity="0.8" />
+      <path
+        d="M288 212 L316 246 L300 238 L288 252 L274 238 L256 246 Z"
+        fill="#FBF6EA"
+        opacity="0.85"
+      />
+      <path
+        d="M494 222 L520 254 L506 246 L494 260 L480 246 L464 254 Z"
+        fill="#FBF6EA"
+        opacity="0.8"
+      />
       <path d="M92 236 L116 266 L102 258 L92 270 L80 258 L64 266 Z" fill="#FBF6EA" opacity="0.7" />
-      <path d="M700 236 L722 264 L710 256 L700 268 L688 256 L674 264 Z" fill="#FBF6EA" opacity="0.7" />
+      <path
+        d="M700 236 L722 264 L710 256 L700 268 L688 256 L674 264 Z"
+        fill="#FBF6EA"
+        opacity="0.7"
+      />
 
       {/* mid range */}
       <path
@@ -148,7 +160,13 @@ function TileSourceMap() {
         <rect x="14" y="16" width="48" height="7" rx="3.5" fill="#A9C6BF" />
         <rect x="14" y="31" width="34" height="7" rx="3.5" fill="#C9502E" />
       </g>
-      <path d="M186 122 L200 158" stroke="#123236" strokeWidth="4" strokeLinecap="round" strokeDasharray="7 8" />
+      <path
+        d="M186 122 L200 158"
+        stroke="#123236"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeDasharray="7 8"
+      />
     </svg>
   );
 }
@@ -183,7 +201,15 @@ function TileMastery() {
   return (
     <svg viewBox="0 0 320 240" aria-hidden="true">
       <rect width="320" height="240" fill="#2C6E70" />
-      <circle cx="150" cy="112" r="80" fill="none" stroke="#FBF6EA" strokeOpacity="0.28" strokeWidth="14" />
+      <circle
+        cx="150"
+        cy="112"
+        r="80"
+        fill="none"
+        stroke="#FBF6EA"
+        strokeOpacity="0.28"
+        strokeWidth="14"
+      />
       <path
         d="M150 32a80 80 0 0 1 62 128"
         fill="none"
@@ -207,14 +233,28 @@ function TileMastery() {
 /* ---------- Medallion icons ---------- */
 
 const expectationIcon = (
-  <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" aria-hidden="true">
+  <svg
+    viewBox="0 0 96 96"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="5"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
     <rect x="26" y="16" width="44" height="64" rx="7" />
     <path d="M36 36h24M36 50h24M36 64h14" />
   </svg>
 );
 
 const taughtIcon = (
-  <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" aria-hidden="true">
+  <svg
+    viewBox="0 0 96 96"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="5"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
     <circle cx="43" cy="41" r="21" />
     <path d="M58 57l17 17" />
     <path d="M35 41h16M43 33v16" />
@@ -222,7 +262,15 @@ const taughtIcon = (
 );
 
 const consistentIcon = (
-  <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg
+    viewBox="0 0 96 96"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <path d="M16 34h52M16 34l11-11M16 34l11 11" />
     <path d="M80 62H28M80 62 69 51M80 62 69 73" />
   </svg>
@@ -255,13 +303,31 @@ function DeskArt() {
 
       {/* two source cards, linked */}
       <g transform="rotate(-8 132 150)">
-        <rect x="46" y="96" width="164" height="118" rx="14" fill="#FFFCF3" stroke="#DBC9A8" strokeWidth="3" />
+        <rect
+          x="46"
+          y="96"
+          width="164"
+          height="118"
+          rx="14"
+          fill="#FFFCF3"
+          stroke="#DBC9A8"
+          strokeWidth="3"
+        />
         <rect x="68" y="122" width="104" height="11" rx="5.5" fill="#2C6E70" />
         <rect x="68" y="146" width="120" height="11" rx="5.5" fill="#EDE2C9" />
         <rect x="68" y="170" width="78" height="11" rx="5.5" fill="#EDE2C9" />
       </g>
       <g transform="rotate(7 320 214)">
-        <rect x="238" y="160" width="164" height="118" rx="14" fill="#FFFCF3" stroke="#DBC9A8" strokeWidth="3" />
+        <rect
+          x="238"
+          y="160"
+          width="164"
+          height="118"
+          rx="14"
+          fill="#FFFCF3"
+          stroke="#DBC9A8"
+          strokeWidth="3"
+        />
         <rect x="260" y="186" width="118" height="11" rx="5.5" fill="#C9502E" />
         <rect x="260" y="210" width="92" height="11" rx="5.5" fill="#EDE2C9" />
         <rect x="260" y="234" width="110" height="11" rx="5.5" fill="#EDE2C9" />
@@ -280,9 +346,27 @@ function DeskArt() {
       <g transform="translate(392 320)">
         <path d="M-26 0 h52 l-9 40 h-34 Z" fill="#A03B1E" />
         <path d="M-30 0 h60" stroke="#7E2C14" strokeWidth="6" strokeLinecap="round" />
-        <path d="M0 -4 C -4 -34, -22 -44, -30 -52" stroke="#6B8A5E" strokeWidth="6" fill="none" strokeLinecap="round" />
-        <path d="M0 -4 C 4 -40, 22 -52, 32 -60" stroke="#6B8A5E" strokeWidth="6" fill="none" strokeLinecap="round" />
-        <path d="M0 -4 C 0 -40, -2 -58, 2 -74" stroke="#6B8A5E" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path
+          d="M0 -4 C -4 -34, -22 -44, -30 -52"
+          stroke="#6B8A5E"
+          strokeWidth="6"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d="M0 -4 C 4 -40, 22 -52, 32 -60"
+          stroke="#6B8A5E"
+          strokeWidth="6"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d="M0 -4 C 0 -40, -2 -58, 2 -74"
+          stroke="#6B8A5E"
+          strokeWidth="6"
+          fill="none"
+          strokeLinecap="round"
+        />
         <ellipse cx="-32" cy="-56" rx="16" ry="10" fill="#83A072" transform="rotate(-28 -32 -56)" />
         <ellipse cx="34" cy="-64" rx="16" ry="10" fill="#83A072" transform="rotate(26 34 -64)" />
         <ellipse cx="4" cy="-78" rx="14" ry="9" fill="#AEC294" transform="rotate(6 4 -78)" />
@@ -363,14 +447,13 @@ export default function Home() {
             <div className="poster-copy">
               <p className="kicker">Evidence-first assessment intelligence</p>
               <h1 className="hero-title">
-                Know <em className="em-coral">what is tested</em>, where it was
-                taught, and what to study next.
+                Know <em className="em-coral">what is tested</em>, where it was taught, and what to
+                study next.
               </h1>
               <p className="hero-lede">
-                Edvance connects each assessment question to the exact lecture,
-                slide, transcript, and note where the answer was taught — flags
-                where your materials disagree — and scores what you have and
-                haven&rsquo;t mastered.
+                Edvance connects each assessment question to the exact lecture, slide, transcript,
+                and note where the answer was taught — flags where your materials disagree — and
+                scores what you have and haven&rsquo;t mastered.
               </p>
               <div className="cta-row">
                 <Link className="btn btn-primary" href="/signup">
@@ -397,12 +480,10 @@ export default function Home() {
                   <span className="eg-ref">Lesson 2 · slide 7</span>
                 </div>
                 <h2>
-                  &ldquo;What are the <em className="em-coral">five</em> components
-                  of the PROMPT framework?&rdquo;
+                  &ldquo;What are the <em className="em-coral">five</em> components of the PROMPT
+                  framework?&rdquo;
                 </h2>
-                <p className="eg-note">
-                  The question says five — the lesson evidence names six.
-                </p>
+                <p className="eg-note">The question says five — the lesson evidence names six.</p>
                 <ol className="pipeline">
                   {pipeline.map((step) => (
                     <li key={step}>{step}</li>
@@ -411,10 +492,7 @@ export default function Home() {
                 <div className="eg-foot">
                   <div className="eg-mastery">
                     <span className="progress-track" aria-hidden="true">
-                      <span
-                        className="progress-fill progress-mastered"
-                        style={{ width: "62%" }}
-                      />
+                      <span className="progress-fill progress-mastered" style={{ width: "62%" }} />
                     </span>
                     <em>62%</em>
                   </div>
@@ -436,8 +514,8 @@ export default function Home() {
               Three jobs, done together
             </h2>
             <p className="landing-leading">
-              Mapping, consistency, and mastery are one system. Each feeds the
-              next, so a flagged contradiction changes your revision list.
+              Mapping, consistency, and mastery are one system. Each feeds the next, so a flagged
+              contradiction changes your revision list.
             </p>
           </div>
           <div className="ptile-grid">
@@ -465,14 +543,16 @@ export default function Home() {
               The four questions Edvance answers
             </h2>
             <p className="landing-leading">
-              Assessment intelligence only matters if it resolves real exam
-              uncertainty.
+              Assessment intelligence only matters if it resolves real exam uncertainty.
             </p>
           </div>
           <div className="medallion-row">
             {questions.map((q) => (
               <article className="medallion" key={q.no}>
-                <span className="medallion-disc" style={{ background: q.tone, color: "var(--cream-50)" }}>
+                <span
+                  className="medallion-disc"
+                  style={{ background: q.tone, color: "var(--cream-50)" }}
+                >
                   <svg className="medallion-rim" viewBox="0 0 162 162" aria-hidden="true">
                     <circle
                       cx="81"
@@ -505,12 +585,10 @@ export default function Home() {
           </div>
           <div>
             <p className="kicker">How it works</p>
-            <h2 id="h-heading">
-              From a blank workspace to a list worth revising
-            </h2>
+            <h2 id="h-heading">From a blank workspace to a list worth revising</h2>
             <p className="lede-quiet">
-              Six steps, each producing evidence the next one builds on. Nothing
-              is inferred that the material doesn&rsquo;t actually support.
+              Six steps, each producing evidence the next one builds on. Nothing is inferred that
+              the material doesn&rsquo;t actually support.
             </p>
             <ol className="step-chips">
               {steps.map((step) => (
@@ -538,12 +616,11 @@ export default function Home() {
             </h2>
             <div className="alert">
               <p>
-                Everything you use is <strong>real</strong>: accounts and sessions
-                (Better Auth over PostgreSQL), private file storage, text extraction,
-                AI course and assessment analysis, practice-based mastery, and
-                targeted revision. Analysis runs only when you ask for it, and the
-                model is called from the server alone. Seeded demo workspaces are
-                clearly labelled and are replaced by your own materials.
+                Everything you use is <strong>real</strong>: accounts and sessions (Better Auth over
+                PostgreSQL), private file storage, text extraction, AI course and assessment
+                analysis, practice-based mastery, and targeted revision. Analysis runs only when you
+                ask for it, and the model is called from the server alone. Seeded demo workspaces
+                are clearly labelled and are replaced by your own materials.
               </p>
             </div>
             <div className="cta-row" style={{ marginTop: "var(--space-8)" }}>

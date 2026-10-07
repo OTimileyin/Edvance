@@ -40,7 +40,11 @@ export function CourseDirectory() {
   }
 
   if (!ready) {
-    return <p className="page-lede" aria-live="polite">Loading courses…</p>;
+    return (
+      <p className="page-lede" aria-live="polite">
+        Loading courses…
+      </p>
+    );
   }
 
   return (
@@ -49,8 +53,8 @@ export function CourseDirectory() {
         <span className="kicker">Learning workspace</span>
         <h1 className="page-title">Courses</h1>
         <p className="page-lede">
-          Workspaces belong to {ownerEmail || "your account"} and are stored in the local
-          PostgreSQL database. Open one to explore its sources, assessments, and mastery progress.
+          Workspaces belong to {ownerEmail || "your account"} and are stored in the local PostgreSQL
+          database. Open one to explore its sources, assessments, and mastery progress.
         </p>
       </section>
 
@@ -59,9 +63,7 @@ export function CourseDirectory() {
           Your courses
         </h2>
         {courses.length === 0 ? (
-          <div className="empty-state">
-            No courses yet. Create your first workspace below.
-          </div>
+          <div className="empty-state">No courses yet. Create your first workspace below.</div>
         ) : (
           <div className="card-grid">
             {courses.map((course) => (
@@ -135,7 +137,9 @@ export function CourseDirectory() {
               {saving ? "Creating…" : "Create workspace"}
             </button>
           </div>
-          <p className="form-hint">Created workspaces are saved to the local PostgreSQL database.</p>
+          <p className="form-hint">
+            Created workspaces are saved to the local PostgreSQL database.
+          </p>
         </form>
       </section>
     </>

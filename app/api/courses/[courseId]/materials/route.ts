@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/api-session";
 import { rateLimit } from "@/lib/api-rate-limit";
 import { RATE_LIMITS } from "@/lib/rate-limit";
-import { createMaterial, getCourseMaterialQuota, getMaterial, ownsCourse } from "@/lib/repo/courses";
+import {
+  createMaterial,
+  getCourseMaterialQuota,
+  getMaterial,
+  ownsCourse,
+} from "@/lib/repo/courses";
 import { ingestMaterial } from "@/lib/ingestion";
 import { deleteObject, isStorageConfigured, putObject } from "@/lib/supabase-storage";
 import {

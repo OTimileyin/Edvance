@@ -102,7 +102,8 @@ export async function POST(
         consistency: "INSUFFICIENT_EVIDENCE",
         reason:
           "The course has not established any concepts yet, so this question cannot be checked against evidence.",
-        nextAction: "Upload material that covers this question, analyse the course, then try again.",
+        nextAction:
+          "Upload material that covers this question, analyse the course, then try again.",
         testedConceptIds: [],
         usage: { model: "none" },
       },

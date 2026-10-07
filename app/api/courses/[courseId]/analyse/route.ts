@@ -69,7 +69,12 @@ export async function POST(
     await saveCourseIntelligence(
       courseId,
       fingerprint,
-      { status: "insufficient-evidence", concepts: [], relationships: [], usage: { model: "none" } },
+      {
+        status: "insufficient-evidence",
+        concepts: [],
+        relationships: [],
+        usage: { model: "none" },
+      },
       evidence,
     );
     const refreshed = await getCourse(user.id, courseId);
@@ -114,7 +119,10 @@ export async function POST(
         "The analysis service returned a response Edvance could not verify. Please try again.",
       );
       return NextResponse.json(
-        { error: "The analysis service returned a response Edvance could not verify. Please try again." },
+        {
+          error:
+            "The analysis service returned a response Edvance could not verify. Please try again.",
+        },
         { status: 502 },
       );
     }
@@ -125,7 +133,10 @@ export async function POST(
       "analysis-failed",
       "Course analysis did not finish. Please try again.",
     );
-    return NextResponse.json({ error: "Course analysis did not finish. Please try again." }, { status: 502 });
+    return NextResponse.json(
+      { error: "Course analysis did not finish. Please try again." },
+      { status: 502 },
+    );
   }
 
   const refreshed = await getCourse(user.id, courseId);

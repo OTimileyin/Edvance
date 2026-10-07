@@ -72,12 +72,42 @@ export const SEED_COURSES: Course[] = [
       { name: "Target Output", status: "Weak", score: 30 },
     ],
     sources: [
-      { id: "s1", type: "Lecture", title: "Lesson 2 — Prompt Engineering (full session)", location: "video · 18 min" },
-      { id: "s2", type: "Transcript", title: "Lesson 2 transcript — PROMPT framework walkthrough", location: "@04:12" },
-      { id: "s3", type: "Slide", title: "PROMPT framework — six components deck", location: "slide 7" },
-      { id: "s4", type: "Slide", title: "Instructor terminology — framework vocabulary", location: "@01:37" },
-      { id: "s5", type: "Notes", title: "Class notes — parameters vs target output", location: "notes p.14" },
-      { id: "s6", type: "Outline", title: "Course outline — Prompt Engineering unit", location: "unit 2" },
+      {
+        id: "s1",
+        type: "Lecture",
+        title: "Lesson 2 — Prompt Engineering (full session)",
+        location: "video · 18 min",
+      },
+      {
+        id: "s2",
+        type: "Transcript",
+        title: "Lesson 2 transcript — PROMPT framework walkthrough",
+        location: "@04:12",
+      },
+      {
+        id: "s3",
+        type: "Slide",
+        title: "PROMPT framework — six components deck",
+        location: "slide 7",
+      },
+      {
+        id: "s4",
+        type: "Slide",
+        title: "Instructor terminology — framework vocabulary",
+        location: "@01:37",
+      },
+      {
+        id: "s5",
+        type: "Notes",
+        title: "Class notes — parameters vs target output",
+        location: "notes p.14",
+      },
+      {
+        id: "s6",
+        type: "Outline",
+        title: "Course outline — Prompt Engineering unit",
+        location: "unit 2",
+      },
     ],
     assessments: [
       {
@@ -117,10 +147,25 @@ export const SEED_COURSES: Course[] = [
       { name: "Annotation density", status: "Developing", score: 65 },
     ],
     sources: [
-      { id: "s1", type: "Lecture", title: "Lesson 4 — Choosing the Right Chart (session)", location: "video · 22 min" },
+      {
+        id: "s1",
+        type: "Lecture",
+        title: "Lesson 4 — Choosing the Right Chart (session)",
+        location: "video · 22 min",
+      },
       { id: "s2", type: "Slide", title: "Chart choice decision tree deck", location: "slide 12" },
-      { id: "s3", type: "Transcript", title: "Lecture 4 transcript — color and annotation", location: "@03:10" },
-      { id: "s4", type: "PDF", title: "Data storytelling guide (course reader)", location: "pp. 44–58" },
+      {
+        id: "s3",
+        type: "Transcript",
+        title: "Lecture 4 transcript — color and annotation",
+        location: "@03:10",
+      },
+      {
+        id: "s4",
+        type: "PDF",
+        title: "Data storytelling guide (course reader)",
+        location: "pp. 44–58",
+      },
     ],
     assessments: [
       {
@@ -138,7 +183,8 @@ export const SEED_COURSES: Course[] = [
     ],
     consistency: {
       status: "consistent",
-      reason: "The assessment wording matches the supplied lesson evidence. No contradictions detected.",
+      reason:
+        "The assessment wording matches the supplied lesson evidence. No contradictions detected.",
       nextAction: "Attempt the practice set on chart selection.",
     },
     intelligence: NO_INTELLIGENCE,

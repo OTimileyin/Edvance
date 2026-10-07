@@ -214,8 +214,8 @@ function CourseSettings({
       <div className="alert alert-warning" style={{ marginTop: 32 }}>
         <p className="alert-title">Delete this course</p>
         <p>
-          This removes the course and everything in it — its materials, concepts, questions,
-          mastery and revision — and deletes its stored files. This cannot be undone.
+          This removes the course and everything in it — its materials, concepts, questions, mastery
+          and revision — and deletes its stored files. This cannot be undone.
         </p>
       </div>
       <div className="field" style={{ marginTop: 16, maxWidth: 360 }}>

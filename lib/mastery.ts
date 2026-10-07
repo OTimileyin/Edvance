@@ -64,10 +64,15 @@ export function deriveMastery(attempts: MasteryAttempt[]): MasteryResult {
 }
 
 /** A short, honest explanation of how a status was reached, for the UI. */
-export function explainMastery(status: ConceptStatus, attemptCount: number, correctCount: number): string {
+export function explainMastery(
+  status: ConceptStatus,
+  attemptCount: number,
+  correctCount: number,
+): string {
   if (status === "Untested") return "No practice recorded yet.";
   const base = `${correctCount} of ${attemptCount} recorded attempt${attemptCount === 1 ? "" : "s"} correct.`;
-  if (status === "Mastered") return `${base} Mastery earned over at least ${MASTERY_MIN_ATTEMPTS} attempts.`;
+  if (status === "Mastered")
+    return `${base} Mastery earned over at least ${MASTERY_MIN_ATTEMPTS} attempts.`;
   if (status === "Developing") return `${base} Keep practising to reach mastery.`;
   return `${base} More wrong than right so far.`;
 }

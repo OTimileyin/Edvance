@@ -23,7 +23,9 @@ const BASE_URL = (process.env.BASE_URL ?? "http://localhost:3260").replace(/\/$/
 const TRUSTED_ORIGIN = process.env.BETTER_AUTH_URL ?? BASE_URL;
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
-  console.error("DATABASE_URL is not set. Run with: infisical run --env=dev -- node scripts/test-course-intelligence.mjs");
+  console.error(
+    "DATABASE_URL is not set. Run with: infisical run --env=dev -- node scripts/test-course-intelligence.mjs",
+  );
   process.exit(1);
 }
 
@@ -48,10 +50,22 @@ function check(name, condition, detail = "") {
 // in its own section. Phase 7 reuses it for the six-versus-five inconsistency.
 // ---------------------------------------------------------------------------
 const FATHOM_FRAMEWORK = [
-  { name: "Frame", body: "Frame the question before looking for evidence. Write down the exact question the material must answer." },
-  { name: "Assemble", body: "Assemble every source that could answer the question. Gather the materials that bear on it." },
-  { name: "Trace", body: "Trace each claim back to the exact place it appears, and record the page, slide or timestamp." },
-  { name: "Hold", body: "Hold uncertainty. When the evidence is thin, report that instead of guessing an answer." },
+  {
+    name: "Frame",
+    body: "Frame the question before looking for evidence. Write down the exact question the material must answer.",
+  },
+  {
+    name: "Assemble",
+    body: "Assemble every source that could answer the question. Gather the materials that bear on it.",
+  },
+  {
+    name: "Trace",
+    body: "Trace each claim back to the exact place it appears, and record the page, slide or timestamp.",
+  },
+  {
+    name: "Hold",
+    body: "Hold uncertainty. When the evidence is thin, report that instead of guessing an answer.",
+  },
   { name: "Order", body: "Order the findings by how strongly the evidence supports them." },
   { name: "Move", body: "Move to the next action the evidence actually justifies." },
 ];
@@ -61,7 +75,8 @@ const FATHOM_MARKDOWN = FATHOM_FRAMEWORK.map(
 ).join("\n\n");
 
 /** A second material that re-teaches one component, for the multi-source case. */
-const TRACE_REMINDER = "## Trace\n\nTrace again: without a recorded location, a claim cannot be checked.";
+const TRACE_REMINDER =
+  "## Trace\n\nTrace again: without a recorded location, a claim cannot be checked.";
 
 // ---------------------------------------------------------------------------
 // HTTP session with a cookie jar.
@@ -119,14 +134,20 @@ async function createCourse(session, name) {
 async function upload(session, courseId, name, text) {
   const form = new FormData();
   form.append("file", new Blob([Buffer.from(text, "utf8")], { type: "text/markdown" }), name);
-  const response = await session.fetch(`/api/courses/${courseId}/materials`, { method: "POST", body: form });
+  const response = await session.fetch(`/api/courses/${courseId}/materials`, {
+    method: "POST",
+    body: form,
+  });
   const body = await response.json().catch(() => ({}));
   return { status: response.status, material: body.material, error: body.error };
 }
 
 async function analyse(session, courseId, scenario) {
   const headers = scenario ? { "x-edvance-mock-scenario": scenario } : {};
-  const response = await session.fetch(`/api/courses/${courseId}/analyse`, { method: "POST", headers });
+  const response = await session.fetch(`/api/courses/${courseId}/analyse`, {
+    method: "POST",
+    headers,
+  });
   const body = await response.json().catch(() => ({}));
   return { status: response.status, body };
 }
@@ -186,16 +207,34 @@ async function main() {
     check("course A created", Boolean(courseA), courseA);
 
     const golden = await upload(learnerA, courseA, "fathom-framework.md", FATHOM_MARKDOWN);
-    check("golden fixture uploads and extracts", golden.status === 201 && golden.material?.ingestion?.status === "completed", `status ${golden.status} ${golden.material?.ingestion?.status}`);
-    cleanupMaterials.push({ session: learnerA, courseId: courseA, materialId: golden.material?.id });
+    check(
+      "golden fixture uploads and extracts",
+      golden.status === 201 && golden.material?.ingestion?.status === "completed",
+      `status ${golden.status} ${golden.material?.ingestion?.status}`,
+    );
+    cleanupMaterials.push({
+      session: learnerA,
+      courseId: courseA,
+      materialId: golden.material?.id,
+    });
 
     // The legacy formats are rejected on a real course.
     {
-      for (const [name, type] of [["legacy.doc", "application/msword"], ["legacy.ppt", "application/vnd.ms-powerpoint"]]) {
+      for (const [name, type] of [
+        ["legacy.doc", "application/msword"],
+        ["legacy.ppt", "application/vnd.ms-powerpoint"],
+      ]) {
         const form = new FormData();
         form.append("file", new Blob([Buffer.from("legacy", "utf8")], { type }), name);
-        const response = await learnerA.fetch(`/api/courses/${courseA}/materials`, { method: "POST", body: form });
-        check(`${name} upload rejected (415)`, response.status === 415, `status ${response.status}`);
+        const response = await learnerA.fetch(`/api/courses/${courseA}/materials`, {
+          method: "POST",
+          body: form,
+        });
+        check(
+          `${name} upload rejected (415)`,
+          response.status === 415,
+          `status ${response.status}`,
+        );
       }
     }
 
@@ -203,17 +242,32 @@ async function main() {
     // that asks for five components while the material teaches six.
     const question = await learnerA.fetch(`/api/courses/${courseA}/assessments`, {
       method: "POST",
-      body: JSON.stringify({ lesson: "Evidence", question: "What are the five components of the FATHOM framework?" }),
+      body: JSON.stringify({
+        lesson: "Evidence",
+        question: "What are the five components of the FATHOM framework?",
+      }),
     });
     check("golden fixture assessment created", question.ok, `status ${question.status}`);
 
     const first = await analyse(learnerA, courseA);
-    check("analyse: accepted (200)", first.status === 200, `status ${first.status} ${JSON.stringify(first.body.error ?? "")}`);
+    check(
+      "analyse: accepted (200)",
+      first.status === 200,
+      `status ${first.status} ${JSON.stringify(first.body.error ?? "")}`,
+    );
     check("analyse: outcome is analysed", first.body.outcome === "analysed", first.body.outcome);
-    check("analyse: course state is ready", first.body.course?.intelligence?.status === "ready", first.body.course?.intelligence?.status);
+    check(
+      "analyse: course state is ready",
+      first.body.course?.intelligence?.status === "ready",
+      first.body.course?.intelligence?.status,
+    );
 
     const status = first.body.course.intelligence;
-    check("golden: six concepts extracted", status.concepts.length === 6, `${status.concepts.length}`);
+    check(
+      "golden: six concepts extracted",
+      status.concepts.length === 6,
+      `${status.concepts.length}`,
+    );
     const names = status.concepts.map((concept) => concept.name);
     check(
       "golden: all six framework components present",
@@ -227,11 +281,17 @@ async function main() {
     );
     check(
       "golden: every concept has resolvable evidence",
-      status.concepts.every((concept) => concept.evidence.length > 0 && concept.evidence.every((ref) => ref.sourceLocation && ref.materialTitle)),
+      status.concepts.every(
+        (concept) =>
+          concept.evidence.length > 0 &&
+          concept.evidence.every((ref) => ref.sourceLocation && ref.materialTitle),
+      ),
     );
     check(
       "golden: evidence locations are human-readable",
-      status.concepts.every((concept) => concept.evidence.every((ref) => ref.sourceLocation.startsWith("Section: "))),
+      status.concepts.every((concept) =>
+        concept.evidence.every((ref) => ref.sourceLocation.startsWith("Section: ")),
+      ),
       JSON.stringify(status.concepts[0]?.evidence),
     );
     check(
@@ -243,71 +303,153 @@ async function main() {
     // Persisted rows match the API view.
     const storedConcepts = await loadConcepts(db, courseA);
     check("db: six concept rows stored", storedConcepts.length === 6, `${storedConcepts.length}`);
-    check("db: concepts are real analysis output, not seed", storedConcepts.every((row) => row.origin === "analysis"));
-    check("db: evidence status stored", storedConcepts.every((row) => row.evidence_status === "SUPPORTED"));
+    check(
+      "db: concepts are real analysis output, not seed",
+      storedConcepts.every((row) => row.origin === "analysis"),
+    );
+    check(
+      "db: evidence status stored",
+      storedConcepts.every((row) => row.evidence_status === "SUPPORTED"),
+    );
     const traceConcept = storedConcepts.find((row) => row.name === "Trace");
     const traceEvidence = traceConcept ? await loadEvidence(db, traceConcept.id) : [];
-    check("db: Trace concept has stored evidence", traceEvidence.length === 1, `${traceEvidence.length}`);
-    check("db: stored excerpt is real material text", (traceEvidence[0]?.excerpt ?? "").includes("Trace each claim"), traceEvidence[0]?.excerpt);
+    check(
+      "db: Trace concept has stored evidence",
+      traceEvidence.length === 1,
+      `${traceEvidence.length}`,
+    );
+    check(
+      "db: stored excerpt is real material text",
+      (traceEvidence[0]?.excerpt ?? "").includes("Trace each claim"),
+      traceEvidence[0]?.excerpt,
+    );
     const analysisRow = await loadAnalysis(db, courseA);
     check("db: analysis row is ready", analysisRow?.status === "ready", analysisRow?.status);
-    check("db: analysis counts recorded", analysisRow?.concept_count === 6, String(analysisRow?.concept_count));
-    check("db: no failure recorded on success", !analysisRow?.error_code && !analysisRow?.error_summary);
+    check(
+      "db: analysis counts recorded",
+      analysisRow?.concept_count === 6,
+      String(analysisRow?.concept_count),
+    );
+    check(
+      "db: no failure recorded on success",
+      !analysisRow?.error_code && !analysisRow?.error_summary,
+    );
 
     // --- 2. Cost control: a second analyse is a no-op ----------------------
     {
       const again = await analyse(learnerA, courseA);
-      check("cost control: re-analyse is up-to-date, no model call", again.status === 200 && again.body.outcome === "up-to-date", `${again.status} ${again.body.outcome}`);
+      check(
+        "cost control: re-analyse is up-to-date, no model call",
+        again.status === 200 && again.body.outcome === "up-to-date",
+        `${again.status} ${again.body.outcome}`,
+      );
     }
 
     // --- 3. Staleness after new material ----------------------------------
     {
       const second = await upload(learnerA, courseA, "trace-reminder.md", TRACE_REMINDER);
       check("multi-source material uploads", second.status === 201, `status ${second.status}`);
-      cleanupMaterials.push({ session: learnerA, courseId: courseA, materialId: second.material?.id });
+      cleanupMaterials.push({
+        session: learnerA,
+        courseId: courseA,
+        materialId: second.material?.id,
+      });
 
       const refreshed = await learnerA.fetch(`/api/courses/${courseA}`);
       const body = await refreshed.json();
-      check("staleness: new material marks intelligence needs-reanalysis", body.course?.intelligence?.status === "needs-reanalysis", body.course?.intelligence?.status);
+      check(
+        "staleness: new material marks intelligence needs-reanalysis",
+        body.course?.intelligence?.status === "needs-reanalysis",
+        body.course?.intelligence?.status,
+      );
 
       // --- 4. Multi-source concept ----------------------------------------
       const rerun = await analyse(learnerA, courseA);
-      check("multi-source: re-analysis succeeds", rerun.status === 200 && rerun.body.course?.intelligence?.status === "ready", `${rerun.status} ${rerun.body.course?.intelligence?.status}`);
-      const trace = rerun.body.course.intelligence.concepts.find((concept) => concept.name === "Trace");
+      check(
+        "multi-source: re-analysis succeeds",
+        rerun.status === 200 && rerun.body.course?.intelligence?.status === "ready",
+        `${rerun.status} ${rerun.body.course?.intelligence?.status}`,
+      );
+      const trace = rerun.body.course.intelligence.concepts.find(
+        (concept) => concept.name === "Trace",
+      );
       const distinctMaterials = new Set((trace?.evidence ?? []).map((ref) => ref.materialId));
-      check("multi-source: one concept cites two materials", distinctMaterials.size === 2, JSON.stringify([...(trace?.evidence ?? [])]));
+      check(
+        "multi-source: one concept cites two materials",
+        distinctMaterials.size === 2,
+        JSON.stringify([...(trace?.evidence ?? [])]),
+      );
     }
 
     // --- 5. Insufficient evidence is a valid success ----------------------
     {
       const empty = await createCourse(learnerA, "Empty course");
       const result = await analyse(learnerA, empty);
-      check("insufficient: empty course returns 200", result.status === 200, `status ${result.status}`);
-      check("insufficient: recorded honestly", result.body.course?.intelligence?.status === "insufficient-evidence", result.body.course?.intelligence?.status);
+      check(
+        "insufficient: empty course returns 200",
+        result.status === 200,
+        `status ${result.status}`,
+      );
+      check(
+        "insufficient: recorded honestly",
+        result.body.course?.intelligence?.status === "insufficient-evidence",
+        result.body.course?.intelligence?.status,
+      );
       const row = await loadAnalysis(db, empty);
-      check("insufficient: no concepts were invented", (await loadConcepts(db, empty)).length === 0);
-      check("insufficient: analysis row recorded", row?.status === "insufficient-evidence", row?.status);
+      check(
+        "insufficient: no concepts were invented",
+        (await loadConcepts(db, empty)).length === 0,
+      );
+      check(
+        "insufficient: analysis row recorded",
+        row?.status === "insufficient-evidence",
+        row?.status,
+      );
     }
 
     // --- 6. Model returns INSUFFICIENT_EVIDENCE ---------------------------
     {
       const dull = await createCourse(learnerA, "Thin course");
-      const dullMaterial = await upload(learnerA, dull, "thin.md", "## Notes\n\nA short and unhelpful note.");
-      cleanupMaterials.push({ session: learnerA, courseId: dull, materialId: dullMaterial.material?.id });
+      const dullMaterial = await upload(
+        learnerA,
+        dull,
+        "thin.md",
+        "## Notes\n\nA short and unhelpful note.",
+      );
+      cleanupMaterials.push({
+        session: learnerA,
+        courseId: dull,
+        materialId: dullMaterial.material?.id,
+      });
       const result = await analyse(learnerA, dull, "insufficient");
       check("model insufficient: accepted", result.status === 200, `status ${result.status}`);
-      check("model insufficient: state is insufficient-evidence", result.body.course?.intelligence?.status === "insufficient-evidence", result.body.course?.intelligence?.status);
+      check(
+        "model insufficient: state is insufficient-evidence",
+        result.body.course?.intelligence?.status === "insufficient-evidence",
+        result.body.course?.intelligence?.status,
+      );
     }
 
     // --- 7. Duplicate concepts are merged ---------------------------------
     {
       const dup = await createCourse(learnerA, "Duplicate course");
       const dupMaterial = await upload(learnerA, dup, "dup.md", FATHOM_MARKDOWN);
-      cleanupMaterials.push({ session: learnerA, courseId: dup, materialId: dupMaterial.material?.id });
+      cleanupMaterials.push({
+        session: learnerA,
+        courseId: dup,
+        materialId: dupMaterial.material?.id,
+      });
       const result = await analyse(learnerA, dup, "duplicate");
       check("duplicate: accepted", result.status === 200, `status ${result.status}`);
-      check("duplicate: merged into one concept", result.body.course?.intelligence?.concepts?.length === 1, `${result.body.course?.intelligence?.concepts?.length}`);
-      check("duplicate: merged concept keeps its evidence", (result.body.course?.intelligence?.concepts?.[0]?.evidence?.length ?? 0) >= 1);
+      check(
+        "duplicate: merged into one concept",
+        result.body.course?.intelligence?.concepts?.length === 1,
+        `${result.body.course?.intelligence?.concepts?.length}`,
+      );
+      check(
+        "duplicate: merged concept keeps its evidence",
+        (result.body.course?.intelligence?.concepts?.[0]?.evidence?.length ?? 0) >= 1,
+      );
     }
 
     // --- 8. Unverifiable / failed responses are rejected whole ------------
@@ -319,22 +461,52 @@ async function main() {
     for (const [scenario, label] of failureCases) {
       const course = await createCourse(learnerA, `Failure course (${scenario})`);
       const material = await upload(learnerA, course, "evidence.md", FATHOM_MARKDOWN);
-      cleanupMaterials.push({ session: learnerA, courseId: course, materialId: material.material?.id });
+      cleanupMaterials.push({
+        session: learnerA,
+        courseId: course,
+        materialId: material.material?.id,
+      });
       const result = await analyse(learnerA, course, scenario);
-      check(`${label}: rejected with 502`, result.status === 502, `status ${result.status} ${JSON.stringify(result.body)}`);
-      check(`${label}: no concepts persisted`, (await loadConcepts(db, course)).length === 0, `${(await loadConcepts(db, course)).length}`);
+      check(
+        `${label}: rejected with 502`,
+        result.status === 502,
+        `status ${result.status} ${JSON.stringify(result.body)}`,
+      );
+      check(
+        `${label}: no concepts persisted`,
+        (await loadConcepts(db, course)).length === 0,
+        `${(await loadConcepts(db, course)).length}`,
+      );
       const row = await loadAnalysis(db, course);
       check(`${label}: analysis recorded as failed`, row?.status === "failed", row?.status);
-      check(`${label}: safe error summary recorded`, Boolean(row?.error_summary) && !/chunk-does-not-exist/.test(row?.error_summary ?? ""));
-      check(`${label}: raw output never stored`, !(row?.error_summary ?? "").includes("not json at all"));
+      check(
+        `${label}: safe error summary recorded`,
+        Boolean(row?.error_summary) && !/chunk-does-not-exist/.test(row?.error_summary ?? ""),
+      );
+      check(
+        `${label}: raw output never stored`,
+        !(row?.error_summary ?? "").includes("not json at all"),
+      );
     }
 
     // --- 9. Ownership isolation ------------------------------------------
     {
       const foreign = await analyse(learnerB, courseA);
-      check("isolation: another learner cannot analyse a course (404)", foreign.status === 404, `status ${foreign.status}`);
-      const unauth = await fetch(`${BASE_URL}/api/courses/${courseA}/analyse`, { method: "POST", headers: { origin: TRUSTED_ORIGIN }, redirect: "manual" });
-      check("isolation: unauthenticated analyse is refused (401)", unauth.status === 401, `status ${unauth.status}`);
+      check(
+        "isolation: another learner cannot analyse a course (404)",
+        foreign.status === 404,
+        `status ${foreign.status}`,
+      );
+      const unauth = await fetch(`${BASE_URL}/api/courses/${courseA}/analyse`, {
+        method: "POST",
+        headers: { origin: TRUSTED_ORIGIN },
+        redirect: "manual",
+      });
+      check(
+        "isolation: unauthenticated analyse is refused (401)",
+        unauth.status === 401,
+        `status ${unauth.status}`,
+      );
       const stray = await db.query(
         `select count(*)::int as n from concept_evidence e
            join concept c on c.id = e.concept_id
@@ -342,7 +514,11 @@ async function main() {
           where co.user_id = (select id from "user" where email = $1)`,
         [emailB],
       );
-      check("isolation: learner B has no evidence of their own", stray.rows[0].n === 0, `${stray.rows[0].n}`);
+      check(
+        "isolation: learner B has no evidence of their own",
+        stray.rows[0].n === 0,
+        `${stray.rows[0].n}`,
+      );
     }
 
     // --- 10. Phase 5.6 regression: no analysis without evidence ----------
@@ -350,18 +526,31 @@ async function main() {
       const seeded = await learnerB.fetch("/api/courses");
       const seededBody = await seeded.json();
       const demo = seededBody.courses?.[0];
-      check("regression: seeded workspace has no real evidence", Array.isArray(seededBody.courses) && (demo?.sources ?? []).every((source) => !source.storageReference));
+      check(
+        "regression: seeded workspace has no real evidence",
+        Array.isArray(seededBody.courses) &&
+          (demo?.sources ?? []).every((source) => !source.storageReference),
+      );
       if (demo) {
         const result = await analyse(learnerB, demo.id);
-        check("regression: demo-only course is insufficient-evidence, not analysed", result.body.course?.intelligence?.status === "insufficient-evidence", result.body.course?.intelligence?.status);
-        check("regression: demo concepts were not fabricated into intelligence", (result.body.course?.intelligence?.concepts ?? []).length === 0);
+        check(
+          "regression: demo-only course is insufficient-evidence, not analysed",
+          result.body.course?.intelligence?.status === "insufficient-evidence",
+          result.body.course?.intelligence?.status,
+        );
+        check(
+          "regression: demo concepts were not fabricated into intelligence",
+          (result.body.course?.intelligence?.concepts ?? []).length === 0,
+        );
       }
     }
   } finally {
     for (const entry of cleanupMaterials) {
       if (!entry.materialId) continue;
       try {
-        await entry.session.fetch(`/api/courses/${entry.courseId}/materials/${entry.materialId}`, { method: "DELETE" });
+        await entry.session.fetch(`/api/courses/${entry.courseId}/materials/${entry.materialId}`, {
+          method: "DELETE",
+        });
       } catch {
         // Best effort.
       }

@@ -29,12 +29,14 @@ const DATABASE_URL_NAMES = [
   "POSTGRES_PRISMA_URL", // Vercel Postgres: pooled (Prisma alias)
 ];
 
-const connectionString = DATABASE_URL_NAMES.map((name) => process.env[name]?.trim()).find(
-  Boolean,
-);
+const connectionString = DATABASE_URL_NAMES.map((name) => process.env[name]?.trim()).find(Boolean);
 if (!connectionString) {
-  console.error(`No database connection string is set. Set one of: ${DATABASE_URL_NAMES.join(", ")}.`);
-  console.error("Locally: npm run migrate (this expects Infisical: infisical run --env=dev -- node scripts/migrate.mjs)");
+  console.error(
+    `No database connection string is set. Set one of: ${DATABASE_URL_NAMES.join(", ")}.`,
+  );
+  console.error(
+    "Locally: npm run migrate (this expects Infisical: infisical run --env=dev -- node scripts/migrate.mjs)",
+  );
   console.error("On Vercel: the Postgres integration injects POSTGRES_URL automatically.");
   process.exit(1);
 }
@@ -79,9 +81,7 @@ async function main() {
     }
   }
 
-  console.log(
-    count === 0 ? "Database already up to date." : `Applied ${count} migration(s).`,
-  );
+  console.log(count === 0 ? "Database already up to date." : `Applied ${count} migration(s).`);
 }
 
 main()

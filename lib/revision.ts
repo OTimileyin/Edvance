@@ -1,10 +1,5 @@
 import { explainMastery } from "./mastery";
-import type {
-  ConceptEvidenceRef,
-  ConceptStatus,
-  RevisionFocus,
-  RevisionPriority,
-} from "./types";
+import type { ConceptEvidenceRef, ConceptStatus, RevisionFocus, RevisionPriority } from "./types";
 
 /**
  * The revision recommendation, derived deterministically from what the learner
@@ -80,10 +75,7 @@ export function buildRevisionFocus(concepts: RevisionConceptInput[]): RevisionFo
 }
 
 /** The single smallest useful next action, naming the top focus and its evidence. */
-export function buildRevisionNextAction(
-  focus: RevisionFocus[],
-  hasConcepts: boolean,
-): string {
+export function buildRevisionNextAction(focus: RevisionFocus[], hasConcepts: boolean): string {
   if (!hasConcepts) {
     return "Analyse the course to extract the concepts your materials teach, then record some practice.";
   }
@@ -104,8 +96,6 @@ export function buildRevisionNextAction(
  * plan becomes stale — with no model call.
  */
 export function revisionFingerprint(focus: RevisionFocus[]): string {
-  const parts = focus
-    .map((entry) => `${entry.conceptId}:${entry.status}:${entry.attempts}`)
-    .sort();
+  const parts = focus.map((entry) => `${entry.conceptId}:${entry.status}:${entry.attempts}`).sort();
   return `v1:${parts.join(",")}`;
 }

@@ -27,9 +27,7 @@ import type { IngestionStatus } from "@/lib/types";
  * learner's uploaded file — it only records a safe diagnostic on the job.
  */
 
-export type IngestionOutcome =
-  | { found: false }
-  | { found: true; status: IngestionStatus };
+export type IngestionOutcome = { found: false } | { found: true; status: IngestionStatus };
 
 /** Maps any thrown error to a short code and a user-safe summary. */
 function safeFailure(error: unknown): { code: string; summary: string } {

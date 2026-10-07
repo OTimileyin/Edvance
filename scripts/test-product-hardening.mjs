@@ -21,7 +21,9 @@ const BASE_URL = (process.env.BASE_URL ?? "http://localhost:3260").replace(/\/$/
 const TRUSTED_ORIGIN = process.env.BETTER_AUTH_URL ?? BASE_URL;
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
-  console.error("DATABASE_URL is not set. Run with: infisical run --env=dev -- node scripts/test-product-hardening.mjs");
+  console.error(
+    "DATABASE_URL is not set. Run with: infisical run --env=dev -- node scripts/test-product-hardening.mjs",
+  );
   process.exit(1);
 }
 
@@ -90,7 +92,10 @@ async function createCourse(session, name) {
 async function upload(session, courseId, name, text) {
   const form = new FormData();
   form.append("file", new Blob([Buffer.from(text, "utf8")], { type: "text/markdown" }), name);
-  const response = await session.fetch(`/api/courses/${courseId}/materials`, { method: "POST", body: form });
+  const response = await session.fetch(`/api/courses/${courseId}/materials`, {
+    method: "POST",
+    body: form,
+  });
   const body = await response.json().catch(() => ({}));
   return { status: response.status, material: body.material };
 }
@@ -115,7 +120,9 @@ async function analyseCourse(session, courseId) {
 }
 
 async function analyseQuestion(session, courseId, questionId) {
-  return session.fetch(`/api/courses/${courseId}/assessments/${questionId}/analyse`, { method: "POST" });
+  return session.fetch(`/api/courses/${courseId}/assessments/${questionId}/analyse`, {
+    method: "POST",
+  });
 }
 
 function findQuestion(course, text) {
@@ -160,27 +167,55 @@ async function main() {
       check("health: responds 200", response.status === 200, `status ${response.status}`);
       check("health: reports ok", body.status === "ok", body.status);
       check("health: database is up", body.database === "ok", body.database);
-      check("health: reports integration state", Boolean(body.integrations) && "ai" in body.integrations, JSON.stringify(body.integrations));
-      check("health: never leaks secrets", !JSON.stringify(body).match(/key|secret|password/i), JSON.stringify(body));
+      check(
+        "health: reports integration state",
+        Boolean(body.integrations) && "ai" in body.integrations,
+        JSON.stringify(body.integrations),
+      );
+      check(
+        "health: never leaks secrets",
+        !JSON.stringify(body).match(/key|secret|password/i),
+        JSON.stringify(body),
+      );
     }
 
     // --- 2. Security headers ----------------------------------------------
     {
       const response = await fetch(`${BASE_URL}/`);
       const csp = response.headers.get("content-security-policy") ?? "";
-      check("headers: CSP present and locked down", /default-src 'self'/.test(csp) && /frame-ancestors 'none'/.test(csp), csp);
-      check("headers: frame options deny", response.headers.get("x-frame-options") === "DENY", response.headers.get("x-frame-options"));
+      check(
+        "headers: CSP present and locked down",
+        /default-src 'self'/.test(csp) && /frame-ancestors 'none'/.test(csp),
+        csp,
+      );
+      check(
+        "headers: frame options deny",
+        response.headers.get("x-frame-options") === "DENY",
+        response.headers.get("x-frame-options"),
+      );
       check("headers: nosniff", response.headers.get("x-content-type-options") === "nosniff");
-      check("headers: referrer policy set", response.headers.get("referrer-policy") === "strict-origin-when-cross-origin", response.headers.get("referrer-policy"));
+      check(
+        "headers: referrer policy set",
+        response.headers.get("referrer-policy") === "strict-origin-when-cross-origin",
+        response.headers.get("referrer-policy"),
+      );
       check("headers: permissions policy set", Boolean(response.headers.get("permissions-policy")));
-      check("headers: framework is not advertised", !response.headers.get("x-powered-by"), response.headers.get("x-powered-by"));
+      check(
+        "headers: framework is not advertised",
+        !response.headers.get("x-powered-by"),
+        response.headers.get("x-powered-by"),
+      );
     }
 
     // --- 3. Not-found page -------------------------------------------------
     {
       const response = await fetch(`${BASE_URL}/this-page-does-not-exist`);
       const text = await response.text();
-      check("not-found: unknown route returns 404", response.status === 404, `status ${response.status}`);
+      check(
+        "not-found: unknown route returns 404",
+        response.status === 404,
+        `status ${response.status}`,
+      );
       check("not-found: page explains the 404", /could not find/i.test(text), text.slice(0, 80));
     }
 
@@ -199,19 +234,31 @@ async function main() {
       });
       const body = await rename.json().catch(() => ({}));
       check("course edit: accepted", rename.status === 200, `status ${rename.status}`);
-      check("course edit: name and lesson updated", body.course?.name === "Renamed course" && body.course?.lesson === "Lesson two", `${body.course?.name}/${body.course?.lesson}`);
+      check(
+        "course edit: name and lesson updated",
+        body.course?.name === "Renamed course" && body.course?.lesson === "Lesson two",
+        `${body.course?.name}/${body.course?.lesson}`,
+      );
 
       const empty = await learnerA.fetch(`/api/courses/${courseId}`, {
         method: "PATCH",
         body: JSON.stringify({ name: "   " }),
       });
-      check("course edit: an empty name is refused (400)", empty.status === 400, `status ${empty.status}`);
+      check(
+        "course edit: an empty name is refused (400)",
+        empty.status === 400,
+        `status ${empty.status}`,
+      );
 
       const mismatch = await learnerA.fetch(`/api/courses/nonexistent-course`, {
         method: "PATCH",
         body: JSON.stringify({ name: "Nope" }),
       });
-      check("course edit: an unknown course is not found (404)", mismatch.status === 404, `status ${mismatch.status}`);
+      check(
+        "course edit: an unknown course is not found (404)",
+        mismatch.status === 404,
+        `status ${mismatch.status}`,
+      );
     }
 
     // --- 5. Assessment edit invalidates the check -------------------------
@@ -219,11 +266,20 @@ async function main() {
       const material = await upload(learnerA, courseId, "trace.md", NOTE_MARKDOWN);
       cleanupMaterials.push({ session: learnerA, courseId, materialId: material.material?.id });
       await analyseCourse(learnerA, courseId);
-      const withQuestion = await addQuestion(learnerA, courseId, "Why record where a claim appears?");
+      const withQuestion = await addQuestion(
+        learnerA,
+        courseId,
+        "Why record where a claim appears?",
+      );
       const question = findQuestion(withQuestion, "Why record where a claim appears?");
       await analyseQuestion(learnerA, courseId, question.id);
       const checked = await getCourse(learnerA, courseId);
-      check("question edit: starts checked", findQuestion(checked.course, "Why record where a claim appears?")?.signature?.status === "ready", findQuestion(checked.course, "Why record where a claim appears?")?.signature?.status);
+      check(
+        "question edit: starts checked",
+        findQuestion(checked.course, "Why record where a claim appears?")?.signature?.status ===
+          "ready",
+        findQuestion(checked.course, "Why record where a claim appears?")?.signature?.status,
+      );
 
       const edit = await learnerA.fetch(`/api/courses/${courseId}/assessments/${question.id}`, {
         method: "PATCH",
@@ -233,18 +289,33 @@ async function main() {
       check("question edit: accepted", edit.status === 200, `status ${edit.status}`);
       const edited = findQuestion(body.course, "Why must a claim be traced to a location?");
       check("question edit: wording updated", Boolean(edited), "not found");
-      check("question edit: the stale check was discarded", edited?.signature?.status === "not-analyzed", edited?.signature?.status);
+      check(
+        "question edit: the stale check was discarded",
+        edited?.signature?.status === "not-analyzed",
+        edited?.signature?.status,
+      );
       const mappings = await db.query(
         "select count(*)::int as n from source_mapping where assessment_question_id = $1",
         [question.id],
       );
-      check("question edit: source mappings were cleared", mappings.rows[0].n === 0, `${mappings.rows[0].n}`);
+      check(
+        "question edit: source mappings were cleared",
+        mappings.rows[0].n === 0,
+        `${mappings.rows[0].n}`,
+      );
 
-      const emptyEdit = await learnerA.fetch(`/api/courses/${courseId}/assessments/${question.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ question: "" }),
-      });
-      check("question edit: an empty question is refused (400)", emptyEdit.status === 400, `status ${emptyEdit.status}`);
+      const emptyEdit = await learnerA.fetch(
+        `/api/courses/${courseId}/assessments/${question.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ question: "" }),
+        },
+      );
+      check(
+        "question edit: an empty question is refused (400)",
+        emptyEdit.status === 400,
+        `status ${emptyEdit.status}`,
+      );
 
       // --- 6. Assessment delete ------------------------------------------
       const remove = await learnerA.fetch(`/api/courses/${courseId}/assessments/${question.id}`, {
@@ -252,7 +323,11 @@ async function main() {
       });
       const removeBody = await remove.json().catch(() => ({}));
       check("question delete: accepted", remove.status === 200, `status ${remove.status}`);
-      check("question delete: the question is gone", removeBody.course?.assessments?.length === 0, `${removeBody.course?.assessments?.length}`);
+      check(
+        "question delete: the question is gone",
+        removeBody.course?.assessments?.length === 0,
+        `${removeBody.course?.assessments?.length}`,
+      );
       const orphan = await db.query(
         "select count(*)::int as n from assessment_question where id = $1",
         [question.id],
@@ -265,51 +340,112 @@ async function main() {
       const before = await bucketCount();
       const doomed = await createCourse(learnerA, "Doomed course");
       const material = await upload(learnerA, doomed, "doomed.md", NOTE_MARKDOWN);
-      check("course delete: material uploaded", material.status === 201, `status ${material.status}`);
-      cleanupMaterials.push({ session: learnerA, courseId: doomed, materialId: material.material?.id });
-      check("course delete: an object now exists", (await bucketCount()) === before + 1, `${before} -> ${await bucketCount()}`);
+      check(
+        "course delete: material uploaded",
+        material.status === 201,
+        `status ${material.status}`,
+      );
+      cleanupMaterials.push({
+        session: learnerA,
+        courseId: doomed,
+        materialId: material.material?.id,
+      });
+      check(
+        "course delete: an object now exists",
+        (await bucketCount()) === before + 1,
+        `${before} -> ${await bucketCount()}`,
+      );
 
       const remove = await learnerA.fetch(`/api/courses/${doomed}`, { method: "DELETE" });
       const body = await remove.json().catch(() => ({}));
-      check("course delete: accepted", remove.status === 200 && body.deleted === true, `${remove.status} ${JSON.stringify(body)}`);
+      check(
+        "course delete: accepted",
+        remove.status === 200 && body.deleted === true,
+        `${remove.status} ${JSON.stringify(body)}`,
+      );
       const gone = await getCourse(learnerA, doomed);
-      check("course delete: the course is gone (404)", gone.status === 404, `status ${gone.status}`);
-      check("course delete: the stored object was removed", (await bucketCount()) === before, `${await bucketCount()} vs ${before}`);
+      check(
+        "course delete: the course is gone (404)",
+        gone.status === 404,
+        `status ${gone.status}`,
+      );
+      check(
+        "course delete: the stored object was removed",
+        (await bucketCount()) === before,
+        `${await bucketCount()} vs ${before}`,
+      );
       const rows = await db.query("select count(*)::int as n from course where id = $1", [doomed]);
       check("course delete: the row is removed", rows.rows[0].n === 0, `${rows.rows[0].n}`);
     }
 
     // --- 8. Account lifecycle ---------------------------------------------
     {
-      const unauth = await fetch(`${BASE_URL}/api/account`, { method: "DELETE", redirect: "manual" });
-      check("account delete: unauthenticated is refused (401)", unauth.status === 401, `status ${unauth.status}`);
+      const unauth = await fetch(`${BASE_URL}/api/account`, {
+        method: "DELETE",
+        redirect: "manual",
+      });
+      check(
+        "account delete: unauthenticated is refused (401)",
+        unauth.status === 401,
+        `status ${unauth.status}`,
+      );
 
       const d = await signUp(emailDelete);
       check("account delete: learner signed up", d.ok, `status ${d.status}`);
       const before = await bucketCount();
       const doomedCourse = await createCourse(d.session, "Account course");
       const material = await upload(d.session, doomedCourse, "account.md", NOTE_MARKDOWN);
-      check("account delete: course and material created", material.status === 201, `status ${material.status}`);
+      check(
+        "account delete: course and material created",
+        material.status === 201,
+        `status ${material.status}`,
+      );
 
       const remove = await d.session.fetch("/api/account", { method: "DELETE" });
       const body = await remove.json().catch(() => ({}));
-      check("account delete: accepted", remove.status === 200 && body.deleted === true, `${remove.status} ${JSON.stringify(body)}`);
-      check("account delete: honest about email when unconfigured", body.emailSent === false, `${body.emailSent}`);
+      check(
+        "account delete: accepted",
+        remove.status === 200 && body.deleted === true,
+        `${remove.status} ${JSON.stringify(body)}`,
+      );
+      check(
+        "account delete: honest about email when unconfigured",
+        body.emailSent === false,
+        `${body.emailSent}`,
+      );
 
       const after = await d.session.fetch("/api/courses");
-      check("account delete: the session is dead (401)", after.status === 401, `status ${after.status}`);
+      check(
+        "account delete: the session is dead (401)",
+        after.status === 401,
+        `status ${after.status}`,
+      );
 
-      const users = await db.query('select count(*)::int as n from "user" where email = $1', [emailDelete]);
+      const users = await db.query('select count(*)::int as n from "user" where email = $1', [
+        emailDelete,
+      ]);
       check("account delete: the account row is gone", users.rows[0].n === 0, `${users.rows[0].n}`);
-      const courses = await db.query("select count(*)::int as n from course where id = $1", [doomedCourse]);
-      check("account delete: owned courses cascade away", courses.rows[0].n === 0, `${courses.rows[0].n}`);
-      check("account delete: stored objects were removed", (await bucketCount()) === before, `${await bucketCount()} vs ${before}`);
+      const courses = await db.query("select count(*)::int as n from course where id = $1", [
+        doomedCourse,
+      ]);
+      check(
+        "account delete: owned courses cascade away",
+        courses.rows[0].n === 0,
+        `${courses.rows[0].n}`,
+      );
+      check(
+        "account delete: stored objects were removed",
+        (await bucketCount()) === before,
+        `${await bucketCount()} vs ${before}`,
+      );
     }
   } finally {
     for (const entry of cleanupMaterials) {
       if (!entry.materialId) continue;
       try {
-        await entry.session.fetch(`/api/courses/${entry.courseId}/materials/${entry.materialId}`, { method: "DELETE" });
+        await entry.session.fetch(`/api/courses/${entry.courseId}/materials/${entry.materialId}`, {
+          method: "DELETE",
+        });
       } catch {
         // Best effort.
       }

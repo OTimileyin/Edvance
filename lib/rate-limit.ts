@@ -21,8 +21,7 @@ export type RateLimitRule = {
 };
 
 export type RateLimitResult =
-  | { ok: true; remaining: number }
-  | { ok: false; retryAfterSeconds: number };
+  { ok: true; remaining: number } | { ok: false; retryAfterSeconds: number };
 
 export class RateLimiter {
   private readonly hits = new Map<string, number[]>();
@@ -43,10 +42,7 @@ export class RateLimiter {
 
     if (recent.length >= rule.limit) {
       const oldest = recent[0];
-      const retryAfterSeconds = Math.max(
-        1,
-        Math.ceil((oldest + rule.windowMs - time) / 1000),
-      );
+      const retryAfterSeconds = Math.max(1, Math.ceil((oldest + rule.windowMs - time) / 1000));
       this.hits.set(key, recent);
       return { ok: false, retryAfterSeconds };
     }

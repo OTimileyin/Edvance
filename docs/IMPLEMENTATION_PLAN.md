@@ -8,14 +8,14 @@
 
 ## 1. Technology Stack (from PRD §14)
 
-| Layer | Decision |
-|---|---|
-| Framework | **Next.js with TypeScript** |
-| Database | **PostgreSQL** (local only for now) |
-| Authentication | **Better Auth** (later phase, not Lesson 6) |
-| File storage | **Supabase Storage** (private bucket; later phase, not Lesson 6) |
-| Local tooling | **Docker** (may run local services such as PostgreSQL); **Caddy** (reverse proxy, later if useful) |
-| Future external services | AI model APIs, email services, transcription services, file-processing services |
+| Layer                    | Decision                                                                                           |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| Framework                | **Next.js with TypeScript**                                                                        |
+| Database                 | **PostgreSQL** (local only for now)                                                                |
+| Authentication           | **Better Auth** (later phase, not Lesson 6)                                                        |
+| File storage             | **Supabase Storage** (private bucket; later phase, not Lesson 6)                                   |
+| Local tooling            | **Docker** (may run local services such as PostgreSQL); **Caddy** (reverse proxy, later if useful) |
+| Future external services | AI model APIs, email services, transcription services, file-processing services                    |
 
 ---
 
@@ -85,6 +85,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 **Current phase:** Phase 7 — Assessment Intelligence — **complete and verified end to end, including a real Google Gemini call**: each assessment question is judged against the concepts the course's own materials taught, and the live model correctly flags the canonical six-versus-five inconsistency (see Appendix A, Change 16). It builds on Phase 6 — Course Intelligence — complete and verified end to end (`GEMINI_API_KEY` present in Infisical; see Appendix A, Change 15). It builds on Phase 5.6 — Text Extraction & Evidence Chunking — complete and verified end to end (`Doc/PRD.md` Appendix A, Change 14), which builds on Phase 5 — Course Material Ingestion (Supabase Storage), complete and verified (Changes 12–13). Phase 4 is complete (Change 11), on top of Phases 1–3 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
 
 **Completed:**
+
 - Phase 1 — Design System & Assessment Intelligence Prototype (static local pages, mock data; `design.html`, `assessment-intelligence.html`).
 - Phase 2 — Core Application Structure.
   - Next.js + TypeScript app (App Router); `npm run dev` serves it at `http://localhost:3000`.
@@ -147,12 +148,15 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
   - The Sources section shows real state — "Ready for analysis" (never "Analyzed"), "Processing…", "Extraction failed" with Retry — plus factual derived metadata only when actually derived, and a **Demo source** flag for seeded rows.
 
 **Verified in Phase 5 (2026-10-01):**
+
 - Supabase Storage upload, private signed retrieval, delete, and the `storageReference` on `learning_material` (`db/migrations/0002_material_storage.sql`, `lib/supabase-storage.ts`, `app/api/courses/[courseId]/materials`). Exercised against the private `edvance-materials` bucket through the real application — see `Doc/PRD.md` Appendix A, Change 13.
 
 **Verified in Phase 5.6 (2026-10-01):**
+
 - Real extraction and chunking for all seven formats, correct page/slide/timestamp/section/line locations, ordered chunks, ingestion jobs, ownership isolation, failed-ingestion states, and delete cascades — `scripts/test-ingestion.mjs` reports 91 passed, 0 failed. See `Doc/PRD.md` Appendix A, Change 14.
 
 **Not yet implemented:**
+
 - Deployment execution (Phase 11): prepared and documented, pending platform credentials and authorisation.
 
 **Next phase:** None — the MVP is submission ready. Run the deployment when the credentials are available (README, Deployment), then smoke-test the live URL against the checklist in `docs/SUBMISSION_REPORT.md`.
@@ -164,6 +168,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 **Goal:** Establish the project environment and documentation.
 
 **Outputs:**
+
 - Next.js + TypeScript project structure (App Router, TypeScript strict).
 - Public GitHub repository maintained at https://github.com/OTimileyin/Edvance.
 - `docs/IMPLEMENTATION_PLAN.md` (this plan).
@@ -172,6 +177,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 - Local development instructions (install, run, test in browser).
 
 **Acceptance Criteria:**
+
 - [ ] Project opens locally (`npm install`, `npm run dev`).
 - [ ] Repository is public.
 - [ ] PRD exists (`Doc/PRD.md`).
@@ -213,6 +219,7 @@ This is the **Lesson 6 deliverable**.
    - Next action: Review the relevant lesson evidence before attempting the assessment.
 
 **Acceptance Criteria:**
+
 - [x] `design.html` opens locally.
 - [x] Color palette is visible.
 - [x] Typography examples are visible.
@@ -233,6 +240,7 @@ This is the **Lesson 6 deliverable**.
 **Goal:** Build the learner experience around courses and course evidence.
 
 **Outputs:**
+
 - Course workspace (create/open a course).
 - Navigation between Courses, Sources, Assessments, and Mastery.
 - Sources section (list course evidence/materials).
@@ -241,6 +249,7 @@ This is the **Lesson 6 deliverable**.
 - Basic responsive layout.
 
 **Acceptance Criteria:**
+
 - [x] App runs locally.
 - [x] A course workspace can be created and opened.
 - [x] Navigation moves between the main sections.
@@ -256,11 +265,13 @@ This is the **Lesson 6 deliverable**.
 **Goal:** Introduce user identity and protected experiences.
 
 **Outputs:**
+
 - Local sign-in/sign-up flows with Better Auth.
 - `User` identity linked to courses and mastery state.
 - Protected application routes.
 
 **Acceptance Criteria:**
+
 - [x] Sign-up and sign-in work locally.
 - [x] Authenticated users can create courses.
 - [x] Unauthenticated access to protected routes is blocked.
@@ -275,11 +286,13 @@ This is the **Lesson 6 deliverable**.
 **Goal:** Persist structured course and learner records.
 
 **Outputs:**
+
 - Schema and migrations for the PRD data model (`User`, `Course`, `LearningMaterial`, `Concept`, `AssessmentQuestion`, `SourceMapping`, `ConsistencyFinding`, `MasteryState`).
 - Local PostgreSQL instance (optionally via Docker).
 - Repository/data-access layer used by the app.
 
 **Acceptance Criteria:**
+
 - [x] PostgreSQL runs locally and connects to the app (verified: `/api/courses` returns seeded rows from `edvance`).
 - [x] Migrations apply cleanly (`npm run migrate` applies `0001_course_data.sql` once; a second run reports "Database already up to date").
 - [x] Courses, materials, concepts, assessments, mappings, consistency findings, and mastery states persist and read back correctly (verified end to end: create course → add assessment → read back from a fresh request; `source_mapping` round-tripped directly against the schema).
@@ -293,11 +306,13 @@ This is the **Lesson 6 deliverable**.
 **Goal:** Allow real course material into the evidence pipeline.
 
 **Outputs:**
+
 - File upload flow for PDFs, slide decks, notes, and transcripts.
 - Storage in Supabase Storage with a stored `storageReference` on `LearningMaterial`.
 - Processing pipeline to prepare materials for course intelligence.
 
 **Delivered:**
+
 - `db/migrations/0002_material_storage.sql` adds `mime_type` and `size_bytes` to `learning_material` (the `storage_reference` object key already existed from Phase 4).
 - `lib/supabase-storage.ts` is a server-only client over the official `@supabase/supabase-js` (session persistence disabled): it uploads with the server-derived content type, mints short-lived signed URLs, and deletes objects. `SUPABASE_SECRET_KEY` is server-only and never reaches the browser.
 - `lib/materials.ts` defines the accepted material types (PDF, PowerPoint, Word, Markdown/plain text, WebVTT/SRT) and the 25 MB per-file limit, shared by the form and the route.
@@ -308,8 +323,9 @@ This is the **Lesson 6 deliverable**.
 **Processing pipeline:** delivered in Phase 5.6 (see below) — text extraction and evidence chunking now run on upload. This phase stores and surfaces materials; AI-assisted course intelligence remains Phase 6.
 
 **Acceptance Criteria:**
-- [x] Files upload and are retrievable via private object storage. *(Verified 2026-10-01: real PDF + TXT upload → 201, signed download 307 → 200 with matching SHA-256, object present at the stored path; bucket refuses anonymous access.)*
-- [x] Uploaded materials appear in the Sources section. *(Verified: the uploaded materials appeared in the course read-back.)*
+
+- [x] Files upload and are retrievable via private object storage. _(Verified 2026-10-01: real PDF + TXT upload → 201, signed download 307 → 200 with matching SHA-256, object present at the stored path; bucket refuses anonymous access.)_
+- [x] Uploaded materials appear in the Sources section. _(Verified: the uploaded materials appeared in the course read-back.)_
 - [x] Failed/unsupported files are handled gracefully (unsupported type → 415, oversized → 413, empty → 400, unauthenticated → 401, not the owner → 404, with messages shown in the form).
 
 ---
@@ -321,11 +337,13 @@ This is the **Lesson 6 deliverable**.
 **Goal:** Turn stored materials into structured, location-aware evidence the later intelligence phases can cite.
 
 **Outputs:**
+
 - Server-only extraction layer for PDF, TXT, Markdown, DOCX, PPTX, WebVTT, and SRT.
 - `material_ingestion_job` and `material_chunk` tables; synchronous ingestion on upload, with retry.
 - Sources processing state ("Ready for analysis") with factual derived metadata, and clearly-labelled demo sources.
 
 **Delivered:**
+
 - `db/migrations/0003_material_ingestion.sql` adds `material_ingestion_job` and `material_chunk`, both cascading from `learning_material`.
 - `lib/extraction/` returns one normalised `{ text, location }` shape from every format — locations are `page`, `slide`, `timestamp`, `section`, or `line`, and the human-readable label is what a citation shows ("Page 7", "00:04:12–00:04:38", "Section: Introduction to PROMPT").
 - `lib/extraction/chunk.ts` produces deterministic, ordered chunks (≈900-character target, 1600 hard limit) that never split a sentence or cross a source location.
@@ -333,10 +351,11 @@ This is the **Lesson 6 deliverable**.
 - The Sources page renders real state and derived metadata, with Retry on failure; seeded rows are labelled **Demo source**.
 
 **Acceptance Criteria:**
-- [x] PDF, TXT, Markdown, DOCX, PPTX, WebVTT, and SRT extract real text. *(Verified 2026-10-01.)*
-- [x] PDF page numbers, PPTX slide numbers, and transcript timestamps are preserved. *(Verified.)*
-- [x] `material_ingestion_job` and `material_chunk` work; chunk ordering is correct; ownership isolation holds; failed ingestion is recorded without deleting the file. *(Verified.)*
-- [x] Sources shows the real processing status. *(Verified.)*
+
+- [x] PDF, TXT, Markdown, DOCX, PPTX, WebVTT, and SRT extract real text. _(Verified 2026-10-01.)_
+- [x] PDF page numbers, PPTX slide numbers, and transcript timestamps are preserved. _(Verified.)_
+- [x] `material_ingestion_job` and `material_chunk` work; chunk ordering is correct; ownership isolation holds; failed ingestion is recorded without deleting the file. _(Verified.)_
+- [x] Sources shows the real processing status. _(Verified.)_
 - [x] Typecheck, tests, and the secret scan pass; documentation updated.
 - [x] No AI provider, prompt, concept extraction, embeddings, or vector database was added.
 
@@ -349,6 +368,7 @@ This is the **Lesson 6 deliverable**.
 **Goal:** Turn stored `material_chunk` evidence into real structured course intelligence, preserving instructor terminology and source evidence.
 
 **Outputs:**
+
 - Concept extraction from course materials.
 - Instructor terminology/framework preservation.
 - Concept-to-source references (where each concept was taught).
@@ -356,6 +376,7 @@ This is the **Lesson 6 deliverable**.
 - An analysis state (`Not analyzed`/`Analyzing`/`Ready`/`Analysis failed`/`Insufficient evidence`/`Needs re-analysis`) that goes stale when materials change.
 
 **Delivered:**
+
 - `db/migrations/0004_course_intelligence.sql`: `course_analysis`, `concept_evidence`, `concept_relationship`, and `concept.origin`/`evidence_status`/`confidence`.
 - `lib/ai/`: provider wrapper, prompt builders (evidence-only, exact chunk ids, preserve course terminology), the structured-output schema, a strict runtime validator plus reference resolver, and the orchestration pipeline.
 - `POST /api/courses/[courseId]/analyse` with authentication, ownership, evidence loading, bounded context, strict validation, and transactional persistence.
@@ -363,6 +384,7 @@ This is the **Lesson 6 deliverable**.
 - The **Intelligence** workspace tab, and the removal of legacy `.doc`/`.ppt` uploads.
 
 **Acceptance Criteria:**
+
 - [x] Concepts and instructor terms are extracted from supplied materials.
 - [x] Each extracted claim carries its evidence: a real material, chunk and human-readable location.
 - [x] Concepts map to source locations in the original material.
@@ -378,6 +400,7 @@ This is the **Lesson 6 deliverable**.
 **Goal:** Connect assessment questions to concepts, sources, and consistency checks.
 
 **Delivered:**
+
 - `db/migrations/0005_assessment_intelligence.sql`: `assessment_analysis` (per-question state, safe error fields, evidence fingerprint, tested-concept count, safe provider metadata) plus one-finding-per-question and one-mapping-per-location constraints.
 - `lib/ai/assessment-intelligence.ts` plus an assessment prompt and JSON Schema: the model is given the course's **already-extracted** concepts and must name the ones the question tests by their exact supplied ids.
 - `POST /api/courses/[courseId]/assessments/[assessmentId]/analyse` — authenticate → ownership → require a ready course → model → strict validation → resolve concept ids → persist `source_mapping`, a `consistency_finding` and the analysis state in one transaction.
@@ -386,6 +409,7 @@ This is the **Lesson 6 deliverable**.
 - The Assessments tab shows each question's signature: state, verdict, the reason, the next action, and the concepts it tests with their own evidence.
 
 **Acceptance Criteria:**
+
 - [x] An assessment question is mapped to relevant concepts and sources.
 - [x] Detected inconsistencies are displayed with evidence.
 - [x] Uncertain outcomes are labelled `Insufficient evidence` rather than guessed.
@@ -399,14 +423,17 @@ This is the **Lesson 6 deliverable**.
 **Goal:** Connect learner performance to assessed concepts.
 
 **Outputs:**
+
 - `MasteryState` per user per concept (status and score).
 - Mastery profile marking Mastered / Developing / Weak / Untested concepts.
 
 **Acceptance Criteria:**
+
 - [x] Practice/self-assessment updates concept mastery status.
 - [x] Mastery profile reflects changes correctly.
 
 **Delivered:**
+
 - `practice_attempt` records each thing a learner actually did — an assessment question (attributed to every concept that question was checked against) or a single concept — with the answer, the correctness verdict and when it happened (`db/migrations/0006_practice_mastery.sql`).
 - `lib/mastery.ts` derives the status from those attempts alone, deterministically: no attempts → Untested; under half correct → Weak; at least half correct → Developing; at least 80% over at least three attempts → **Mastered**. No model is called; mastery is never AI-set.
 - Recording an attempt re-derives the affected concepts from the learner's complete history and upserts `mastery_state` (with attempt counts and a last-practised timestamp) in one transaction.
@@ -422,14 +449,17 @@ This is the **Lesson 6 deliverable**.
 **Goal:** Turn evidence and mastery into a useful next action.
 
 **Outputs:**
+
 - Revision recommendation based on the learner's weak concepts.
 - Targeted practice questions generated from weak areas (not random across the course).
 
 **Acceptance Criteria:**
+
 - [x] Recommendations reference the smallest useful next action.
 - [x] Practice generation focuses on weak/untested concepts.
 
 **Delivered:**
+
 - `lib/revision.ts` derives the recommendation deterministically from mastery and evidence: the focus (Weak → Developing → Untested, Mastered excluded) and one smallest next action, naming the top concept and where the course teaches it. No model call, and it is always current.
 - `practice_question` and `revision_plan` (migration `0007`) store targeted practice and the per-course generation state, including a `generated_for` weak-area fingerprint.
 - `POST /api/courses/[courseId]/revision` authenticates, authorises by ownership, refuses an un-analysed course with 409, records `nothing-to-revise` and `insufficient-evidence` honestly (no model call), and never recomputes an up-to-date generation.
@@ -445,6 +475,7 @@ This is the **Lesson 6 deliverable**.
 **Goal:** Make the product complete and operable, and prove it holds under a real build.
 
 **Outputs:**
+
 - Edit and delete for courses, materials, and assessment questions.
 - An account lifecycle: profile, password change, account deletion.
 - Security headers and CSP, rate limiting, and per-course upload quotas.
@@ -454,6 +485,7 @@ This is the **Lesson 6 deliverable**.
 - A passing production build.
 
 **Acceptance Criteria:**
+
 - [x] Courses, materials, and questions can be edited and deleted, with storage cleaned up.
 - [x] An account can be managed and deleted, with all owned data and files removed.
 - [x] Security headers, a CSP, rate limiting, and upload quotas are enforced.
@@ -462,6 +494,7 @@ This is the **Lesson 6 deliverable**.
 - [x] `next build` completes a production build.
 
 **Delivered:**
+
 - **Edit/delete.** `PATCH`/`DELETE` on `/api/courses/[courseId]` rename or delete a course (the delete cascades in the database and removes its stored files), and on `/api/courses/[courseId]/assessments/[assessmentId]` edit or delete a question. Editing a question discards its stale check so it must be checked again against the evidence. The overview and Assessments tabs expose all of it, and destroying actions require the word DELETE typed.
 - **Account lifecycle.** An `/account` page shows who is signed in, changes the password (revoking other sessions), and deletes the account — which cascades away every course, material, concept, attempt and plan, and removes the stored files. A confirmation email is sent through **Resend** when `RESEND_API_KEY` is configured, and Edvance reports honestly that it did not send one when it is not.
 - **Hardening.** Security headers and a strict Content-Security-Policy (relaxed only in development) are set in `next.config.ts`; an in-memory fixed-window rate limiter (`lib/rate-limit.ts`) guards model calls, uploads, practice and account actions per learner; and a course is capped at `MAX_MATERIALS_PER_COURSE` materials and `MAX_COURSE_BYTES` of stored content.
@@ -478,16 +511,19 @@ This is the **Lesson 6 deliverable**.
 **Goal:** Ship the built product to a free-tier host with HTTPS and managed PostgreSQL.
 
 **Outputs:**
+
 - A complete deployment specification (`specific.hcl`).
 - A documented procedure and verification checklist.
 
 **Acceptance Criteria:**
+
 - [x] `specific.hcl` declares every secret the app reads, and every reference resolves.
 - [x] The health check points at the real readiness probe, and migrations run pre-deploy.
 - [x] The deploy procedure and a verification checklist are documented.
 - [x] The app is deployed and smoke-tested. **Done:** live at <https://white-whale.spcf.app> (`depl_02f4368hqt4n86q6`); remote suite **69 passed / 0 failed**.
 
 **Delivered:**
+
 - `specific.hcl` now declares `gemini_api_key`, `supabase_url`, `supabase_secret_key`, `supabase_storage_bucket` and the optional `resend_api_key`/`email_from`, wires them into the service environment, pins `GEMINI_MODEL`, and changes the endpoint health check from `/` to the real `/api/health` probe. Every `secret.*` reference has a matching declaration (verified). `better_auth_secret` stays platform-generated.
 - `README.md` gains a **Deployment** section: the prerequisites, the secrets table, the deploy commands, and a verification checklist (health probe, security headers, the full learner loop, confirmation that the production mock is refused, and a re-deploy migration no-op).
 - The local production build the platform runs is verified (`next build` succeeds).
@@ -501,10 +537,12 @@ This is the **Lesson 6 deliverable**.
 **Goal:** Prove the submission holds under adversarial scrutiny, or fix what does not.
 
 **Outputs:**
+
 - `docs/SUBMISSION_REPORT.md`.
 - A full, freshly run verification gate.
 
 **Acceptance Criteria:**
+
 - [x] Adversarial audit performed; honesty guarantees attacked and held.
 - [x] No-fake-feature sweep clean.
 - [x] Full test gate green (typecheck, unit, six end-to-end suites, live provider, production build, secret scan, baseline).
@@ -513,6 +551,7 @@ This is the **Lesson 6 deliverable**.
 - [x] Edvance declared submission ready **and deployed live** (the deployment is no longer pending).
 
 **Delivered:**
+
 - Adversarial audit: a fabricated citation, a fabricated concept, an unjustified contradiction, a cross-user read and an untrusted origin were each attempted and each refused. The mock provider cannot reach production (`NODE_ENV`), no client component imports a server-only module, and no secret is hardcoded or exposed via `NEXT_PUBLIC_`.
 - **One real defect found and fixed:** the landing page, footer and header still claimed analysis was "not yet live" and running on "mock data", and labelled the product "Demo · mock data" — false since Phases 6–9. Corrected.
 - Full gate: typecheck exit 0; unit **24**; end-to-end **43 / 72 / 48 / 76 / 59 / 91**, all 0 failed; live provider **34**, 0 failed; production build passes; secret scan clean; database and bucket restored to baseline.
@@ -523,6 +562,7 @@ This is the **Lesson 6 deliverable**.
 ## 8. Definition of MVP Success (PRD §23)
 
 The full MVP is successful when a learner can:
+
 1. Add course material.
 2. Add an assessment question.
 3. See what concepts the question requires.

@@ -2,7 +2,9 @@ name: check
 
 # Runs on every push — and on pull requests — so a broken change is caught
 # before it can be deployed. `npm run check` is the same offline gate used
-# locally: `tsc --noEmit` followed by the dependency-free unit suite.
+# locally: `tsc --noEmit` followed by the dependency-free unit suite. The
+# lint job adds the ESLint and Prettier gates (`npm run lint`,
+# `npm run format:check`).
 on:
   push:
   pull_request:
@@ -31,6 +33,29 @@ jobs:
 
       - name: Typecheck and unit tests
         run: npm run check
+
+  # Static analysis gate: ESLint (flat config over eslint-config-next and
+  # typescript-eslint) and Prettier's format check. These are the same
+  # commands run locally via `npm run lint` and `npm run format:check`.
+  lint:
+    name: lint + formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Prettier format check
+        run: npm run format:check
 
   # Runs the real production build against an ephemeral Postgres service,
   # mirroring the Vercel build command exactly: `node scripts/migrate.mjs && npm

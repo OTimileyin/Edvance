@@ -126,9 +126,7 @@ export async function POST(
 
   await markRevisionAnalyzing(courseId, fingerprint);
 
-  const conceptById = new Map(
-    course.intelligence.concepts.map((concept) => [concept.id, concept]),
-  );
+  const conceptById = new Map(course.intelligence.concepts.map((concept) => [concept.id, concept]));
 
   let outcome = "generated";
   try {
