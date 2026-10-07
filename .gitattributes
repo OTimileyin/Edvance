@@ -1,0 +1,21 @@
+*
+text=auto
+# Force LF for the files that ESLint/Prettier touch, so a Windows checkout cannot reintroduce CRLF into committed source
+.gitattributes text=auto eol=lf
+.github/workflows/check.yml text eol=lf
+.prettierrc.json text eol=lf
+.prettierignore text eol=lf
+package.json text eol=lf
+package-lock.json text eol=lf
+eslint.config.mjs text eol=lf
+tsconfig.json text eol=lf
+README.md text eol=lf
+Doc/PRD.md text eol=lf
+docs/*.md text eol=lf
+tests/unit/*.test.mjs text eol=lf
+scripts/*.mjs text eol=lf
+app/**/*.ts text eol=lf
+app/**/*.tsx text eol=lf
+app/**/*.css text eol=lf
+components/**/*.tsx text eol=lf
+lib/**/*.ts text eol=lf
