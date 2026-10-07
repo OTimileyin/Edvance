@@ -3,8 +3,8 @@
 **Date:** 2026-10-02
 **Deployment status last re-checked:** 2026-10-05
 **Branch:** `main`
-**Last verified commit:** `756c4fb` — `feat(deploy): diff two deployments check by check and record the second target`
-**Verified at this commit:** remote suite against Specific → **69 passed / 0 failed**; two-deployment diff mode exercised against the not-yet-live Vercel host → **16 passed / 53 failed**.
+**Last verified commit:** `9468e85` — `chore(tooling): configure ESLint and Prettier and gate CI on them`
+**Verified at this commit:** `npm run lint` and `npm run format:check` exit 0, `npm run check` → **38 passed / 0 failed**, production build passes; the three required CI checks (`typecheck + unit tests`, `lint + formatting`, `production build`) green on PR #2. The remote suite against Specific (**69 passed / 0 failed**) and the two-deployment diff mode against the not-yet-live Vercel host (**16 passed / 53 failed**) were run at `756c4fb`.
 **Live deployment:** **https://white-whale.spcf.app** (`depl_02f4368hqt4n86q6`)
 **Status:** **EDVANCE — DEPLOYED AND SUBMISSION READY.** The app is live, serves HTTPS, and passed a
 remote end-to-end verification of the complete learner journey (**69 checks, 0 failures**).
@@ -108,7 +108,9 @@ source.
 | Check                             | Command                                                                           | Result                                                                                                                                                                    |
 | --------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Typecheck                         | `rm -f tsconfig.tsbuildinfo && npx tsc --noEmit`                                  | **exit 0**                                                                                                                                                                |
-| Unit tests                        | `npm run test:unit`                                                               | **24 passed / 0 failed**                                                                                                                                                  |
+| ESLint                            | `npm run lint`                                                                    | **exit 0** (0 problems)                                                                                                                                                   |
+| Prettier                          | `npm run format:check`                                                            | **exit 0** (all files formatted)                                                                                                                                          |
+| Unit tests                        | `npm run test:unit`                                                               | **38 passed / 0 failed**                                                                                                                                                  |
 | Phase 10 — product & hardening    | `npm run test:hardening`                                                          | **43 passed / 0 failed**                                                                                                                                                  |
 | Phase 9 — targeted revision       | `npm run test:revision`                                                           | **72 passed / 0 failed**                                                                                                                                                  |
 | Phase 8 — mastery                 | `npm run test:mastery`                                                            | **48 passed / 0 failed**                                                                                                                                                  |
