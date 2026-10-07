@@ -248,6 +248,19 @@ service behind a public HTTPS endpoint, a managed PostgreSQL instance, a `/api/h
 and a `pre_deploy` step that applies `db/migrations/*.sql` before each rollout (safe to re-run, tracked
 in `schema_migrations`).
 
+### Landing changes on main
+
+`main` is protected: **direct pushes are rejected** — for everyone, admins included. Every change
+arrives as a pull request, and the `check` workflow must be green before it can merge:
+
+- **`typecheck + unit tests`** — `tsc --noEmit` plus the dependency-free unit suite (`npm run check`).
+- **`production build`** — applies `db/migrations/*.sql` against a real Postgres service container,
+  then runs `next build`, mirroring the Vercel build command exactly — so a migration break or a
+  Next.js build break fails in CI, not on deploy.
+
+Branches must be up to date with `main` before merging. This is the merge/deploy gate in practice:
+only green commits reach `main`, and both platforms deploy from `main`.
+
 Two things are deliberately left to a human, because they need an account and real credentials:
 
 1. **Authenticate the platform.** Install the Specific CLI and sign in (`specific login`), or supply a
