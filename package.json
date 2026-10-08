@@ -14,6 +14,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "prepare": "husky",
     "migrate": "infisical run --env=dev -- node scripts/migrate.mjs",
     "test:ingestion": "infisical run --env=dev -- node scripts/test-ingestion.mjs",
     "test:intelligence": "infisical run --env=dev -- node scripts/test-course-intelligence.mjs",
@@ -46,8 +47,14 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.4.0",
     "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
     "@typescript/native": "npm:typescript@^7.0.2",
     "prettier": "^3.9.9",
     "typescript": "npm:@typescript/typescript6@^6.0.2"
+  },
+  "lint-staged": {
+    "*.{js,jsx,mjs,cjs,ts,tsx}": "eslint",
+    "*": "prettier --ignore-unknown --check"
   }
 }

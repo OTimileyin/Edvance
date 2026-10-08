@@ -32,6 +32,10 @@ squash-merged to `main`. Verified on this commit: `npm run lint` and `npm run fo
 (`typecheck + unit tests`, `lint + formatting`, `production build`) are green. The remote suite was
 run against `756c4fb`'s script: Specific **69 passed / 0 failed**, and the two-deployment diff mode
 was exercised against the not-yet-live Vercel host (**16 passed / 53 failed**).
+
+Later tooling change: a **husky + lint-staged pre-commit hook** runs `eslint` and `prettier --check`
+on the files in a commit, locally, before it is created. It is check-only (it never rewrites files),
+so CI remains the authority. Both paths were exercised by hand — see the test-status table.
 Phase 12 was `b97cd0d`; the deployment commits were `ec06507`, `afef1b8`, `b3e3a98`.
 Phase 11 was `18db198`; Phase 10 was `fb96dc2`.
 Phase 9 was `3d7b818`; Phase 8 was `aa6f014`; Phase 7 was `2d51d6f`; Phase 6 was `2bce681`;
@@ -145,6 +149,7 @@ make the change, and re-run the gate before claiming anything:
 | `npx tsc --noEmit` (after clearing `tsconfig.tsbuildinfo`)     | exit 0                                                                                                                                                                    |
 | ESLint — `npm run lint`                                        | exit 0 (0 problems)                                                                                                                                                       |
 | Prettier — `npm run format:check`                              | exit 0 (all files formatted)                                                                                                                                              |
+| Pre-commit hook — husky + lint-staged                          | exit 1 misformatted / exit 0 clean                                                                                                                                        |
 | Unit — `npm run test:unit` (`tests/unit/*.test.mjs`)           | **38 passed / 0 failed**                                                                                                                                                  |
 | Phase 10 — `scripts/test-product-hardening.mjs`                | **43 passed / 0 failed**                                                                                                                                                  |
 | Phase 9 — `scripts/test-targeted-revision.mjs`                 | **72 passed / 0 failed**                                                                                                                                                  |

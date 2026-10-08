@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+# Local gate: run the same ESLint and Prettier checks CI runs, but only on the
+# files in this commit, so a lint error or an unformatted file is caught before
+# it reaches a pull request. Fix with `npm run lint:fix` and `npm run format`.
+npx --no-install lint-staged
+
+# husky moves Git's hooks directory to .husky/_, which would silently disable any
+# hook kept in .git/hooks (on the maintainer's machine, the Infisical secret
+# scan). Run that one too when it is present; it is absent on a fresh clone.
+if [ -x .git/hooks/pre-commit ]; then
+  ./.git/hooks/pre-commit || exit $?
+fi
