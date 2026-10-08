@@ -123,23 +123,61 @@ export async function createCourse(input: {
   return ((await response.json()) as { course: Course }).course;
 }
 
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Uploads a file to a course's Sources. Goes through the route handler, which
- * stores the bytes in private object storage and records the material. Throws
- * with a display message on failure (unsupported type, too large, storage down).
+ * Uploads one file to a course's Sources, reporting real byte progress.
+ *
+ * `XMLHttpRequest` rather than `fetch` for one reason: upload progress is not
+ * observable through `fetch`, and a ten-file batch needs a per-file bar that
+ * means something. The route, the error contract and the returned material are
+ * identical either way. Throws with a display message on failure (unsupported
+ * type, too large, quota reached, storage down).
+ */
+export function uploadMaterialWithProgress(
+  courseId: string,
+  file: File,
+  onProgress: (percent: number) => void,
+): Promise<SourceItem> {
+  return new Promise((resolve, reject) => {
+    const body = new FormData();
+    body.append("file", file);
+
+    const request = new XMLHttpRequest();
+    request.open("POST", `/api/courses/${courseId}/materials`);
+    request.upload.onprogress = (event) => {
+      if (!event.lengthComputable || event.total === 0) return;
+      onProgress((event.loaded / event.total) * 100);
+    };
+    request.onload = () => {
+      const payload = parseJson(request.responseText) as {
+        material?: SourceItem;
+        error?: string;
+      } | null;
+      if (request.status >= 200 && request.status < 300 && payload?.material) {
+        resolve(payload.material);
+        return;
+      }
+      reject(new Error(payload?.error ?? "Could not upload the material."));
+    };
+    request.onerror = () => reject(new Error("Could not reach the server to upload the material."));
+    request.onabort = () => reject(new Error("The upload was cancelled."));
+    request.send(body);
+  });
+}
+
+/**
+ * Uploads a file without reporting progress. Goes through the route handler,
+ * which stores the bytes in private object storage and records the material.
  */
 export async function uploadMaterial(courseId: string, file: File): Promise<SourceItem> {
-  const body = new FormData();
-  body.append("file", file);
-
-  const response = await fetch(`/api/courses/${courseId}/materials`, {
-    method: "POST",
-    body,
-  });
-  if (!response.ok) {
-    throw new Error(await readError(response, "Could not upload the material."));
-  }
-  return ((await response.json()) as { material: SourceItem }).material;
+  return uploadMaterialWithProgress(courseId, file, () => {});
 }
 
 /**
