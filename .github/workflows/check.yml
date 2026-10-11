@@ -8,6 +8,15 @@ name: check
 on:
   push:
   pull_request:
+  # Manual dispatch with "update-baselines" re-captures the plush visual
+  # baselines on the CI renderer and uploads them as an artifact, which is the
+  # supported way to accept an intentional redesign.
+  workflow_dispatch:
+    inputs:
+      update-baselines:
+        description: "Capture fresh visual baselines on the CI renderer (commit the uploaded artifact)"
+        type: boolean
+        default: false
 
 concurrency:
   group: check-${{ github.ref }}
@@ -107,3 +116,89 @@ jobs:
           BETTER_AUTH_URL: http://localhost:3000
           NEXT_TELEMETRY_DISABLED: 1
         run: npm run build
+
+  # Visual regression for the plush design: serves the production build and
+  # screenshots the plush surfaces (landing, sign-in, sign-up, offline
+  # revision, and the two design-document HTML pages) at desktop and mobile
+  # viewports, comparing them pixel-for-pixel against the baselines committed
+  # in tests/visual/baselines. Any redesign drift fails the gate and uploads
+  # the captured images plus highlighted diffs for inspection.
+  #
+  # Baselines are renderer-specific (font rasterisation differs per OS), so
+  # they are captured on this job's own renderer: dispatch the workflow with
+  # "update-baselines" and commit the uploaded artifact — never commit
+  # baselines captured on a developer machine.
+  visual:
+    name: visual regression
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: edvance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The screenshots must come from the same Chromium build on every run,
+      # so the browser is installed from the lockfile-pinned playwright. The
+      # headless shell is what the script actually launches; both are pinned.
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium chromium-headless-shell
+
+      - name: Apply migrations
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/edvance
+          NEXT_TELEMETRY_DISABLED: 1
+        run: node scripts/migrate.mjs
+
+      - name: Production build
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/edvance
+          BETTER_AUTH_SECRET: ci-build-placeholder-secret-not-for-runtime-use
+          BETTER_AUTH_URL: http://localhost:3000
+          NEXT_TELEMETRY_DISABLED: 1
+        run: npm run build
+
+      - name: Compare against plush baselines
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/edvance
+          BETTER_AUTH_SECRET: ci-build-placeholder-secret-not-for-runtime-use
+          BETTER_AUTH_URL: http://localhost:3000
+          NEXT_TELEMETRY_DISABLED: 1
+        run: node scripts/visual-regression.mjs ${{ github.event_name == 'workflow_dispatch' && '--update' || '' }}
+
+      # On drift (or a missing baseline) the captured shots and pixel diffs
+      # are uploaded so the change can be reviewed from the run page.
+      - name: Upload visual diff artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-output
+          path: .tmp-scratch/visual/
+          if-no-files-found: ignore
+
+      # Re-baseline flow: the fresh captures land in an artifact that a human
+      # reviews and commits to tests/visual/baselines.
+      - name: Upload fresh baselines
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fresh-visual-baselines
+          path: tests/visual/baselines/
