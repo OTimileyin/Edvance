@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InstallButton } from "@/components/install-button";
 
 const pipeline = ["Question", "Concept", "Evidence", "Consistency", "Mastery", "Revision"];
 
@@ -462,6 +463,7 @@ export default function Home() {
                 <Link className="btn btn-secondary" href="/signin">
                   Sign in
                 </Link>
+                <InstallButton />
               </div>
               <p className="hero-note">
                 Evidence-first · every citation checked before it is stored
