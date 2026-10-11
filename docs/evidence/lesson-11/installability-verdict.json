@@ -1,0 +1,10 @@
+{
+  "url": "https://white-whale.spcf.app",
+  "serviceWorker": {
+    "registered": true,
+    "scope": "https://white-whale.spcf.app/",
+    "active": true,
+    "controlled": true
+  },
+  "installabilityErrors": []
+}
