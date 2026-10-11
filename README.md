@@ -142,6 +142,18 @@ BASE_URL=http://localhost:3260 infisical run --env=dev -- node scripts/verify-ge
 
 It reports **34 passed, 0 failed**: six concepts with instructor terminology preserved, every citation resolving to a real `Section: …` chunk, cost control and staleness, and the real model correctly flagging the six-versus-five assessment inconsistency.
 
+## Installable PWA
+
+Edvance is an installable Progressive Web App. The pieces:
+
+- **Manifest** — `app/manifest.ts`, served at `/manifest.webmanifest` (name `Edvance`, `display: standalone`, `start_url`/`scope` `/`, theme `#1E2A6B` on `#FAF4E7`, icons 192px + 512px + a 512px maskable).
+- **Service worker** — `public/sw.js`, registered by `components/pwa-register.tsx` in production only. Navigations are network-first with `public/offline.html` as the fallback notice; hashed `/_next/static/` assets and icons are cache-first. **`/api/*` and every non-GET request are never intercepted**, so no learner data, signed storage URLs, or model responses are ever written to storage.
+- **Icons** — `public/icons/icon-192.png`, `icon-512.png`, `icon-512-maskable.png`, generated from the Edvance logo mark; `app/apple-icon.png` (180px) for iOS; the `app/icon.svg` favicon is unchanged.
+- **CSP** — `worker-src 'self'` and `manifest-src 'self'` in `next.config.ts` explicitly permit the worker and manifest without loosening anything else.
+- **Offline limits** — offline you get the reconnect notice and nothing else: authentication, analysis, assessments, and mastery all require a connection and are never claimed to work offline.
+
+Installability is verified with Chrome's own verdict (`Page.getInstallabilityErrors`) against the live HTTPS URL — zero errors. Install from the browser's install icon in the address bar.
+
 ## Brand
 
 The Edvance mark is a seal containing an "E" built from three stacked source bars — the middle bar is rust because Edvance highlights the evidence that matters and flags the source that disagrees.

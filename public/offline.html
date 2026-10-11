@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1E2A6B" />
+    <title>Offline — Edvance</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #faf4e7;
+        color: #1e2a6b;
+        font-family: ui-rounded, "Segoe UI", system-ui, sans-serif;
+        text-align: center;
+      }
+      .card {
+        max-width: 26rem;
+        padding: 2.5rem 2rem;
+        margin: 1rem;
+        background: #fffcf3;
+        border-radius: 2rem;
+        box-shadow: 0 18px 40px -20px rgba(30, 42, 107, 0.35);
+      }
+      .disc {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 1.25rem;
+        border-radius: 999px;
+        background: #c43a28;
+        display: grid;
+        place-items: center;
+        font-size: 2rem;
+      }
+      h1 {
+        margin: 0 0 0.75rem;
+        font-size: 1.6rem;
+      }
+      p {
+        margin: 0 0 1.5rem;
+        color: #4a4536;
+        line-height: 1.55;
+      }
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 0.85rem 1.75rem;
+        font-size: 1rem;
+        font-weight: 700;
+        background: #1e2a6b;
+        color: #faf4e7;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="disc" aria-hidden="true">☁</div>
+      <h1>You are offline</h1>
+      <p>
+        Reconnect to continue using Edvance. Accounts, file analysis, assessments and mastery data
+        all need a connection — nothing is processed offline.
+      </p>
+      <button type="button" onclick="location.reload()">Try again</button>
+    </div>
+  </body>
+</html>

@@ -9,10 +9,9 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Edvance — Course Intelligence",
+    name: "Edvance",
     short_name: "Edvance",
-    description:
-      "Evidence-first assessment intelligence: every question mapped to the lesson that taught it, every inconsistency flagged, every concept scored.",
+    description: "Evidence-first assessment intelligence for learners.",
     id: "/",
     start_url: "/",
     scope: "/",

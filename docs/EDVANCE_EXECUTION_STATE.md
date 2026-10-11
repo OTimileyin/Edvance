@@ -70,6 +70,16 @@ nothing being served. To finish: connect Vercel Postgres in the dashboard and re
 `main`, then require 69/0 before recording it as live. **Specific stays the live, submission
 deployment until then.**
 
+## INSTALLABLE PWA (LESSON 11)
+
+**Complete and verified.** Manifest `app/manifest.ts` → `/manifest.webmanifest`; service worker
+`public/sw.js` registered by `components/pwa-register.tsx` (production only); icons in
+`public/icons/` (192, 512, 512-maskable) plus `app/apple-icon.png`; offline notice
+`public/offline.html`; CSP gains `worker-src 'self'` and `manifest-src 'self'`. Chrome's
+`Page.getInstallabilityErrors` against `https://white-whale.spcf.app` returns **zero errors**.
+The worker never intercepts `/api/*` or non-GET requests. Offline serves only the reconnect
+notice — no offline claims for auth, analysis, or learner data.
+
 ## ACTIVE BLOCKERS
 
 None.

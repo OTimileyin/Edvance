@@ -252,6 +252,29 @@ surfaces as an honest retryable failure rather than a crash or a fabricated resu
 
 ---
 
+## 9. Installable PWA
+
+Edvance is an installable Progressive Web App on the live deployment:
+
+| Piece            | Where                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web App Manifest | `app/manifest.ts` → `/manifest.webmanifest` (name `Edvance`, `display: standalone`, `start_url` `/`, theme `#1E2A6B`, background `#FAF4E7`) |
+| Service worker   | `public/sw.js`, registered by `components/pwa-register.tsx` (production only)                                                               |
+| Icons            | `public/icons/icon-192.png`, `icon-512.png`, `icon-512-maskable.png` (from the Edvance logo mark); `app/apple-icon.png` (180px)             |
+| Offline notice   | `public/offline.html` — "You are offline. Reconnect to continue using Edvance."                                                             |
+| CSP              | `worker-src 'self'`, `manifest-src 'self'` added to the existing policy; nothing else relaxed                                               |
+
+**Install verification:** Chrome's own installability verdict (`Page.getInstallabilityErrors`) against
+`https://white-whale.spcf.app` over HTTPS returns **zero errors**; the service worker registers,
+activates, and controls the page. The conservative worker never intercepts `/api/*` or non-GET
+requests, so no learner data, signed Supabase URLs, or Gemini responses are cached.
+
+**Offline limitations (honest):** offline the app serves only the reconnect notice. Authentication,
+AI analysis, assessment intelligence, mastery and revision all require a connection; nothing is
+claimed to work offline.
+
+---
+
 ## Appendix — Commit history
 
 | Phase  | Commit        | Summary                                                               |
