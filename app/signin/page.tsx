@@ -73,16 +73,25 @@ export default function SignInPage() {
 
   async function handleDemo() {
     setBusy(true);
-    // Provision the shared local demo account on the fly.
-    await authClient.signUp.email({
-      name: "Demo learner",
+    setError("");
+    // The shared demo account is provisioned on the fly. Sign in first and
+    // only create the account when it is missing — signing up first returned
+    // 422 on every repeat visit once the account already existed.
+    let result = await authClient.signIn.email({
       email: "demo@edvance.app",
       password: "demo-password-123",
     });
-    const result = await authClient.signIn.email({
-      email: "demo@edvance.app",
-      password: "demo-password-123",
-    });
+    if (result.error) {
+      await authClient.signUp.email({
+        name: "Demo learner",
+        email: "demo@edvance.app",
+        password: "demo-password-123",
+      });
+      result = await authClient.signIn.email({
+        email: "demo@edvance.app",
+        password: "demo-password-123",
+      });
+    }
     setBusy(false);
     if (result.error) {
       setError(result.error.message ?? "Demo sign-in failed. Try again.");
