@@ -23,6 +23,29 @@ export const metadata: Metadata = {
   title: "Edvance — Course Intelligence",
   description:
     "Evidence-first assessment intelligence: every question mapped to the lesson that taught it, every inconsistency flagged, every concept scored.",
+  metadataBase: new URL("https://white-whale.spcf.app"),
+  openGraph: {
+    type: "website",
+    siteName: "Edvance",
+    title: "Edvance — Course Intelligence",
+    description:
+      "Evidence-first assessment intelligence: every question mapped to the lesson that taught it, every inconsistency flagged, every concept scored.",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "Edvance — evidence-first assessment intelligence",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Edvance — Course Intelligence",
+    description:
+      "Evidence-first assessment intelligence: every question mapped to the lesson that taught it, every inconsistency flagged, every concept scored.",
+    images: ["/og.png"],
+  },
 };
 
 export const viewport: Viewport = {

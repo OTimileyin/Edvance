@@ -2,8 +2,10 @@
  * Edvance logo.
  *
  * The mark is an "E" built from three stacked source bars inside a seal —
- * the middle bar is highlighted rust, because Edvance highlights the evidence
- * that matters and flags the source that disagrees.
+ * one plush accent per bar (mustard, rust, teal-green). The middle bar stays
+ * rust because Edvance highlights the evidence that matters and flags the
+ * source that disagrees; the outer bars carry the growth and highlight
+ * accents so the mark reads as the full plush palette.
  *
  * `idSuffix` keeps the gradient ids unique per instance so the same mark can
  * render many times on a page (header, footer, auth panel) without collisions.
@@ -61,10 +63,11 @@ export function LogoMark({
       />
       <rect width="40" height="16" rx="12" fill={`url(#${gloss})`} />
 
-      {/* Three source bars: top, highlighted middle, bottom */}
-      <rect x="11.5" y="11.6" width="17" height="3.7" rx="1.85" fill="#FAF4E7" />
+      {/* Three source bars: one plush accent each — mustard, rust (the
+          flag), teal-green. Cream inset stroke keeps them separated. */}
+      <rect x="11.5" y="11.6" width="17" height="3.7" rx="1.85" fill="#E8A828" />
       <rect x="11.5" y="18.15" width="12.6" height="3.7" rx="1.85" fill="#D6452F" />
-      <rect x="11.5" y="24.7" width="8.6" height="3.7" rx="1.85" fill="#FAF4E7" />
+      <rect x="11.5" y="24.7" width="8.6" height="3.7" rx="1.85" fill="#1A8E7F" />
     </svg>
   );
 }
