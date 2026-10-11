@@ -56,6 +56,12 @@
         color: #faf4e7;
         cursor: pointer;
       }
+      .link {
+        display: inline-block;
+        margin-top: 1rem;
+        color: #1e2a6b;
+        font-weight: 700;
+      }
     </style>
   </head>
   <body>
@@ -64,9 +70,11 @@
       <h1>You are offline</h1>
       <p>
         Reconnect to continue using Edvance. Accounts, file analysis, assessments and mastery data
-        all need a connection — nothing is processed offline.
+        all need a connection — nothing is processed offline. Revision lists you saved while online
+        can still be read.
       </p>
       <button type="button" onclick="location.reload()">Try again</button>
+      <a class="link" href="/offline-revision">Open saved revision lists</a>
     </div>
   </body>
 </html>

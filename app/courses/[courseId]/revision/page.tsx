@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { generateRevision, recordPractice, useCourse } from "@/lib/useCourses";
+import { saveRevisionSnapshot } from "@/lib/offline-revision";
 import { ConceptBadge } from "@/components/badges";
 import type { AnalysisStatus, PracticeQuestion } from "@/lib/types";
 
@@ -37,6 +38,16 @@ export default function CourseRevision() {
   const params = useParams<{ courseId: string }>();
   const { course, ready, reload } = useCourse(params.courseId);
 
+  // Keep this course's revision list on the device so it can be studied from
+  // /offline-revision without a connection. Purely a local copy of what is on
+  // screen; the learner can wipe it from that page.
+  useEffect(() => {
+    if (!course) return;
+    saveRevisionSnapshot(course.id, course.name, course.revision).catch(() => {
+      // Storage is a progressive enhancement; revision works without it.
+    });
+  }, [course]);
+
   if (!ready) return null;
   if (!course) return null;
 
@@ -57,6 +68,11 @@ export default function CourseRevision() {
         <p className="page-lede">
           What to revise in {course.name} next, and practice written for the concepts you are
           weakest on. The recommendation is derived from your practice; Edvance never invents a gap.
+        </p>
+        {/* A plain link: offline study needs a full navigation the service
+            worker can answer from its precache. */}
+        <p className="form-hint" style={{ marginTop: "0.75rem" }}>
+          <a href="/offline-revision">Study offline — saved revision lists</a>
         </p>
       </section>
 

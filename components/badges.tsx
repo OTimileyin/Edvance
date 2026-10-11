@@ -21,7 +21,9 @@ const CONSISTENCY_LABELS: Record<ConsistencyStatus, { label: string; className: 
 };
 
 export function ConceptBadge({ status }: { status: ConceptStatus }) {
-  const meta = CONCEPT_LABELS[status];
+  // Offline revision snapshots are persisted JSON read back at runtime, so
+  // fall back instead of crashing on a value the table does not know.
+  const meta = CONCEPT_LABELS[status] ?? { label: status, className: "badge-neutral" };
   return <span className={`badge ${meta.className}`}>{meta.label}</span>;
 }
 
