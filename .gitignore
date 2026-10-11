@@ -40,3 +40,4 @@ specific.local
 # Local scratch (agent tooling)
 .freebuff/
 .tmp-scratch/
+.playwright-cli/
