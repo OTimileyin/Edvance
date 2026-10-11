@@ -19,7 +19,7 @@ export default function GlobalError({
           fontFamily: "system-ui, sans-serif",
           margin: 0,
           padding: "64px 24px",
-          background: "#FBF6EA",
+          background: "#FAF4E7",
           color: "#23201A",
         }}
       >
@@ -30,7 +30,7 @@ export default function GlobalError({
               fontWeight: 700,
               letterSpacing: "0.16em",
               textTransform: "uppercase",
-              color: "#C9502E",
+              color: "#C43A28",
             }}
           >
             Edvance
@@ -48,7 +48,7 @@ export default function GlobalError({
               padding: "12px 24px",
               borderRadius: 999,
               border: "none",
-              background: "#22545A",
+              background: "#3A4AAC",
               color: "#FDFBF5",
               fontWeight: 700,
               cursor: "pointer",

@@ -19,6 +19,16 @@ export const MAX_MATERIAL_BYTES = 25 * 1024 * 1024; // 25 MB
 export const MAX_MATERIALS_PER_COURSE = 50;
 export const MAX_COURSE_BYTES = 200 * 1024 * 1024; // 200 MB across a course
 
+/**
+ * How many files one action may hand to the uploader.
+ *
+ * A batch is uploaded one request per file — so the route's per-file quota
+ * checks stay exact and one bad file cannot take the others down with it — and
+ * this cap keeps a single action bounded. Every rule here is enforced again by
+ * the upload route.
+ */
+export const MAX_FILES_PER_UPLOAD = 10;
+
 export type MaterialKind = {
   /** The Edvance source type this file is ingested as. */
   type: SourceType;
@@ -108,4 +118,58 @@ export function safeMaterialFilename(filename: string): string {
 export function materialTitle(filename: string, fallback: string): string {
   const base = filename.replace(/\.[a-z0-9]+$/i, "").trim();
   return base || fallback;
+}
+
+/** One chosen file the uploader will not send, and why — shown as-is. */
+export interface RejectedUpload {
+  name: string;
+  /** A sentence naming the limit that was hit, never a bare identifier. */
+  reason: string;
+}
+
+/**
+ * Applies the upload rules to a batch of chosen files.
+ *
+ * Pure on purpose: the form renders a per-file reason for anything refused, and
+ * the same rules are unit-tested here rather than only exercised through the
+ * browser.`alreadyQueued` counts the files still waiting or uploading, so a
+ * second drop cannot push a batch past {@link MAX_FILES_PER_UPLOAD}.
+ */
+export function validateUploadFiles<T extends { name: string; size: number }>(
+  files: T[],
+  options: { alreadyQueued?: number } = {},
+): { accepted: T[]; rejected: RejectedUpload[] } {
+  const alreadyQueued = Math.max(0, options.alreadyQueued ?? 0);
+  const room = Math.max(0, MAX_FILES_PER_UPLOAD - alreadyQueued);
+  const accepted: T[] = [];
+  const rejected: RejectedUpload[] = [];
+
+  for (const file of files) {
+    if (accepted.length >= room) {
+      rejected.push({
+        name: file.name,
+        reason: `Only ${MAX_FILES_PER_UPLOAD} files can be uploaded at once. Add these in a second batch.`,
+      });
+      continue;
+    }
+    if (!materialKindFor(file.name)) {
+      rejected.push({
+        name: file.name,
+        reason: `Edvance can't read this format yet. Accepted: ${acceptedKindLabels()}.`,
+      });
+      continue;
+    }
+    if (file.size > MAX_MATERIAL_BYTES) {
+      rejected.push({
+        name: file.name,
+        reason: `Too large at ${formatBytes(file.size)} — the limit is ${formatBytes(
+          MAX_MATERIAL_BYTES,
+        )} per file.`,
+      });
+      continue;
+    }
+    accepted.push(file);
+  }
+
+  return { accepted, rejected };
 }

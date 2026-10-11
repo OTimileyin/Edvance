@@ -1,22 +1,22 @@
-import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Fredoka, Nunito } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { AppHeader } from "@/components/header";
 import { Logo } from "@/components/logo";
+import { PwaRegister } from "@/components/pwa-register";
 
-const inter = Inter({
+const nunito = Nunito({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter-stack",
+  variable: "--font-nunito-stack",
 });
 
-const fraunces = Fraunces({
+const fredoka = Fredoka({
   subsets: ["latin"],
-  style: ["normal", "italic"],
-  axes: ["SOFT", "WONK", "opsz"],
+  axes: ["wdth"],
   display: "swap",
-  variable: "--font-fraunces-stack",
+  variable: "--font-fredoka-stack",
 });
 
 export const metadata: Metadata = {
@@ -25,10 +25,15 @@ export const metadata: Metadata = {
     "Evidence-first assessment intelligence: every question mapped to the lesson that taught it, every inconsistency flagged, every concept scored.",
 };
 
+export const viewport: Viewport = {
+  themeColor: "#1E2A6B",
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${fraunces.variable}`}>
+    <html lang="en" className={`${nunito.variable} ${fredoka.variable}`}>
       <body>
+        <PwaRegister />
         <a className="skip-link" href="#main">
           Skip to content
         </a>

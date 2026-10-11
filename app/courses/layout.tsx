@@ -16,5 +16,5 @@ export default async function CoursesLayout({ children }: { children: React.Reac
   // never empty. Idempotent, so this is a cheap no-op on every later visit.
   await ensureSeeded(session.user.id);
 
-  return <div className="container page-pad">{children}</div>;
+  return <div className="container page-pad courses-scope">{children}</div>;
 }

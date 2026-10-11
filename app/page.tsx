@@ -14,21 +14,21 @@ function PosterScene() {
     >
       <defs>
         <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#F8F2E2" />
-          <stop offset="52%" stopColor="#E4E7D3" />
-          <stop offset="100%" stopColor="#BFDCD6" />
+          <stop offset="0%" stopColor="#F8F1E0" />
+          <stop offset="52%" stopColor="#E3E7F7" />
+          <stop offset="100%" stopColor="#C9D0F6" />
         </linearGradient>
         <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#4A9A96" />
-          <stop offset="55%" stopColor="#2C6E70" />
-          <stop offset="100%" stopColor="#123A3C" />
+          <stop offset="0%" stopColor="#5D6ED0" />
+          <stop offset="55%" stopColor="#4B5CC4" />
+          <stop offset="100%" stopColor="#232F74" />
         </linearGradient>
       </defs>
 
       <rect width="760" height="360" fill="url(#sky)" />
 
       {/* clouds */}
-      <g fill="#FFFCF3" opacity="0.92">
+      <g fill="#FFFCF5" opacity="0.92">
         <g transform="translate(104 92)">
           <circle cx="0" cy="0" r="22" />
           <circle cx="34" cy="-9" r="29" />
@@ -48,20 +48,20 @@ function PosterScene() {
       </g>
 
       {/* the seal-sun */}
-      <circle cx="604" cy="134" r="58" fill="#DC6338" />
+      <circle cx="604" cy="134" r="58" fill="#D6452F" />
       <circle
         cx="604"
         cy="134"
         r="78"
         fill="none"
-        stroke="#C9502E"
+        stroke="#C43A28"
         strokeOpacity="0.32"
         strokeWidth="2"
         strokeDasharray="6 11"
       />
 
       {/* birds */}
-      <g fill="none" stroke="#3F6E68" strokeWidth="2.2" strokeLinecap="round" opacity="0.72">
+      <g fill="none" stroke="#3A4AAC" strokeWidth="2.2" strokeLinecap="round" opacity="0.72">
         <path d="M138 252q10-8 20 0q10-8 20 0" />
         <path d="M196 228q7-6 14 0q7-6 14 0" />
       </g>
@@ -69,29 +69,29 @@ function PosterScene() {
       {/* far range */}
       <path
         d="M0 302 L92 236 L178 288 L288 212 L392 276 L494 222 L598 284 L700 236 L760 266 L760 372 L0 372 Z"
-        fill="#A9C6BF"
+        fill="#B7C0F2"
       />
       <path
         d="M288 212 L316 246 L300 238 L288 252 L274 238 L256 246 Z"
-        fill="#FBF6EA"
+        fill="#FAF4E7"
         opacity="0.85"
       />
       <path
         d="M494 222 L520 254 L506 246 L494 260 L480 246 L464 254 Z"
-        fill="#FBF6EA"
+        fill="#FAF4E7"
         opacity="0.8"
       />
-      <path d="M92 236 L116 266 L102 258 L92 270 L80 258 L64 266 Z" fill="#FBF6EA" opacity="0.7" />
+      <path d="M92 236 L116 266 L102 258 L92 270 L80 258 L64 266 Z" fill="#FAF4E7" opacity="0.7" />
       <path
         d="M700 236 L722 264 L710 256 L700 268 L688 256 L674 264 Z"
-        fill="#FBF6EA"
+        fill="#FAF4E7"
         opacity="0.7"
       />
 
       {/* mid range */}
       <path
         d="M0 372 L124 318 L252 358 L384 300 L516 352 L652 306 L760 346 L760 452 L0 452 Z"
-        fill="#6E9E96"
+        fill="#8B98E2"
       />
 
       {/* sea */}
@@ -100,34 +100,34 @@ function PosterScene() {
       {/* headland with lighthouse */}
       <path
         d="M556 470 C 592 432, 648 414, 712 420 C 736 422, 752 428, 760 434 L760 470 Z"
-        fill="#3F6E68"
+        fill="#3A4AAC"
       />
-      <g fill="#12474A">
+      <g fill="#2B3885">
         <path d="M556 424c-6-16-5-42 0-56 5 14 6 40 0 56Z" />
         <path d="M582 430c-5-13-4-34 0-45 4 11 5 32 0 45Z" />
         <path d="M672 428c-5-12-4-32 0-42 4 10 5 30 0 42Z" />
       </g>
       <g transform="translate(636 434)">
-        <path d="M-16 0 L-10 -78 L10 -78 L16 0 Z" fill="#FBF6EA" />
-        <path d="M-14 -18 L14 -18 L12.6 -30 L-12.6 -30 Z" fill="#C9502E" />
-        <path d="M-12 -42 L12 -42 L10.8 -54 L-10.8 -54 Z" fill="#C9502E" />
-        <rect x="-8" y="-90" width="16" height="13" fill="#123236" />
-        <path d="M-13 -90 L0 -103 L13 -90 Z" fill="#123236" />
-        <path d="M-8 -85 L-56 -98 L-56 -70 Z" fill="#F5ECD4" opacity="0.5" />
-        <path d="M8 -85 L56 -98 L56 -70 Z" fill="#F5ECD4" opacity="0.5" />
+        <path d="M-16 0 L-10 -78 L10 -78 L16 0 Z" fill="#FAF4E7" />
+        <path d="M-14 -18 L14 -18 L12.6 -30 L-12.6 -30 Z" fill="#C43A28" />
+        <path d="M-12 -42 L12 -42 L10.8 -54 L-10.8 -54 Z" fill="#C43A28" />
+        <rect x="-8" y="-90" width="16" height="13" fill="#26337B" />
+        <path d="M-13 -90 L0 -103 L13 -90 Z" fill="#26337B" />
+        <path d="M-8 -85 L-56 -98 L-56 -70 Z" fill="#F8E8C0" opacity="0.5" />
+        <path d="M8 -85 L56 -98 L56 -70 Z" fill="#F8E8C0" opacity="0.5" />
       </g>
 
       {/* sailboat */}
       <g transform="translate(140 468)">
-        <ellipse cx="0" cy="24" rx="48" ry="8" fill="#0E2C2B" opacity="0.32" />
-        <path d="M-7 0 L-7 -48 L30 0 Z" fill="#FBF6EA" />
-        <path d="M-12 0 L-12 -34 L-34 0 Z" fill="#EFE6D7" />
-        <path d="M-7 -52 L-7 0" stroke="#123236" strokeWidth="2.4" />
-        <path d="M-33 0 L33 0 L22 15 L-22 15 Z" fill="#A03B1E" />
+        <ellipse cx="0" cy="24" rx="48" ry="8" fill="#1A2462" opacity="0.32" />
+        <path d="M-7 0 L-7 -48 L30 0 Z" fill="#FAF4E7" />
+        <path d="M-12 0 L-12 -34 L-34 0 Z" fill="#F5E4C8" />
+        <path d="M-7 -52 L-7 0" stroke="#26337B" strokeWidth="2.4" />
+        <path d="M-33 0 L33 0 L22 15 L-22 15 Z" fill="#9E2A1B" />
       </g>
 
       {/* wave strokes (kept above the caption card) */}
-      <g fill="none" stroke="#9EDCD2" strokeOpacity="0.45" strokeWidth="3" strokeLinecap="round">
+      <g fill="none" stroke="#B0C4F4" strokeOpacity="0.45" strokeWidth="3" strokeLinecap="round">
         <path d="M60 452q16-8 32 0t32 0" />
         <path d="M300 448q16-8 32 0t32 0" />
         <path d="M470 458q16-8 32 0t32 0" />
@@ -145,24 +145,24 @@ function PosterScene() {
 function TileSourceMap() {
   return (
     <svg viewBox="0 0 320 240" aria-hidden="true">
-      <rect width="320" height="240" fill="#6B8A5E" />
-      <circle cx="252" cy="62" r="46" fill="#FBF6EA" opacity="0.16" />
+      <rect width="320" height="240" fill="#12776B" />
+      <circle cx="252" cy="62" r="46" fill="#FAF4E7" opacity="0.16" />
       <g transform="translate(58 38)">
-        <rect width="132" height="164" rx="10" fill="#FBF6EA" />
-        <rect x="18" y="24" width="88" height="9" rx="4.5" fill="#DBC9A8" />
-        <rect x="18" y="46" width="96" height="9" rx="4.5" fill="#C9502E" />
-        <rect x="18" y="68" width="70" height="9" rx="4.5" fill="#DBC9A8" />
-        <rect x="18" y="90" width="88" height="9" rx="4.5" fill="#DBC9A8" />
-        <rect x="18" y="112" width="56" height="9" rx="4.5" fill="#2C6E70" />
+        <rect width="132" height="164" rx="10" fill="#FAF4E7" />
+        <rect x="18" y="24" width="88" height="9" rx="4.5" fill="#D9C7A2" />
+        <rect x="18" y="46" width="96" height="9" rx="4.5" fill="#C43A28" />
+        <rect x="18" y="68" width="70" height="9" rx="4.5" fill="#D9C7A2" />
+        <rect x="18" y="90" width="88" height="9" rx="4.5" fill="#D9C7A2" />
+        <rect x="18" y="112" width="56" height="9" rx="4.5" fill="#4B5CC4" />
       </g>
       <g transform="translate(196 158)">
-        <rect width="76" height="52" rx="9" fill="#F6EFDD" stroke="#123236" strokeWidth="3" />
-        <rect x="14" y="16" width="48" height="7" rx="3.5" fill="#A9C6BF" />
-        <rect x="14" y="31" width="34" height="7" rx="3.5" fill="#C9502E" />
+        <rect width="76" height="52" rx="9" fill="#F5EDDA" stroke="#26337B" strokeWidth="3" />
+        <rect x="14" y="16" width="48" height="7" rx="3.5" fill="#B7C0F2" />
+        <rect x="14" y="31" width="34" height="7" rx="3.5" fill="#C43A28" />
       </g>
       <path
         d="M186 122 L200 158"
-        stroke="#123236"
+        stroke="#26337B"
         strokeWidth="4"
         strokeLinecap="round"
         strokeDasharray="7 8"
@@ -174,24 +174,24 @@ function TileSourceMap() {
 function TileConsistency() {
   return (
     <svg viewBox="0 0 320 240" aria-hidden="true">
-      <rect width="320" height="240" fill="#C9502E" />
-      <circle cx="66" cy="196" r="52" fill="#FBF6EA" opacity="0.12" />
+      <rect width="320" height="240" fill="#C43A28" />
+      <circle cx="66" cy="196" r="52" fill="#FAF4E7" opacity="0.12" />
       <g transform="rotate(-9 108 110)">
-        <rect x="46" y="40" width="118" height="150" rx="10" fill="#FBF6EA" />
-        <rect x="62" y="64" width="86" height="9" rx="4.5" fill="#DBC9A8" />
-        <rect x="62" y="86" width="62" height="9" rx="4.5" fill="#DBC9A8" />
-        <rect x="62" y="108" width="78" height="9" rx="4.5" fill="#123236" />
+        <rect x="46" y="40" width="118" height="150" rx="10" fill="#FAF4E7" />
+        <rect x="62" y="64" width="86" height="9" rx="4.5" fill="#D9C7A2" />
+        <rect x="62" y="86" width="62" height="9" rx="4.5" fill="#D9C7A2" />
+        <rect x="62" y="108" width="78" height="9" rx="4.5" fill="#26337B" />
       </g>
       <g transform="rotate(10 226 128)">
-        <rect x="168" y="52" width="118" height="150" rx="10" fill="#F6EFDD" />
-        <rect x="184" y="78" width="86" height="9" rx="4.5" fill="#DBC9A8" />
-        <rect x="184" y="100" width="70" height="9" rx="4.5" fill="#DBC9A8" />
-        <rect x="184" y="122" width="52" height="9" rx="4.5" fill="#123236" />
+        <rect x="168" y="52" width="118" height="150" rx="10" fill="#F5EDDA" />
+        <rect x="184" y="78" width="86" height="9" rx="4.5" fill="#D9C7A2" />
+        <rect x="184" y="100" width="70" height="9" rx="4.5" fill="#D9C7A2" />
+        <rect x="184" y="122" width="52" height="9" rx="4.5" fill="#26337B" />
       </g>
       <g transform="translate(160 122)">
-        <circle cx="0" cy="0" r="30" fill="#F5ECD4" stroke="#123236" strokeWidth="4" />
-        <path d="M0 -12v14" stroke="#A03B1E" strokeWidth="5" strokeLinecap="round" />
-        <circle cx="0" cy="12" r="3.4" fill="#A03B1E" />
+        <circle cx="0" cy="0" r="30" fill="#F8E8C0" stroke="#26337B" strokeWidth="4" />
+        <path d="M0 -12v14" stroke="#9E2A1B" strokeWidth="5" strokeLinecap="round" />
+        <circle cx="0" cy="12" r="3.4" fill="#9E2A1B" />
       </g>
     </svg>
   );
@@ -200,32 +200,32 @@ function TileConsistency() {
 function TileMastery() {
   return (
     <svg viewBox="0 0 320 240" aria-hidden="true">
-      <rect width="320" height="240" fill="#2C6E70" />
+      <rect width="320" height="240" fill="#4B5CC4" />
       <circle
         cx="150"
         cy="112"
         r="80"
         fill="none"
-        stroke="#FBF6EA"
+        stroke="#FAF4E7"
         strokeOpacity="0.28"
         strokeWidth="14"
       />
       <path
         d="M150 32a80 80 0 0 1 62 128"
         fill="none"
-        stroke="#FBF6EA"
+        stroke="#FAF4E7"
         strokeWidth="14"
         strokeLinecap="round"
       />
-      <circle cx="150" cy="112" r="30" fill="#123236" />
-      <circle cx="150" cy="112" r="10" fill="#DC6338" />
-      <g fill="#FBF6EA">
+      <circle cx="150" cy="112" r="30" fill="#26337B" />
+      <circle cx="150" cy="112" r="10" fill="#D6452F" />
+      <g fill="#FAF4E7">
         <rect x="62" y="176" width="18" height="46" rx="6" />
         <rect x="92" y="152" width="18" height="70" rx="6" />
         <rect x="122" y="194" width="18" height="28" rx="6" opacity="0.6" />
       </g>
-      <rect x="176" y="120" width="104" height="26" rx="13" fill="#FBF6EA" opacity="0.9" />
-      <rect x="176" y="120" width="66" height="26" rx="13" fill="#DC6338" />
+      <rect x="176" y="120" width="104" height="26" rx="13" fill="#FAF4E7" opacity="0.9" />
+      <rect x="176" y="120" width="66" height="26" rx="13" fill="#D6452F" />
     </svg>
   );
 }
@@ -289,13 +289,13 @@ const masteryIcon = (
 function DeskArt() {
   return (
     <svg viewBox="0 0 460 400" aria-hidden="true">
-      <circle cx="232" cy="200" r="188" fill="#FBF6EA" />
+      <circle cx="232" cy="200" r="188" fill="#FAF4E7" />
       <circle
         cx="232"
         cy="200"
         r="176"
         fill="none"
-        stroke="#DBC9A8"
+        stroke="#D9C7A2"
         strokeWidth="3"
         strokeDasharray="4 12"
         strokeLinecap="round"
@@ -309,13 +309,13 @@ function DeskArt() {
           width="164"
           height="118"
           rx="14"
-          fill="#FFFCF3"
-          stroke="#DBC9A8"
+          fill="#FFFCF5"
+          stroke="#D9C7A2"
           strokeWidth="3"
         />
-        <rect x="68" y="122" width="104" height="11" rx="5.5" fill="#2C6E70" />
-        <rect x="68" y="146" width="120" height="11" rx="5.5" fill="#EDE2C9" />
-        <rect x="68" y="170" width="78" height="11" rx="5.5" fill="#EDE2C9" />
+        <rect x="68" y="122" width="104" height="11" rx="5.5" fill="#4B5CC4" />
+        <rect x="68" y="146" width="120" height="11" rx="5.5" fill="#EBDFC4" />
+        <rect x="68" y="170" width="78" height="11" rx="5.5" fill="#EBDFC4" />
       </g>
       <g transform="rotate(7 320 214)">
         <rect
@@ -324,52 +324,52 @@ function DeskArt() {
           width="164"
           height="118"
           rx="14"
-          fill="#FFFCF3"
-          stroke="#DBC9A8"
+          fill="#FFFCF5"
+          stroke="#D9C7A2"
           strokeWidth="3"
         />
-        <rect x="260" y="186" width="118" height="11" rx="5.5" fill="#C9502E" />
-        <rect x="260" y="210" width="92" height="11" rx="5.5" fill="#EDE2C9" />
-        <rect x="260" y="234" width="110" height="11" rx="5.5" fill="#EDE2C9" />
+        <rect x="260" y="186" width="118" height="11" rx="5.5" fill="#C43A28" />
+        <rect x="260" y="210" width="92" height="11" rx="5.5" fill="#EBDFC4" />
+        <rect x="260" y="234" width="110" height="11" rx="5.5" fill="#EBDFC4" />
       </g>
       <path
         d="M150 236 C 196 288, 262 286, 300 258"
         fill="none"
-        stroke="#123236"
+        stroke="#26337B"
         strokeWidth="4"
         strokeDasharray="8 10"
         strokeLinecap="round"
       />
-      <circle cx="226" cy="272" r="13" fill="#C9502E" stroke="#FBF6EA" strokeWidth="4" />
+      <circle cx="226" cy="272" r="13" fill="#C43A28" stroke="#FAF4E7" strokeWidth="4" />
 
       {/* plant, echoing the reference medallions */}
       <g transform="translate(392 320)">
-        <path d="M-26 0 h52 l-9 40 h-34 Z" fill="#A03B1E" />
-        <path d="M-30 0 h60" stroke="#7E2C14" strokeWidth="6" strokeLinecap="round" />
+        <path d="M-26 0 h52 l-9 40 h-34 Z" fill="#9E2A1B" />
+        <path d="M-30 0 h60" stroke="#7A1F12" strokeWidth="6" strokeLinecap="round" />
         <path
           d="M0 -4 C -4 -34, -22 -44, -30 -52"
-          stroke="#6B8A5E"
+          stroke="#12776B"
           strokeWidth="6"
           fill="none"
           strokeLinecap="round"
         />
         <path
           d="M0 -4 C 4 -40, 22 -52, 32 -60"
-          stroke="#6B8A5E"
+          stroke="#12776B"
           strokeWidth="6"
           fill="none"
           strokeLinecap="round"
         />
         <path
           d="M0 -4 C 0 -40, -2 -58, 2 -74"
-          stroke="#6B8A5E"
+          stroke="#12776B"
           strokeWidth="6"
           fill="none"
           strokeLinecap="round"
         />
-        <ellipse cx="-32" cy="-56" rx="16" ry="10" fill="#83A072" transform="rotate(-28 -32 -56)" />
-        <ellipse cx="34" cy="-64" rx="16" ry="10" fill="#83A072" transform="rotate(26 34 -64)" />
-        <ellipse cx="4" cy="-78" rx="14" ry="9" fill="#AEC294" transform="rotate(6 4 -78)" />
+        <ellipse cx="-32" cy="-56" rx="16" ry="10" fill="#1A8E7F" transform="rotate(-28 -32 -56)" />
+        <ellipse cx="34" cy="-64" rx="16" ry="10" fill="#1A8E7F" transform="rotate(26 34 -64)" />
+        <ellipse cx="4" cy="-78" rx="14" ry="9" fill="#7FC3B6" transform="rotate(6 4 -78)" />
       </g>
     </svg>
   );

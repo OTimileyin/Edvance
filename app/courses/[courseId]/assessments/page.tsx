@@ -101,6 +101,12 @@ export default function CourseAssessments() {
 
   async function handleDelete(assessmentId: string) {
     if (!course) return;
+    const question = course.assessments.find((entry) => entry.id === assessmentId)?.question;
+    const confirmation = question
+      ? `Delete “${question}”? This cannot be undone.`
+      : "Delete this question? This cannot be undone.";
+    if (!window.confirm(confirmation)) return;
+
     setDeletingId(assessmentId);
     setError(null);
     try {

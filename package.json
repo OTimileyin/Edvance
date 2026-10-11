@@ -16,6 +16,7 @@
     "format:check": "prettier --check .",
     "migrate": "infisical run --env=dev -- node scripts/migrate.mjs",
     "test:ingestion": "infisical run --env=dev -- node scripts/test-ingestion.mjs",
+    "test:batch-upload": "infisical run --env=dev -- node scripts/test-batch-upload.mjs",
     "test:intelligence": "infisical run --env=dev -- node scripts/test-course-intelligence.mjs",
     "test:assessment": "infisical run --env=dev -- node scripts/test-assessment-intelligence.mjs",
     "test:mastery": "infisical run --env=dev -- node scripts/test-mastery-intelligence.mjs",

@@ -38,9 +38,9 @@ export function LogoMark({
       {title ? <title>{title}</title> : null}
       <defs>
         <linearGradient id={seal} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#2C6E70" />
-          <stop offset="58%" stopColor="#1A4245" />
-          <stop offset="100%" stopColor="#0D2327" />
+          <stop offset="0%" stopColor="#4B5CC4" />
+          <stop offset="58%" stopColor="#2F3E92" />
+          <stop offset="100%" stopColor="#1E2A6B" />
         </linearGradient>
         <linearGradient id={gloss} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.22" />
@@ -56,15 +56,15 @@ export function LogoMark({
         height="37.5"
         rx="11"
         fill="none"
-        stroke="#FBF6EA"
+        stroke="#FAF4E7"
         strokeOpacity="0.16"
       />
       <rect width="40" height="16" rx="12" fill={`url(#${gloss})`} />
 
       {/* Three source bars: top, highlighted middle, bottom */}
-      <rect x="11.5" y="11.6" width="17" height="3.7" rx="1.85" fill="#FBF6EA" />
-      <rect x="11.5" y="18.15" width="12.6" height="3.7" rx="1.85" fill="#DC6338" />
-      <rect x="11.5" y="24.7" width="8.6" height="3.7" rx="1.85" fill="#FBF6EA" />
+      <rect x="11.5" y="11.6" width="17" height="3.7" rx="1.85" fill="#FAF4E7" />
+      <rect x="11.5" y="18.15" width="12.6" height="3.7" rx="1.85" fill="#D6452F" />
+      <rect x="11.5" y="24.7" width="8.6" height="3.7" rx="1.85" fill="#FAF4E7" />
     </svg>
   );
 }
