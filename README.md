@@ -367,6 +367,22 @@ build fails with `Missing required environment variable DATABASE_URL`.
   provider, mastery, revision, cross-learner isolation and secret non-exposure (**70 checks**), then
   deletes what it created.
 
+## Android app
+
+Oyevolve also ships as an Android app: a **Trusted Web Activity** that opens the live site in the
+device's own browser engine. That split is the whole update story — a web change reaches every phone
+the moment it is deployed, and only the shell itself (icon, name, permissions, target API level) is
+versioned, signed and released as an APK. The app reports its own build number at launch, compares it
+against `/api/app/version`, and offers a newer APK when one exists. It never installs anything itself:
+it follows a download link and Android's installer takes over.
+
+`android/version.json` is the single source of the version, read by both Gradle and the web app. The
+shell lives in `android/` and is built by `.github/workflows/android.yml` from an `android-v<versionCode>`
+tag. Read [docs/ANDROID_APP_RUNBOOK.md](docs/ANDROID_APP_RUNBOOK.md) before the first release — it
+covers the signing key you must create and keep, the four repository secrets, the
+`ANDROID_APP_FINGERPRINT` that hides the browser's address bar, and an honest list of what is and is
+not verified.
+
 ## Running the Local Prototype
 
 ### Main app (Phase 2 + landing/demo sign-in)

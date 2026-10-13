@@ -1,0 +1,22 @@
+/*
+ * The Android shell for Oyevolve — a Trusted Web Activity.
+ *
+ * This project is a *rendered* copy of Google's Bubblewrap template
+ * (GoogleChromeLabs/bubblewrap, packages/core/template_project, Apache-2.0),
+ * with the template's placeholders filled in and its deprecated `jcenter()`
+ * repository replaced by `mavenCentral()`. Keeping it checked in rather than
+ * regenerating it means the shell is reviewable in a pull request like every
+ * other source file, and that CI needs no interactive generator.
+ */
+
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = "Oyevolve"
+
+include ':app'

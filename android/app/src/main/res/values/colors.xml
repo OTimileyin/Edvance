@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Brand colors for the shell. These are the same values the web app declares in
+    app/manifest.ts (`theme_color` #1E2A6B, `background_color` #FAF4E7), so the
+    splash screen, the status bar and the site's own theme agree.
+-->
+<resources>
+    <color name="colorPrimary">#FF1E2A6B</color>
+    <color name="colorPrimaryDark">#FF1E2A6B</color>
+    <color name="navigationColor">#FF1E2A6B</color>
+    <color name="navigationColorDark">#FF1E2A6B</color>
+    <color name="backgroundColor">#FFFAF4E7</color>
+    <!--
+        The adaptive launcher icon's backdrop. Cream matches the maskable icon
+        already published for the PWA, so the installed app and the installed
+        web app are not subtly different shades.
+    -->
+    <color name="launcherBackground">#FFFAF4E7</color>
+</resources>

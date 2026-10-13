@@ -25,6 +25,10 @@ const eslintConfig = defineConfig([
     // Vendored Claude Code skills: third-party files installed per machine, not
     // this project's source, so they must not fail lint the same way in CI:
     ".claude/**",
+    // The Android shell is a Gradle/Java/XML project. It is not JavaScript, and
+    // it is built and gated by its own toolchain in
+    // .github/workflows/android.yml rather than by this web lint gate:
+    "android/**",
   ]),
 ]);
 

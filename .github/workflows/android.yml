@@ -1,0 +1,209 @@
+name: android
+
+# Deliberately *not* on every push.
+#
+# The web app deploys itself: a phone that is online runs whatever `main` was
+# last deployed, so a fix reaches every learner with no build. The Android shell
+# is the one artifact that cannot work that way, and it changes only when the
+# icon, the name, the permissions or the target API level change. So it is built
+# deliberately — by pushing an `android-v<versionCode>` tag, or by hand — rather
+# than on every commit.
+#
+# A pull request that touches the shell does compile it, though. Otherwise the
+# first time this project is ever built would be the release, which is precisely
+# where a mistyped Gradle file or a missing resource costs the most. Secrets are
+# not exposed to fork pull requests, so those runs produce an unsigned APK and
+# stop before publishing.
+on:
+  push:
+    tags:
+      - "android-v*"
+  pull_request:
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish the APK as a GitHub Release (requires the signing keystore)"
+        type: boolean
+        default: false
+
+# A release is never cancelled by a newer one starting: an interrupted publish
+# is worse than a queued one.
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  apk:
+    name: build + sign the APK
+    runs-on: ubuntu-latest
+    permissions:
+      # `gh release create` needs to write the release. Nothing else is granted.
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # JDK 17 — what Android Gradle Plugin 8.9.1 in android/build.gradle expects
+      # and what the SDK command-line tools are validated against.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # Installs the command-line tools, puts `sdkmanager` on the PATH and
+      # accepts the SDK licences. The licences matter: without them the Gradle
+      # build cannot fetch any component the image is missing.
+      - uses: android-actions/setup-android@v4
+
+      # Node is what reads `android/version.json` below (and names the APK from
+      # it). Pinned rather than inherited from the runner image so the version
+      # that names a release cannot change under it.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # Caches the Gradle distribution and dependency graph between runs.
+      - uses: gradle/actions/setup-gradle@v6
+
+      # The platform the app compiles against. Build-tools are deliberately *not*
+      # pinned here: the Android Gradle Plugin picks its own default and fetches
+      # it, and naming a version here would be a second source of truth that
+      # could disagree with the plugin.
+      - name: Install the Android platform
+        run: sdkmanager --install "platforms;android-36"
+
+      # The tag, the APK and the URL the website advertises all have to name the
+      # same build. `lib/android-release.ts` derives the download URL from
+      # `android/version.json`, so a tag that disagrees with it would publish a
+      # release nobody could reach — or worse, point an update prompt at an
+      # older build than the one being shipped.
+      - name: Check the tag matches android/version.json
+        if: startsWith(github.ref, 'refs/tags/android-v')
+        run: |
+          set -euo pipefail
+          version_code="$(node -p "require('./android/version.json').versionCode")"
+          tag_version="${GITHUB_REF_NAME#android-v}"
+          if [ "$version_code" != "$tag_version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match android/version.json versionCode $version_code. Bump the file in the commit the tag points at."
+            exit 1
+          fi
+          echo "Tag and android/version.json agree on build $version_code."
+
+      # The keystore is decoded from a repository secret into the runner's
+      # temporary directory. It is never printed, never committed, and never
+      # uploaded as an artifact.
+      - name: Decode the signing keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ]; then
+            echo "::warning::ANDROID_KEYSTORE_BASE64 is not set. The release APK will be built unsigned — this still proves the project compiles, but it cannot be installed or published. See docs/ANDROID_APP_RUNBOOK.md."
+            exit 0
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+
+      # A checkout made on Windows may not carry the wrapper script's executable
+      # bit, so it is set here rather than assumed.
+      - name: Make the Gradle wrapper executable
+        working-directory: android
+        run: chmod +x gradlew
+
+      # One build. A debug variant is deliberately not produced: a debug APK is
+      # signed with a throwaway key, so it could never be updated into the
+      # release build — offering both would invite exactly that confusion.
+      - name: Build the release APK
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        # `--no-daemon`: the runner is discarded at the end of the job, so a
+        # daemon would only add shutdown noise.
+        run: ./gradlew --no-daemon assembleRelease
+
+      # The APK is renamed to the exact asset name `lib/android-release.ts`
+      # predicts, so the download URL the app shows is the file that exists.
+      - name: Collect the APK
+        id: apk
+        run: |
+          set -euo pipefail
+          version_code="$(node -p "require('./android/version.json').versionCode")"
+          version_name="$(node -p "require('./android/version.json').versionName")"
+          echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
+          echo "version_name=$version_name" >> "$GITHUB_OUTPUT"
+
+          built="$RUNNER_TEMP/oyevolve-$version_code.apk"
+          if [ -f android/app/build/outputs/apk/release/app-release.apk ]; then
+            cp android/app/build/outputs/apk/release/app-release.apk "$built"
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          elif [ -f android/app/build/outputs/apk/release/app-release-unsigned.apk ]; then
+            cp android/app/build/outputs/apk/release/app-release-unsigned.apk "$built"
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::The build produced no APK at the expected path. Inspect the Gradle output above."
+            exit 1
+          fi
+
+          echo "path=$built" >> "$GITHUB_OUTPUT"
+          sha256sum "$built" | tee "$RUNNER_TEMP/apk.sha256"
+          echo "sha256=$(cut -d' ' -f1 "$RUNNER_TEMP/apk.sha256")" >> "$GITHUB_OUTPUT"
+
+      # Always uploaded, so a compile-only run is still inspectable from the run
+      # page without configuring anything.
+      - name: Upload the APK as a build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oyevolve-apk-${{ steps.apk.outputs.version_code }}
+          path: ${{ steps.apk.outputs.path }}
+          if-no-files-found: error
+
+      # A tag push is a promise to publish. An unsigned APK cannot be installed
+      # over an existing one, so failing here is the honest outcome — better than
+      # a release nobody can use.
+      - name: Refuse to publish an unsigned APK
+        if: >-
+          steps.apk.outputs.signed == 'false' &&
+          (startsWith(github.ref, 'refs/tags/android-v') || inputs.publish)
+        run: |
+          echo "::error::This run publishes a release, but no signing keystore is configured. Set ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD as repository secrets."
+          exit 1
+
+      - name: Publish the GitHub Release
+        if: >-
+          steps.apk.outputs.signed == 'true' &&
+          (startsWith(github.ref, 'refs/tags/android-v') || inputs.publish)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version_code="${{ steps.apk.outputs.version_code }}"
+          version_name="${{ steps.apk.outputs.version_name }}"
+          tag="android-v$version_code"
+
+          # Idempotent: a re-run of a half-finished publish reuses the tag.
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "${{ steps.apk.outputs.path }}" --clobber
+          else
+            gh release create "$tag" "${{ steps.apk.outputs.path }}" \
+              --title "Oyevolve $version_name (Android build $version_code)" \
+              --notes "$(cat <<NOTES
+          Signed Android build of Oyevolve, version $version_name.
+
+          Install this file on an Android device to get the app. If a previous
+          build is already installed, this one replaces it in place — same
+          package id, same signing key — and your signed-in session is kept.
+
+          - SHA-256: ${{ steps.apk.outputs.sha256 }}
+          - Target API level: 36 (Android 16)
+          - Minimum: Android 7.0
+
+          This file is only the Android shell. Do not use it to update the
+          website — the site deploys itself, and a phone that is online is
+          always running the latest version of the app's content.
+          NOTES
+          )"
+          fi

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The adaptive launcher icon (Android 8.0+).
+
+    The foreground is the plain, transparent-background mark — the same
+    public/icons/icon-512.png the web app publishes. It is drawn full-bleed in
+    that file, so it is inset here to the adaptive icon's safe zone: the mask
+    only ever reveals the middle ~67% of the layer, and 16% per side keeps the
+    mark inside that on every launcher shape, including circular ones.
+
+    The backdrop is cream, matching public/icons/icon-512-maskable.png and the
+    web app's `background_color`.
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/launcherBackground" />
+    <foreground>
+        <inset
+            android:drawable="@mipmap/ic_launcher_foreground"
+            android:inset="16%" />
+    </foreground>
+</adaptive-icon>

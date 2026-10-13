@@ -50,6 +50,24 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  /**
+   * Android fetches `/.well-known/assetlinks.json` from the origin root to
+   * verify the Trusted Web Activity against this site, and it fetches exactly
+   * that path. The file is served by a route handler instead of a static file
+   * because it has to name the APK's signing certificate, which is deployment
+   * configuration (`ANDROID_APP_FINGERPRINT`) rather than source.
+   *
+   * A rewrite is used rather than putting the file in `public/.well-known/`
+   * so the response can be built from configuration at request time.
+   */
+  async rewrites() {
+    return [
+      {
+        source: "/.well-known/assetlinks.json",
+        destination: "/api/assetlinks",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
