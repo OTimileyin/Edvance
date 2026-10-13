@@ -242,7 +242,7 @@ fails on purpose.
 
 ## 8. What has been verified, and what has not
 
-Honest accounting, because the two halves were not equally checkable here.
+Honest accounting, because the two halves were not equally checkable.
 
 **Verified, end to end, by running it:**
 
@@ -261,12 +261,25 @@ Honest accounting, because the two halves were not equally checkable here.
 - `npm run typecheck`, `npm run lint`, `npm run format:check` and the 131 unit
   tests all pass, and `next build` succeeds with all 35 routes emitted.
 
-**Not verified here, and why:** the APK itself. This machine has no JDK, no
-Gradle and no Android SDK, so `./gradlew assembleRelease` has never run against
-this project. The first CI run is the real test of the Android half — of the
-Gradle files, the manifest, the launcher activity and the `BuildConfig.VERSION_CODE`
-reference. Expect that first run to be where anything wrong surfaces, and treat
-a green run as the point the Android half becomes verified.
+**The Android half is verified too.** The `android` workflow compiled and signed
+the APK in CI (1m38s), and the artifact was inspected directly rather than taken
+on trust from a green job:
+
+- It is a valid archive of 405 entries, including `classes.dex`,
+  `AndroidManifest.xml` and `resources.arsc`.
+- It carries an APK Signature Scheme v2 signing block, and the signing
+  certificate's SHA-256 is the keystore's fingerprint exactly. That is worth
+  checking rather than assuming, because the same value is what
+  `/.well-known/assetlinks.json` publishes: if the two ever disagreed, the
+  address bar would never go away and no update could be installed over an
+  existing build. (`apksigner` is not available on a machine without the Android
+  build-tools, so the certificate is read out of the signing block and hashed;
+  `keytool -printcert` on the extracted certificate agrees.)
+
+**Still unproven: the app on a real device.** Nothing here has run the APK on
+Android hardware, so the launcher icon, the asset-link verification and the
+fullscreen behaviour remain unconfirmed in the only place that ultimately
+matters. Everything above is a statement about the artifact, not about a phone.
 
 One deliberate divergence from the generated template: `minifyEnabled` is
 `false` for release. R8 has nothing to win on a launcher this thin, and code it
