@@ -10,9 +10,16 @@
  * spacing shift, a component restyle) fails the run and writes the captured
  * image plus a highlighted diff into .tmp-scratch/visual/ for inspection.
  *
+ * The same pass runs a viewport layout smoke check: every target is also
+ * measured at each phone width in scripts/lib/viewport-layout.mjs, and the run
+ * fails when a page scrolls horizontally. That check needs no baselines, so a
+ * layout regression is caught at 320px even when nobody is looking at the diff
+ * images — and a page that scrolls sideways is never baselined.
+ *
  * Usage:
  *   node scripts/visual-regression.mjs                compare against baselines
  *   node scripts/visual-regression.mjs --update       write fresh baselines
+ *   node scripts/visual-regression.mjs --layout-only  only the phone-width smoke check
  *   node scripts/visual-regression.mjs --grep=landing run a subset of targets
  *   node scripts/visual-regression.mjs --base-url=…   use a running server
  *                                                    (otherwise `next start`
@@ -38,6 +45,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
+import {
+  HORIZONTAL_TOLERANCE_PX,
+  PHONE_WIDTHS,
+  describeLayoutFailures,
+  overflowsHorizontally,
+  probeOverflow,
+} from "./lib/viewport-layout.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BASELINE_DIR = path.join(ROOT, "tests", "visual", "baselines");
@@ -61,6 +75,11 @@ const VIEWPORTS = [
   { name: "mobile", width: 375, height: 812 },
 ];
 
+/** The height a phone page is measured at. Phone widths deliberately do not
+ * enter VIEWPORTS: the smoke check measures layout instead of screenshotting,
+ * so adding a width can never require re-baselining. */
+const PHONE_HEIGHT = 812;
+
 /** Per-pixel colour tolerance (0–1) for the diff — absorbs sub-pixel
  * rasterisation noise without hiding a real colour-token change. */
 const PIXELMATCH_THRESHOLD = 0.15;
@@ -72,12 +91,14 @@ const MAX_DIFF_RATIO = 0.001;
 function parseArgs(argv) {
   const args = {
     update: false,
+    layoutOnly: false,
     grep: "",
     baseUrl: "",
     port: Number(process.env.VISUAL_PORT ?? 3311),
   };
   for (const arg of argv) {
     if (arg === "--update") args.update = true;
+    else if (arg === "--layout-only") args.layoutOnly = true;
     else if (arg.startsWith("--grep=")) args.grep = arg.slice("--grep=".length);
     else if (arg.startsWith("--base-url=")) args.baseUrl = arg.slice("--base-url=".length);
     else if (arg.startsWith("--port=")) args.port = Number(arg.slice("--port=".length));
@@ -126,9 +147,11 @@ async function startServer(port) {
   return { child, url };
 }
 
-/** Captures one target at one viewport into `outFile`. Throws if an HTTP
- * target answers with an error status, so a broken page is never baselined. */
-async function capture(browser, baseUrl, target, viewport, outFile) {
+/** Opens one target in a fresh context at one viewport, so no service-worker
+ * or cache state carries between shots. Throws if an HTTP target answers with an
+ * error status, so a broken page is never measured or baselined; the caller owns
+ * the returned context and closes it. */
+async function openTarget(browser, baseUrl, target, viewport) {
   const context = await browser.newContext({
     viewport: { width: viewport.width, height: viewport.height },
     deviceScaleFactor: 1,
@@ -137,15 +160,26 @@ async function capture(browser, baseUrl, target, viewport, outFile) {
     reducedMotion: "reduce",
   });
   const page = await context.newPage();
+  const url = target.file
+    ? pathToFileURL(path.join(ROOT, target.file)).href
+    : new URL(target.urlPath, baseUrl).href;
   try {
-    const url = target.file
-      ? pathToFileURL(path.join(ROOT, target.file)).href
-      : new URL(target.urlPath, baseUrl).href;
     const response = await page.goto(url, { waitUntil: "load", timeout: 30_000 });
     if (response && response.status() >= 400) {
       throw new Error(`${url} answered ${response.status()}`);
     }
     await page.evaluate(() => document.fonts.ready);
+  } catch (error) {
+    await context.close();
+    throw error;
+  }
+  return { context, page, url };
+}
+
+/** Captures one target at one viewport into `outFile`. */
+async function capture(browser, baseUrl, target, viewport, outFile) {
+  const { context, page } = await openTarget(browser, baseUrl, target, viewport);
+  try {
     await page.waitForTimeout(350);
     await page.screenshot({
       path: outFile,
@@ -154,6 +188,22 @@ async function capture(browser, baseUrl, target, viewport, outFile) {
       caret: "hide",
       scale: "css",
     });
+  } finally {
+    await context.close();
+  }
+}
+
+/** Measures one target at one phone width. Text is allowed to settle first, for
+ * the same reason a capture waits: a web font landing after the measurement
+ * could change how wide the page lays out. */
+async function measureLayout(browser, baseUrl, target, width) {
+  const { context, page } = await openTarget(browser, baseUrl, target, {
+    width,
+    height: PHONE_HEIGHT,
+  });
+  try {
+    await page.waitForTimeout(350);
+    return await page.evaluate(probeOverflow, { tolerancePx: HORIZONTAL_TOLERANCE_PX });
   } finally {
     await context.close();
   }
@@ -208,6 +258,77 @@ async function compareShot(baselineFile, actualFile, diffFile, dims) {
   return { ...shot, diffPixels, diffRatio: Number(diffRatio.toFixed(5)) };
 }
 
+/** Measures every target at every phone width. A page that cannot be measured is
+ * recorded as an error instead of aborting the run, so one broken URL cannot
+ * hide the state of the others. */
+async function runLayoutPass(browser, baseUrl, targets, layoutResults) {
+  for (const target of targets) {
+    for (const width of PHONE_WIDTHS) {
+      process.stdout.write(`layout ${target.name}@${width} … `);
+      try {
+        const measured = await measureLayout(browser, baseUrl, target, width);
+        layoutResults.push({ target: target.name, width, status: "measured", ...measured });
+        console.log(overflowsHorizontally(measured) ? `SCROLLS ${measured.overflowPx}px` : "fits");
+      } catch (err) {
+        console.log(`ERROR — ${err.message}`);
+        layoutResults.push({
+          target: target.name,
+          width,
+          status: "error",
+          detail: err.message,
+          viewportWidth: width,
+          scrollWidth: 0,
+          overflowPx: 0,
+          offenders: [],
+        });
+      }
+    }
+  }
+}
+
+/** Captures and compares every target at every screenshot viewport. */
+async function runPixelPass(browser, baseUrl, targets, args, results) {
+  for (const target of targets) {
+    for (const viewport of VIEWPORTS) {
+      const shotName = `${target.name}-${viewport.name}`;
+      const actualFile = path.join(OUTPUT_DIR, "actual", `${shotName}.png`);
+      const baselineFile = path.join(BASELINE_DIR, `${shotName}.png`);
+      const diffFile = path.join(OUTPUT_DIR, "diff", `${shotName}.png`);
+      process.stdout.write(`capturing ${shotName} … `);
+      // One broken page must not hide the state of the others: a capture
+      // error is recorded as a failing shot and the run continues.
+      try {
+        await capture(browser, baseUrl, target, viewport, actualFile);
+      } catch (err) {
+        console.log(`ERROR — ${err.message}`);
+        results.push({
+          shot: shotName,
+          status: "error",
+          diffPixels: 0,
+          diffRatio: 0,
+          detail: err.message,
+        });
+        continue;
+      }
+      if (args.update) {
+        await copyFile(actualFile, baselineFile);
+        console.log("baselined");
+        results.push({
+          shot: shotName,
+          status: "baselined",
+          diffPixels: 0,
+          diffRatio: 0,
+          detail: "",
+        });
+        continue;
+      }
+      const result = await compareShot(baselineFile, actualFile, diffFile, viewport);
+      console.log(result.status.toUpperCase() + (result.detail ? ` — ${result.detail}` : ""));
+      results.push({ shot: shotName, ...result });
+    }
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const targets = TARGETS.filter((t) => !args.grep || t.name.includes(args.grep));
@@ -234,62 +355,56 @@ async function main() {
 
   const browser = await chromium.launch();
   const results = [];
+  const layoutResults = [];
   try {
-    for (const target of targets) {
-      for (const viewport of VIEWPORTS) {
-        const shotName = `${target.name}-${viewport.name}`;
-        const actualFile = path.join(OUTPUT_DIR, "actual", `${shotName}.png`);
-        const baselineFile = path.join(BASELINE_DIR, `${shotName}.png`);
-        const diffFile = path.join(OUTPUT_DIR, "diff", `${shotName}.png`);
-        process.stdout.write(`capturing ${shotName} … `);
-        // One broken page must not hide the state of the others: a capture
-        // error is recorded as a failing shot and the run continues.
-        try {
-          await capture(browser, baseUrl, target, viewport, actualFile);
-        } catch (err) {
-          console.log(`ERROR — ${err.message}`);
-          results.push({
-            shot: shotName,
-            status: "error",
-            diffPixels: 0,
-            diffRatio: 0,
-            detail: err.message,
-          });
-          continue;
-        }
-        if (args.update) {
-          await copyFile(actualFile, baselineFile);
-          console.log("baselined");
-          results.push({
-            shot: shotName,
-            status: "baselined",
-            diffPixels: 0,
-            diffRatio: 0,
-            detail: "",
-          });
-          continue;
-        }
-        const result = await compareShot(baselineFile, actualFile, diffFile, viewport);
-        console.log(result.status.toUpperCase() + (result.detail ? ` — ${result.detail}` : ""));
-        results.push({ shot: shotName, ...result });
-      }
+    // The layout smoke pass runs first: it needs no baselines, and a page that
+    // scrolls sideways at a phone width must never be baselined.
+    await runLayoutPass(browser, baseUrl, targets, layoutResults);
+    if (!args.layoutOnly) {
+      await runPixelPass(browser, baseUrl, targets, args, results);
     }
   } finally {
     await browser.close();
     if (server) server.child.kill();
   }
 
+  const layoutFailures = describeLayoutFailures(layoutResults);
   const report = {
     baseUrl,
     update: args.update,
+    layoutOnly: args.layoutOnly,
     generatedAt: new Date().toISOString(),
     maxDiffRatio: MAX_DIFF_RATIO,
+    phoneWidths: PHONE_WIDTHS,
     results,
+    layoutResults,
   };
   await writeFile(path.join(OUTPUT_DIR, "report.json"), `${JSON.stringify(report, null, 2)}\n`);
 
+  // The layout smoke check is reported first: it is what fails a build for a
+  // sideways-scrolling page, so it must not be buried under pixel drift.
+  console.log(
+    `\nViewport smoke: ${layoutResults.length - layoutFailures.length}/${layoutResults.length} ` +
+      `page/width combinations fit ${PHONE_WIDTHS.join("/")}px without horizontal scroll.`,
+  );
+  for (const failure of layoutFailures) console.log(`  FAIL ${failure}`);
+
+  if (args.layoutOnly) {
+    if (layoutFailures.length > 0) {
+      console.log(`\nReport: ${path.relative(ROOT, OUTPUT_DIR)}/report.json`);
+      process.exit(1);
+    }
+    return;
+  }
+
   const errored = results.filter((r) => r.status === "error");
   if (args.update) {
+    if (layoutFailures.length > 0) {
+      console.error(
+        "\nRefusing to baseline: fix the horizontal scroll above first, then re-run --update.",
+      );
+      process.exit(1);
+    }
     console.log(
       `\nBaselines written to ${path.relative(ROOT, BASELINE_DIR)} (${results.length - errored.length} shots).`,
     );
@@ -308,7 +423,7 @@ async function main() {
   console.log(
     `\n${results.length - bad.length}/${results.length} shots match the plush baselines.`,
   );
-  if (bad.length > 0) {
+  if (bad.length > 0 || layoutFailures.length > 0) {
     console.log(`Captured images and diffs: ${path.relative(ROOT, OUTPUT_DIR)}/`);
     if (missing.length > 0) {
       console.log(

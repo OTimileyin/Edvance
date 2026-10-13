@@ -1,5 +1,5 @@
 /**
- * Edvance service worker — the second half of installability.
+ * Oyevolve service worker — the second half of installability.
  *
  * Deliberately small and safe for an authenticated app:
  *   - navigations are network-first, so a signed-in learner always gets fresh
@@ -13,7 +13,7 @@
  *     is ever written to storage.
  */
 
-const CACHE = "edvance-shell-v2";
+const CACHE = "oyevolve-shell-v2";
 
 const SHELL = [
   "/offline.html",
@@ -59,9 +59,9 @@ self.addEventListener("activate", (event) => {
         Promise.all(
           keys
             // Only the shell caches rotate. The learner's saved revision
-            // lists (edvance-revision-*) are theirs — kept until they clear
+            // lists (oyevolve-revision-*) are theirs — kept until they clear
             // them from the offline revision page.
-            .filter((key) => key.startsWith("edvance-shell-") && key !== CACHE)
+            .filter((key) => key.startsWith("oyevolve-shell-") && key !== CACHE)
             .map((key) => caches.delete(key)),
         ),
       )

@@ -1,7 +1,7 @@
 /**
  * A small, dependency-free fixed-window rate limiter.
  *
- * Edvance runs as a single local process, so an in-memory limiter is honest and
+ * Oyevolve runs as a single local process, so an in-memory limiter is honest and
  * sufficient: it protects the expensive, user-triggered actions (model calls,
  * uploads, account deletion) from accidental or abusive repetition. It is
  * deliberately pure — no framework imports — so it can be unit-tested, and a

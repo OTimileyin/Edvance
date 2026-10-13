@@ -1,4 +1,4 @@
-// Edvance — watch a deployment until it is healthy, then run the remote suite.
+// Oyevolve — watch a deployment until it is healthy, then run the remote suite.
 //
 // Polls `<url>/api/health` until the app reports ready (HTTP 200 with
 // `status: "ok"` and `database: "ok"`), then runs

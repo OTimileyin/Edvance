@@ -1,9 +1,9 @@
-// Edvance Phase 8 — Mastery Intelligence end-to-end tests.
+// Oyevolve Phase 8 — Mastery Intelligence end-to-end tests.
 //
 // Exercises the real practice pipeline against a running dev server started with
 // the deterministic test provider enabled:
 //
-//   EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
+//   OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
 //
 // Mastery is never set by a model: it is derived from the learner's recorded
 // practice attempts by one deterministic rule. These tests record attempts
@@ -203,9 +203,9 @@ async function main() {
   const db = new Client({ connectionString: DATABASE_URL });
   await db.connect();
 
-  const emailA = `mastery-a-${stamp}@edvance.test`;
-  const emailB = `mastery-b-${stamp}@edvance.test`;
-  const emailC = `mastery-c-${stamp}@edvance.test`;
+  const emailA = `mastery-a-${stamp}@oyevolve.test`;
+  const emailB = `mastery-b-${stamp}@oyevolve.test`;
+  const emailC = `mastery-c-${stamp}@oyevolve.test`;
   const cleanupMaterials = [];
   let courseA = null;
 

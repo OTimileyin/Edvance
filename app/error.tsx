@@ -25,7 +25,7 @@ export default function Error({
         <span className="kicker">Something went wrong</span>
         <h1 className="page-title">This screen could not load</h1>
         <p className="page-lede">
-          Edvance hit an unexpected error while rendering this page. Your work is unaffected — try
+          Oyevolve hit an unexpected error while rendering this page. Your work is unaffected — try
           again, and if it keeps happening, reload the page.
         </p>
         <p style={{ marginTop: 20 }}>

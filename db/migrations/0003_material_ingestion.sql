@@ -1,4 +1,4 @@
--- Edvance Phase 5.6 — Text Extraction & Evidence Chunking
+-- Oyevolve Phase 5.6 — Text Extraction & Evidence Chunking
 --
 -- Uploaded materials live in private object storage (`learning_material`). This
 -- migration adds the two tables that turn those opaque files into structured,

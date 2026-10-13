@@ -20,14 +20,14 @@ const fredoka = Fredoka({
 });
 
 export const metadata: Metadata = {
-  title: "Edvance — Course Intelligence",
+  title: "Oyevolve — Course Intelligence",
   description:
     "Evidence-first assessment intelligence: every question mapped to the lesson that taught it, every inconsistency flagged, every concept scored.",
   metadataBase: new URL("https://white-whale.spcf.app"),
   openGraph: {
     type: "website",
-    siteName: "Edvance",
-    title: "Edvance — Course Intelligence",
+    siteName: "Oyevolve",
+    title: "Oyevolve — Course Intelligence",
     description:
       "Evidence-first assessment intelligence: every question mapped to the lesson that taught it, every inconsistency flagged, every concept scored.",
     images: [
@@ -35,13 +35,13 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "Edvance — evidence-first assessment intelligence",
+        alt: "Oyevolve — evidence-first assessment intelligence",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Edvance — Course Intelligence",
+    title: "Oyevolve — Course Intelligence",
     description:
       "Evidence-first assessment intelligence: every question mapped to the lesson that taught it, every inconsistency flagged, every concept scored.",
     images: ["/og.png"],
@@ -64,7 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main id="main">{children}</main>
         <footer className="app-footer">
           <div className="app-footer-inner">
-            <Link href="/" className="brand" aria-label="Edvance home">
+            <Link href="/" className="brand" aria-label="Oyevolve home">
               <Logo idSuffix="footer" size={32} />
             </Link>
             <p className="footer-note">
@@ -83,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link
                 className="icon-btn icon-btn--quiet"
                 href="/#questions"
-                aria-label="The four questions Edvance answers"
+                aria-label="The four questions Oyevolve answers"
               >
                 <svg
                   viewBox="0 0 24 24"

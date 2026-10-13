@@ -25,7 +25,7 @@ import {
  * model is given just the weak concepts and the evidence that teaches them, so a
  * question can only ever be written for a real weak area and cite real evidence;
  * a fabricated concept or citation rejects the whole response. When there is
- * nothing to revise — or no evidence to ground a question — Edvance records that
+ * nothing to revise — or no evidence to ground a question — Oyevolve records that
  * honestly, with no model call.
  */
 export async function POST(
@@ -41,7 +41,7 @@ export async function POST(
   if (limited) return limited;
 
   const mockScenario = isMockProvider()
-    ? (request.headers.get("x-edvance-mock-scenario") ?? undefined)
+    ? (request.headers.get("x-oyevolve-mock-scenario") ?? undefined)
     : undefined;
 
   const { courseId } = await params;
@@ -156,12 +156,12 @@ export async function POST(
       await failRevisionPlan(
         courseId,
         "unverified-output",
-        "The generation service returned a response Edvance could not verify. Please try again.",
+        "The generation service returned a response Oyevolve could not verify. Please try again.",
       );
       return NextResponse.json(
         {
           error:
-            "The generation service returned a response Edvance could not verify. Please try again.",
+            "The generation service returned a response Oyevolve could not verify. Please try again.",
         },
         { status: 502 },
       );

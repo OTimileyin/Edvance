@@ -1,9 +1,9 @@
-// Edvance Phase 6 — Course Intelligence end-to-end tests.
+// Oyevolve Phase 6 — Course Intelligence end-to-end tests.
 //
 // Exercises the real analysis pipeline against a running dev server started
 // with the deterministic test provider enabled:
 //
-//   EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
+//   OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
 //
 // The deterministic provider is env-gated and refused in production; a per-test
 // header selects a scenario so one server can exercise every path. It derives
@@ -18,6 +18,8 @@
 // their prior state.
 
 import { Client } from "pg";
+
+import { waitForQueue } from "./lib/work-queue.mjs";
 
 const BASE_URL = (process.env.BASE_URL ?? "http://localhost:3260").replace(/\/$/, "");
 const TRUSTED_ORIGIN = process.env.BETTER_AUTH_URL ?? BASE_URL;
@@ -139,11 +141,14 @@ async function upload(session, courseId, name, text) {
     body: form,
   });
   const body = await response.json().catch(() => ({}));
+  // Reading the file is queued rather than done in the request (V2.2); analysis
+  // over zero chunks would be a different test, so wait for the evidence first.
+  await waitForQueue(session, courseId);
   return { status: response.status, material: body.material, error: body.error };
 }
 
 async function analyse(session, courseId, scenario) {
-  const headers = scenario ? { "x-edvance-mock-scenario": scenario } : {};
+  const headers = scenario ? { "x-oyevolve-mock-scenario": scenario } : {};
   const response = await session.fetch(`/api/courses/${courseId}/analyse`, {
     method: "POST",
     headers,
@@ -190,8 +195,8 @@ async function main() {
   const db = new Client({ connectionString: DATABASE_URL });
   await db.connect();
 
-  const emailA = `intel-a-${stamp}@edvance.test`;
-  const emailB = `intel-b-${stamp}@edvance.test`;
+  const emailA = `intel-a-${stamp}@oyevolve.test`;
+  const emailB = `intel-b-${stamp}@oyevolve.test`;
   const cleanupMaterials = []; // { session, courseId, materialId }
 
   try {
@@ -453,12 +458,16 @@ async function main() {
     }
 
     // --- 8. Unverifiable / failed responses are rejected whole ------------
+    // Each failure records the code that names its real cause, so the state a
+    // learner reads is honest: a cut-short answer is never reported as an
+    // unverifiable one, and a provider outage is never reported as bad output.
     const failureCases = [
-      ["invalid-chunk-id", "invalid chunk id"],
-      ["malformed", "malformed structured output"],
-      ["provider-failure", "provider failure"],
+      ["invalid-chunk-id", "invalid chunk id", "unverified-output"],
+      ["malformed", "malformed structured output", "unverified-output"],
+      ["provider-failure", "provider failure", "provider-error"],
+      ["truncated", "cut-short answer", "response-truncated"],
     ];
-    for (const [scenario, label] of failureCases) {
+    for (const [scenario, label, expectedCode] of failureCases) {
       const course = await createCourse(learnerA, `Failure course (${scenario})`);
       const material = await upload(learnerA, course, "evidence.md", FATHOM_MARKDOWN);
       cleanupMaterials.push({
@@ -479,6 +488,11 @@ async function main() {
       );
       const row = await loadAnalysis(db, course);
       check(`${label}: analysis recorded as failed`, row?.status === "failed", row?.status);
+      check(
+        `${label}: recorded under the code that names its cause`,
+        row?.error_code === expectedCode,
+        `${row?.error_code} (expected ${expectedCode})`,
+      );
       check(
         `${label}: safe error summary recorded`,
         Boolean(row?.error_summary) && !/chunk-does-not-exist/.test(row?.error_summary ?? ""),
@@ -521,26 +535,31 @@ async function main() {
       );
     }
 
-    // --- 10. Phase 5.6 regression: no analysis without evidence ----------
+    // --- 10. Demo workspaces carry real evidence, and can be analysed -----
     {
       const seeded = await learnerB.fetch("/api/courses");
       const seededBody = await seeded.json();
       const demo = seededBody.courses?.[0];
       check(
-        "regression: seeded workspace has no real evidence",
+        "regression: seeded workspace stores evidence without a stored file",
         Array.isArray(seededBody.courses) &&
-          (demo?.sources ?? []).every((source) => !source.storageReference),
+          (demo?.sources ?? []).length > 0 &&
+          (demo?.sources ?? []).every(
+            (source) => !source.storageReference && (source.ingestion?.chunkCount ?? 0) > 0,
+          ),
       );
       if (demo) {
         const result = await analyse(learnerB, demo.id);
         check(
-          "regression: demo-only course is insufficient-evidence, not analysed",
-          result.body.course?.intelligence?.status === "insufficient-evidence",
+          "regression: demo course analyses its own evidence",
+          result.body.course?.intelligence?.status === "ready",
           result.body.course?.intelligence?.status,
         );
+        const concepts = result.body.course?.intelligence?.concepts ?? [];
         check(
-          "regression: demo concepts were not fabricated into intelligence",
-          (result.body.course?.intelligence?.concepts ?? []).length === 0,
+          "regression: every demo concept cites stored evidence",
+          concepts.length > 0 && concepts.every((concept) => (concept.evidence ?? []).length > 0),
+          `${concepts.length}`,
         );
       }
     }

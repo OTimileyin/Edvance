@@ -21,3 +21,8 @@ CLAUDE.md
 .freebuff/
 .tmp-scratch/
 .playwright-cli/
+
+# Vendored Claude Code skills (third-party, installed per machine by
+# `npx claude-code-templates --skill …`). Not this project's source, so they
+# must not fail the formatting gate.
+.claude/

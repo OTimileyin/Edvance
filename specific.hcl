@@ -1,4 +1,4 @@
-# Edvance — infrastructure definition for Specific.
+# Oyevolve — infrastructure definition for Specific.
 #
 # The same file drives local development (`specific dev`) and production
 # (`specific deploy`). Connection details reach the app as environment

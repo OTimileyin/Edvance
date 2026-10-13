@@ -1,14 +1,14 @@
-# Deploying Edvance to Vercel
+# Deploying Oyevolve to Vercel
 
 A first-time deployer's runbook. Follow it top to bottom; every command and click
 is named exactly. Total time: about 20 minutes, most of it waiting on builds.
 
-Edvance is already deployed on **Specific** at <https://white-whale.spcf.app>.
+Oyevolve is already deployed on **Specific** at <https://white-whale.spcf.app>.
 This runbook produces a _second, independent_ deployment on Vercel from the same
 repository. The two share integration keys but have separate databases and
 separate session secrets, so rotating or breaking one never affects the other.
 
-- Repository: <https://github.com/OTimileyin/Edvance> (public, `main`)
+- Repository: <https://github.com/OTimileyin/Oyevolve> (public, `main`)
 - Framework: Next.js (App Router), detected automatically by Vercel
 - Database: Vercel Postgres (Neon-backed), created in the dashboard
 - Build command: `node scripts/migrate.mjs && next build` (from `vercel.json`)
@@ -19,19 +19,20 @@ separate session secrets, so rotating or breaking one never affects the other.
 ## Prerequisites
 
 - A **Vercel account** (the free Hobby plan is enough). Sign up with the same
-  GitHub account that can see `OTimileyin/Edvance`.
+  GitHub account that can see `OTimileyin/Oyevolve`.
 - The repository pushed and **public** — a fresh clone must contain
   `db/migrations/0000_better_auth.sql` or auth tables cannot be created.
 - Local: Node.js, and the **Infisical CLI** authenticated and linked to the
-  `edvance` project (the same setup `npm run dev` uses — see
+  `oyevolve` project (the same setup `npm run dev` uses — see
   [README.md](../README.md#secrets-infisical)).
 - No Vercel CLI and no `vercel login` are needed. Everything below is done in the
   browser dashboard.
 
-> **Pick a project name that is not `edvance`.** The domain `edvance.vercel.app`
-> is already registered to a different account, so a project literally named
-> `edvance` will be given a suffixed URL. Use `edvance-app`, `edvance-otimileyin`,
-> or similar.
+> **The bare name `oyevolve` is available.** `oyevolve.vercel.app` was unclaimed
+> when this was last checked (2026-10-13), so a project named `oyevolve` keeps that
+> URL. The previous domain, `edvance.vercel.app`, belongs to a different account —
+> do not name anything `edvance`. If the bare name is taken by the time you read
+> this, use `oyevolve-app` or similar instead.
 
 ---
 
@@ -55,9 +56,9 @@ values in Step 3.
 ## Step 2 — Import the repository
 
 1. Go to <https://vercel.com/new>.
-2. Under **Import Git Repository**, choose `OTimileyin/Edvance`. If it is not
+2. Under **Import Git Repository**, choose `OTimileyin/Oyevolve`. If it is not
    listed, click **Adjust GitHub App Permissions** and grant access.
-3. **Project Name**: enter your chosen name (not `edvance`).
+3. **Project Name**: enter your chosen name (not `oyevolve`).
 4. **Framework Preset**: leave as **Next.js** (auto-detected). Do not change the
    build settings — `vercel.json` supplies the build command.
 5. **Do not click Deploy yet.** Expand **Environment Variables** first (Step 3).
@@ -81,7 +82,7 @@ Production, Preview and Development**.
 | `BETTER_AUTH_URL`         | **leave unset for now**  | Set in Step 5, once the URL exists.    |
 
 **Do not set `DATABASE_URL`.** The Vercel Postgres integration (Step 4) injects
-the connection string automatically. Edvance accepts it under either
+the connection string automatically. Oyevolve accepts it under either
 `DATABASE_URL` or `POSTGRES_URL`, so you do not need to name it yourself.
 
 Click **Deploy**.
@@ -98,18 +99,18 @@ No database connection string is set. Set one of: DATABASE_URL_UNPOOLED,
 POSTGRES_URL_NON_POOLING, DATABASE_URL, POSTGRES_URL, POSTGRES_PRISMA_URL.
 ```
 
-That is the intended, honest failure: Edvance refuses to build a deployment it
+That is the intended, honest failure: Oyevolve refuses to build a deployment it
 knows cannot reach a database. Create one now.
 
 1. Open the project → **Storage** tab.
 2. **Create Database** → choose **Postgres** (Neon-backed). Pick the free plan and
    the region closest to you.
-3. Name it (e.g. `edvance-db`) and **Connect** it to this project, for all
+3. Name it (e.g. `oyevolve-db`) and **Connect** it to this project, for all
    environments.
 4. Vercel injects the connection variables into the project.
 
 > **Variable-name check.** In the integration's env-var list, confirm a pooled
-> connection (`POSTGRES_URL` or `DATABASE_URL`) is present. Edvance prefers a
+> connection (`POSTGRES_URL` or `DATABASE_URL`) is present. Oyevolve prefers a
 > pooled URL at runtime and a direct one (`POSTGRES_URL_NON_POOLING` /
 > `DATABASE_URL_UNPOOLED`) for migrations, and falls back across all of them. If
 > somehow only a non-pooling URL exists, the app still runs.
@@ -121,7 +122,7 @@ knows cannot reach a database. Create one now.
 Sessions and the CSRF origin check need the app's own public URL.
 
 1. Copy the deployment URL from the project overview, e.g.
-   `https://edvance-app.vercel.app` (no trailing slash).
+   `https://oyevolve.vercel.app` (no trailing slash).
 2. **Settings → Environment Variables** → add `BETTER_AUTH_URL` with that exact
    value, for **Production, Preview and Development**.
 3. **Deployments → ⋯ → Redeploy** (uncheck "use existing build cache" so the new

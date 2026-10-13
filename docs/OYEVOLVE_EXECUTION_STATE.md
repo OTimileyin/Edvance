@@ -1,4 +1,4 @@
-# Edvance — Execution State
+# Oyevolve — Execution State
 
 Persistent memory for the autonomous completion run. On a bare `continue`, recover from **this
 file + the repository** — never from chat memory.
@@ -7,7 +7,7 @@ file + the repository** — never from chat memory.
 
 ## CURRENT PHASE
 
-**Phase 11 — Deployment — COMPLETE.** Edvance is deployed at https://white-whale.spcf.app.
+**Phase 11 — Deployment — COMPLETE.** Oyevolve is deployed at https://white-whale.spcf.app.
 
 **Second deployment target (Vercel) — prepared, not live.** `vercel.json`, the `POSTGRES_URL`
 fallback, the runbook and the two-deployment diff tooling are on `main`, but the Vercel project has
@@ -16,7 +16,7 @@ deployment. See "SECOND DEPLOYMENT TARGET" below.
 
 ## CURRENT TASK
 
-Nothing is in flight. **EDVANCE — DEPLOYED AND SUBMISSION READY.** Phases 0–12 are complete; the
+Nothing is in flight. **OYEVOLVE — DEPLOYED AND SUBMISSION READY.** Phases 0–12 are complete; the
 deployment ran and passed a remote end-to-end verification (69 checks, 0 failures) covering HTTPS,
 headers, storage, ingestion, Gemini course/assessment intelligence, mastery, revision, cross-learner
 isolation and secret non-exposure. The submission deliverable is `docs/SUBMISSION_REPORT.md`.
@@ -49,12 +49,12 @@ Phase 5.6 was `f45ad5a`; Phase 5.5 was `0e33c80`.
 - Phase 10 — Product Completion & Hardening. Committed `fb96dc2`. Hardening **43**, unit **24**,
   regressions **72 / 48 / 76 / 59 / 91**, typecheck exit 0, production build passes.
 - Phase 11 — Deployment. **Executed and live.** Deployed from WSL Ubuntu (the Specific CLI does not
-  run on native Windows) to project `edvance` (`proj_0vqsej2psy3sy4tr`), environment `prod`, active
+  run on native Windows) to project `oyevolve` (`proj_0vqsej2psy3sy4tr`), environment `prod`, active
   deployment `depl_02f4368hqt4n86q6` at **https://white-whale.spcf.app**. All 8 migrations applied;
   `/api/health` returns `200` with database/ai/storage healthy (`email: not-configured`). The `build`
   block gained build-only placeholder env (see ENVIRONMENT NOTES); `GEMINI_MODEL` is pinned to
   `gemini-3-flash-preview`. Remote verification: **69 checks, 0 failures**.
-- Phase 12 — Submission Readiness. **Complete.** Edvance declared submission ready: adversarial
+- Phase 12 — Submission Readiness. **Complete.** Oyevolve declared submission ready: adversarial
   audit held, no-fake-feature sweep clean, four stale product claims found and fixed, full gate green
   (typecheck, unit 24, end-to-end 43/72/48/76/59/91, live Gemini 34, production build, secret scan,
   baseline), `docs/SUBMISSION_REPORT.md` written.
@@ -111,7 +111,7 @@ None — the deployment is live and everything verified. Two optional, non-block
   `rm -f tsconfig.tsbuildinfo` before `npx tsc --noEmit`.**
 - Ports: `test-ingestion.mjs` defaults to **3250**; all newer suites default to **3260**. Pass
   `BASE_URL` explicitly. One mock server serves every suite:
-  `EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260`.
+  `OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260`.
 - Production build needs env injected: `infisical run --env=dev -- npx next build`.
 - Unit tests run the TypeScript directly under Node's type-stripping loader. **Do not add TypeScript
   parameter properties / enums / namespaces to modules under `tests/unit`** — they are unsupported
@@ -138,7 +138,7 @@ make the change, and re-run the gate before claiming anything:
 
 1. `rm -f tsconfig.tsbuildinfo && npx tsc --noEmit`.
 2. `npm run test:unit`.
-3. Start one mock dev server (`EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260`)
+3. Start one mock dev server (`OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260`)
    and run the Phase 10 / 9 / 8 / 7 / 6 / 5.6 suites with `BASE_URL=http://localhost:3260`.
 4. `infisical run --env=dev -- npx next build`, and once with only the `specific.hcl` build-arg
    placeholders to reproduce the platform builder.
@@ -176,7 +176,7 @@ make the change, and re-run the gate before claiming anything:
 - Ingestion is synchronous; scanned/image-only PDFs fail as `empty-content` (no OCR).
 - No embeddings or vector database; context is bounded.
 - Analysis prerequisites are deliberate (analyse course → check question → practise → revision).
-- Mastery counts a self-recorded attempt; Edvance does not auto-grade prose.
+- Mastery counts a self-recorded attempt; Oyevolve does not auto-grade prose.
 - Live Gemini is a shared free tier: a transient 503/429 can surface as an honest retryable failure.
 - The seeded demo workspace carries demo consistency/mastery until real analysis and practice replace
   them.
@@ -188,7 +188,7 @@ directory stay untracked by design, listed in `.gitignore`.
 
 ## FINAL SUBMISSION STATUS
 
-**EDVANCE — DEPLOYED AND SUBMISSION READY.** Phases 0–12 complete; the app is live at
+**OYEVOLVE — DEPLOYED AND SUBMISSION READY.** Phases 0–12 complete; the app is live at
 **https://white-whale.spcf.app** and passed a remote end-to-end verification (69 checks, 0 failures)
 covering HTTPS, headers, storage, ingestion, Gemini course/assessment intelligence, mastery,
 revision, cross-learner isolation and secret non-exposure. Every claimed capability is implemented,

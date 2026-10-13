@@ -1,4 +1,4 @@
--- Edvance Phase 4 — Course Data & PostgreSQL
+-- Oyevolve Phase 4 — Course Data & PostgreSQL
 -- Implements the PRD §15 high-level data model. Better Auth already owns the
 -- `user`, `session`, `account`, and `verification` tables; this migration adds
 -- the course and learner records that reference them.

@@ -67,7 +67,8 @@ export default function CourseRevision() {
         <h1 className="page-title">Revision</h1>
         <p className="page-lede">
           What to revise in {course.name} next, and practice written for the concepts you are
-          weakest on. The recommendation is derived from your practice; Edvance never invents a gap.
+          weakest on. The recommendation is derived from your practice; Oyevolve never invents a
+          gap.
         </p>
         {/* A plain link: offline study needs a full navigation the service
             worker can answer from its precache. */}
@@ -88,7 +89,7 @@ export default function CourseRevision() {
             <p>
               Revision is built from the concepts your materials taught, so the{" "}
               <strong>course must be analysed first</strong> (see the Intelligence tab). Until then,
-              Edvance has nothing evidence-grounded to recommend.
+              Oyevolve has nothing evidence-grounded to recommend.
             </p>
           </div>
         </section>

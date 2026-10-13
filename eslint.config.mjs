@@ -22,6 +22,9 @@ const eslintConfig = defineConfig([
     // Local scratch (never committed), kept out so local runs match CI:
     ".freebuff/**",
     ".tmp-scratch/**",
+    // Vendored Claude Code skills: third-party files installed per machine, not
+    // this project's source, so they must not fail lint the same way in CI:
+    ".claude/**",
   ]),
 ]);
 

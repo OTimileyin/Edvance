@@ -1,4 +1,4 @@
--- Edvance — Better Auth schema.
+-- Oyevolve — Better Auth schema.
 --
 -- Better Auth owns `user`, `session`, `account`, and `verification`. Locally
 -- these were created with the Better Auth CLI; this migration captures the same

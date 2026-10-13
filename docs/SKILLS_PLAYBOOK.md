@@ -77,7 +77,8 @@ You can name several in one request; they compose because each one owns a differ
 
 `.claude/` is excluded from both Prettier and ESLint (see `.prettierignore` and `globalIgnores`
 in `eslint.config.mjs`), so vendored third-party skill files can never fail `format:check` or
-`lint`. It is currently untracked and not in `.gitignore`.
+`lint`. It is also git-ignored (see the `.claude/` entry in `.gitignore`), so it stays a local
+toolbox: the playbook is committed, the skill files it describes are not.
 
 ## 3. The composed workflow: one task, all five
 
@@ -91,7 +92,7 @@ instead of guessing. It has language pattern files worth knowing about before yo
 `patterns/react.md` (React/Next.js), `patterns/nodejs.md`, `patterns/database.md`,
 `patterns/docker.md`, `patterns/git.md`, `patterns/network.md`. Its real value on this project is
 the class of failure behind the Intelligence tab's _"The analysis service returned a response
-Edvance could not verify"_ — an error whose shape (HTTP 200, unparseable body) the framework
+Oyevolve could not verify"_ — an error whose shape (HTTP 200, unparseable body) the framework
 pattern files describe better than a generic traceback reading. It also maintains a replay log at
 `.claude/error-solutions/` for solutions worth reusing.
 
@@ -145,7 +146,7 @@ source until a customisation is genuinely required.
 This is the pay-off, and the only step that touches the repository. It runs an interview first —
 critical flows, auth strategy, test data, CI, visual regression — then writes
 `playwright.config.ts`, `e2e/pages/*`, `e2e/fixtures.ts`, `e2e/auth.setup.ts`, the specs, and a
-GitHub Actions workflow. It is opinionated in ways that suit Edvance: role-based locators, no
+GitHub Actions workflow. It is opinionated in ways that suit Oyevolve: role-based locators, no
 `waitForTimeout()`, per-test data seeding and cleanup, trace/screenshot/video on failure, and
 `storageState` saved once in a `setup` project — which is exactly right for this app, since auth
 is better-auth cookies rather than a token in `localStorage`.
@@ -176,7 +177,7 @@ python -m pip install playwright && python -m playwright install chromium   # we
 npm i -D @playwright/test                                                   # playwright-e2e-builder
 ```
 
-### Edvance-specific traps
+### Oyevolve-specific traps
 
 **Infisical overrides `PORT`.** `npm run dev` is
 `infisical run --env=dev -- next dev`, and Infisical injects a `PORT`, so Next binds an ephemeral

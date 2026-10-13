@@ -18,7 +18,7 @@ import type { AnalysisStatus, ConsistencyStatus } from "@/lib/types";
  * A question is only ever judged against real analysed concepts, so the page
  * says which concepts it tests and where they were taught. When the evidence
  * cannot support a judgement — or the question presumes something the evidence
- * contradicts — Edvance says exactly that instead of guessing. Checking a
+ * contradicts — Oyevolve says exactly that instead of guessing. Checking a
  * question only ever starts from the button on this page.
  */
 
@@ -137,7 +137,7 @@ export default function CourseAssessments() {
             <p>
               Questions are judged against your course&apos;s extracted concepts, so the{" "}
               <strong>course must be analysed first</strong> (see the Intelligence tab). Until then,
-              Edvance will report insufficient evidence rather than guess.
+              Oyevolve will report insufficient evidence rather than guess.
             </p>
           </div>
         </section>

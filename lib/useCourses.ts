@@ -208,7 +208,7 @@ export async function removeMaterial(courseId: string, materialId: string): Prom
 }
 
 /**
- * Runs Edvance's course analysis for a course, returning its refreshed state.
+ * Runs Oyevolve's course analysis for a course, returning its refreshed state.
  * This is the only client entry point that triggers a model call, and it is
  * always an explicit learner action. Throws with a display message on failure.
  */

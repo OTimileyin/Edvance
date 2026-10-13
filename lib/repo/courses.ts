@@ -1,5 +1,8 @@
+import type { PoolClient } from "pg";
+
 import { pool } from "@/lib/db";
-import { SEED_COURSES } from "@/lib/data";
+import { SEED_COURSES, seedExtractionMetadata, type SeedSource } from "@/lib/data";
+import { chunkBlocks } from "@/lib/extraction";
 import { deriveMastery } from "@/lib/mastery";
 import {
   buildRevisionFocus,
@@ -66,6 +69,8 @@ type MaterialRow = {
   job_error_summary: string | null;
   job_metadata: IngestionMetadata | null;
   chunk_count: string | null;
+  /** True while an `ingest` job for this material is queued or running. */
+  queued: boolean;
 };
 
 type ConceptRow = {
@@ -282,6 +287,10 @@ function mapMaterial(row: MaterialRow): SourceItem {
           chunkCount: row.chunk_count === null ? 0 : Number(row.chunk_count),
         }
       : null,
+    // Whether Oyevolve still has this file's reading queued. It is read straight
+    // from the queue rather than inferred, because it is what stops the UI
+    // showing "Uploaded" for a file nobody has read yet.
+    queued: row.queued === true,
   };
 }
 
@@ -293,7 +302,10 @@ const MATERIAL_COLUMNS = `m.id, m.course_id, m.type, m.title, m.location,
         m.storage_reference, m.mime_type, m.size_bytes,
         j.status as job_status, j.error_code as job_error_code,
         j.error_summary as job_error_summary, j.metadata as job_metadata,
-        (select count(*) from material_chunk ch where ch.material_id = m.id) as chunk_count`;
+        (select count(*) from material_chunk ch where ch.material_id = m.id) as chunk_count,
+        exists (select 1 from work_job w
+                 where w.target_id = m.id and w.kind = 'ingest'
+                   and w.status in ('pending', 'running')) as queued`;
 
 const MATERIAL_LATEST_JOB = `left join lateral (
           select status, error_code, error_summary, metadata
@@ -1935,7 +1947,7 @@ export async function failAssessmentAnalysis(
  * mappings, its consistency finding, and its analysis state.
  *
  * Only concepts the course actually established can be mapped, and only real
- * evidence rows become source locations — the model names ids, and Edvance
+ * evidence rows become source locations — the model names ids, and Oyevolve
  * looks up what those ids actually point at. A concept that is not in the
  * course has no stored row to attach to, so nothing invented is persisted.
  *
@@ -2026,11 +2038,80 @@ export async function saveAssessmentIntelligence(
 }
 
 /**
+ * Stores the evidence one demo source contributes: a completed ingestion job
+ * plus the chunks the real chunker produces from the source's authored blocks.
+ * This is the exact shape the upload pipeline writes, so every reader treats a
+ * demo workspace like any other. `storage_reference` is deliberately left null:
+ * no file was ever uploaded, and the Sources UI keeps saying so.
+ */
+async function insertSeedEvidence(
+  client: PoolClient,
+  materialId: string,
+  source: SeedSource,
+): Promise<void> {
+  const chunks = chunkBlocks(source.blocks);
+  await client.query(
+    `insert into material_ingestion_job
+       (id, material_id, status, started_at, completed_at, metadata, created_at, updated_at)
+     values ($1, $2, 'completed', now(), now(), $3::jsonb, now(), now())`,
+    [
+      newId("job"),
+      materialId,
+      JSON.stringify({ ...seedExtractionMetadata(source), chunks: chunks.length }),
+    ],
+  );
+  for (const [ordinal, chunk] of chunks.entries()) {
+    await client.query(
+      `insert into material_chunk (id, material_id, ordinal, content, source_location, metadata)
+       values ($1, $2, $3, $4, $5, $6::jsonb)`,
+      [
+        newId("chunk"),
+        materialId,
+        ordinal,
+        chunk.content,
+        chunk.location.label,
+        JSON.stringify(chunk.metadata),
+      ],
+    );
+  }
+}
+
+/**
+ * Tops up a workspace that was seeded before demo sources carried evidence.
+ * Idempotent by construction: it only matches a demo course by title and a
+ * material that has no stored file, no job and no chunks, so it can run on
+ * every visit without duplicating evidence or touching an uploaded material.
+ */
+async function backfillSeedEvidence(client: PoolClient, userId: string): Promise<void> {
+  for (const seed of SEED_COURSES) {
+    const byTitle = new Map(seed.sources.map((source) => [source.title, source]));
+    const { rows } = await client.query<{ id: string; title: string }>(
+      `select m.id, m.title
+         from learning_material m
+         join course c on c.id = m.course_id
+        where c.user_id = $1 and c.title = $2
+          and m.storage_reference is null
+          and not exists (select 1 from material_chunk ch where ch.material_id = m.id)
+          and not exists (select 1 from material_ingestion_job j where j.material_id = m.id)`,
+      [userId, seed.name],
+    );
+    for (const row of rows) {
+      const source = byTitle.get(row.title);
+      if (source) await insertSeedEvidence(client, row.id, source);
+    }
+  }
+}
+
+/**
  * Seeds a brand-new learner with the demo workspaces so their first visit is
  * never empty. Idempotent and concurrency-safe: it takes a per-user advisory
  * lock, re-checks that the learner still has no courses, and writes everything
  * in one transaction. Real ingestion (Phase 5) replaces this with materials the
  * learner uploads.
+ *
+ * Every demo source is stored with the evidence the extraction pipeline would
+ * have produced for it, so a demo course can actually be analysed — while the
+ * material still reports no stored file.
  */
 export async function ensureSeeded(userId: string): Promise<void> {
   const client = await pool.connect();
@@ -2044,6 +2125,9 @@ export async function ensureSeeded(userId: string): Promise<void> {
       [userId],
     );
     if (rows[0].count !== "0") {
+      // An existing workspace may predate demo evidence: top it up so the demo
+      // courses become analysable without waiting for the learner to re-seed.
+      await backfillSeedEvidence(client, userId);
       await client.query("commit");
       return;
     }
@@ -2057,11 +2141,13 @@ export async function ensureSeeded(userId: string): Promise<void> {
       );
 
       for (const source of seed.sources) {
+        const materialId = newId("material");
         await client.query(
           `insert into learning_material (id, course_id, type, title, location)
            values ($1, $2, $3, $4, $5)`,
-          [newId("material"), courseId, source.type, source.title, source.location],
+          [materialId, courseId, source.type, source.title, source.location],
         );
+        await insertSeedEvidence(client, materialId, source);
       }
 
       for (const [ordinal, concept] of seed.concepts.entries()) {

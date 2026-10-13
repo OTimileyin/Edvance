@@ -1,4 +1,4 @@
-// Edvance V2.1 — batch upload end-to-end tests.
+// Oyevolve V2.1 — batch upload end-to-end tests.
 //
 // Exercises the batch the Sources form actually performs: ten files in one
 // action, one request per file, a few in flight at a time. It proves the parts a
@@ -17,6 +17,8 @@
 // again, so the database and bucket return to their prior state.
 
 import { Client } from "pg";
+
+import { waitForQueue } from "./lib/work-queue.mjs";
 
 const BASE_URL = (process.env.BASE_URL ?? "http://localhost:3250").replace(/\/$/, "");
 // Better Auth validates the Origin header against its trusted origins; a Node
@@ -153,7 +155,7 @@ async function main() {
   await db.connect();
 
   // --- Set up one learner and one course ---------------------------------
-  const email = `batch-${stamp}@edvance.test`;
+  const email = `batch-${stamp}@oyevolve.test`;
   const signUpResult = await signUp("Batch learner", email);
   learner = signUpResult.session;
   check("learner created", signUpResult.ok, `status ${signUpResult.status}`);
@@ -181,7 +183,7 @@ async function main() {
   const unsupported = {
     name: "lecture.mp4",
     type: "video/mp4",
-    bytes: Buffer.from("not a material Edvance can read", "utf8"),
+    bytes: Buffer.from("not a material Oyevolve can read", "utf8"),
   };
   const batch = [...fixtures, oversized, unsupported];
   check("the batch is ten files, as one action allows", batch.length === 10, `${batch.length}`);
@@ -189,6 +191,12 @@ async function main() {
   const results = await withConcurrency(batch, CONCURRENCY, (fixture) =>
     upload(learner, courseId, fixture),
   );
+
+  // Reading the accepted files is queued rather than done in each request
+  // (V2.2). This suite asserts real chunks in the database, so it waits for that
+  // work — the whole point of the batch is that ten uploads do not hold ten
+  // requests open until extraction finishes.
+  await waitForQueue(learner, courseId);
 
   const rateLimited = results.filter((result) => result.status === 429);
   check(
@@ -274,7 +282,7 @@ async function main() {
   );
 
   // --- Another learner cannot see any of it ------------------------------
-  const other = await signUp("Other learner", `batch-other-${stamp}@edvance.test`);
+  const other = await signUp("Other learner", `batch-other-${stamp}@oyevolve.test`);
   if (other.ok) {
     const foreign = materialIds[0];
     const download = await other.session.fetch(

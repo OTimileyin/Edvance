@@ -53,7 +53,7 @@ lines.push(`GEMINI_MODEL=${process.env.GEMINI_MODEL?.trim() || "gemini-3-flash-p
 lines.push(`BETTER_AUTH_SECRET=${randomBytes(32).toString("base64url")}`);
 
 lines.push("");
-lines.push("# Set this to the deployed URL Vercel gives you, e.g. https://edvance.vercel.app");
+lines.push("# Set this to the deployed URL Vercel gives you, e.g. https://oyevolve.vercel.app");
 lines.push("BETTER_AUTH_URL=");
 lines.push("");
 lines.push("# The database connection string is provided automatically by the Vercel");

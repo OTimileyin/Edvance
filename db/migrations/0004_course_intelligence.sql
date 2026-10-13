@@ -1,4 +1,4 @@
--- Edvance Phase 6 — Course Intelligence
+-- Oyevolve Phase 6 — Course Intelligence
 --
 -- Turns real `material_chunk` evidence into real, evidence-grounded course
 -- intelligence. This migration adds the durable state the analysis pipeline

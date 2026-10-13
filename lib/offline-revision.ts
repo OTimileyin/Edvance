@@ -12,11 +12,11 @@ import type { PracticeQuestion, RevisionFocus, RevisionPlan } from "@/lib/types"
  * no model traffic.
  *
  * The service worker preserves this bucket on activation (it only clears its
- * own `edvance-shell-*` caches), and the learner can wipe it from the
+ * own `oyevolve-shell-*` caches), and the learner can wipe it from the
  * offline revision page at any time.
  */
 
-const CACHE_NAME = "edvance-revision-v1";
+const CACHE_NAME = "oyevolve-revision-v1";
 const KEY_PREFIX = "/offline-revision-data/";
 
 /** The parts of a revision plan worth studying offline. */

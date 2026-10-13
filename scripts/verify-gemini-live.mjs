@@ -1,16 +1,16 @@
-// Edvance — live Google Gemini acceptance check for course intelligence.
+// Oyevolve — live Google Gemini acceptance check for course intelligence.
 //
 // The suite in scripts/test-course-intelligence.mjs uses the deterministic
-// provider (EDVANCE_AI_MOCK) so every branch, including failure injection, is
+// provider (OYEVOLVE_AI_MOCK) so every branch, including failure injection, is
 // reproducible offline. This script is its real-provider counterpart: it calls
 // the actual Gemini API through the running dev server and checks the one thing
-// a mock cannot prove — that real model output survives Edvance's strict
+// a mock cannot prove — that real model output survives Oyevolve's strict
 // validation, that every citation resolves to real stored evidence, and that no
 // evidence is fabricated.
 //
 // It needs a running server WITHOUT the mock and WITH a real key:
 //
-//   infisical run --env=dev -- npx next dev -p 3260      # no EDVANCE_AI_MOCK
+//   infisical run --env=dev -- npx next dev -p 3260      # no OYEVOLVE_AI_MOCK
 //   infisical run --env=dev -- node scripts/verify-gemini-live.mjs
 //
 // Because it is network- and model-dependent it is not part of the offline test
@@ -111,7 +111,7 @@ async function main() {
   const db = new Client({ connectionString: DATABASE_URL });
   await db.connect();
 
-  const email = `gemini-live-${stamp}@edvance.test`;
+  const email = `gemini-live-${stamp}@oyevolve.test`;
   const session = new Session();
 
   try {
@@ -153,7 +153,7 @@ async function main() {
 
     // --- The live call -----------------------------------------------------
     // A shared free-tier model can answer 503/429 for a short window. That is
-    // an external capacity limit, not an Edvance defect: the endpoint already
+    // an external capacity limit, not an Oyevolve defect: the endpoint already
     // reports it honestly as a retryable 502. Ride it out here so the check
     // measures the pipeline, not Google's queue.
     console.log("\n— calling Google Gemini (real provider) —");

@@ -3,6 +3,8 @@ import { getSessionUser } from "@/lib/api-session";
 import { rateLimit } from "@/lib/api-rate-limit";
 import { RATE_LIMITS } from "@/lib/rate-limit";
 import { deleteCourse, ensureSeeded, getCourse, updateCourse } from "@/lib/repo/courses";
+import { queueState } from "@/lib/jobs/policy";
+import { listQueuedJobs } from "@/lib/repo/jobs";
 import { deleteObject } from "@/lib/supabase-storage";
 
 export async function GET(
@@ -20,7 +22,10 @@ export async function GET(
   if (!course) {
     return NextResponse.json({ error: "Course not found." }, { status: 404 });
   }
-  return NextResponse.json({ course });
+  // What is still outstanding is reported with the course, so the workspace can
+  // say so plainly instead of leaving a learner to read a spinner.
+  const queue = queueState(await listQueuedJobs(user.id, courseId));
+  return NextResponse.json({ course: { ...course, queue } });
 }
 
 /** Renames / re-labels a course. Only presentation fields change. */

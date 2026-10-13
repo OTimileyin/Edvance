@@ -6,7 +6,7 @@ import { optionalEnv } from "./env";
  * Email is used only where it is genuinely transactional — confirming a
  * consequential account action. When `RESEND_API_KEY` is absent the feature
  * reports that it is not configured instead of pretending a message was sent:
- * nothing in Edvance ever claims an email was delivered when it was not.
+ * nothing in Oyevolve ever claims an email was delivered when it was not.
  *
  * The API key is read here, never logged, and never sent to the browser.
  */
@@ -25,7 +25,7 @@ export type EmailResult = { sent: true } | { sent: false; reason: string };
 
 /** The verified sender address, overridable for a real domain. */
 function emailFrom(): string {
-  return optionalEnv("EMAIL_FROM") ?? "Edvance <onboarding@resend.dev>";
+  return optionalEnv("EMAIL_FROM") ?? "Oyevolve <onboarding@resend.dev>";
 }
 
 /**

@@ -19,7 +19,7 @@ export function AppHeader() {
   return (
     <header className="app-header">
       <div className="app-header-inner">
-        <Link href="/" className="brand" aria-label="Edvance home">
+        <Link href="/" className="brand" aria-label="Oyevolve home">
           <Logo idSuffix="header" size={38} />
         </Link>
 

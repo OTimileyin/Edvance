@@ -1,7 +1,7 @@
 import { ModelOutputError } from "./types";
 
 /**
- * The contract between Edvance and the model.
+ * The contract between Oyevolve and the model.
  *
  * `COURSE_INTELLIGENCE_JSON_SCHEMA` is sent to Gemini as a structured-output
  * schema so the model is constrained at generation time.
@@ -221,7 +221,7 @@ export type ModelAssessmentIntelligence = {
  *
  * Beyond shape, it enforces the honesty rule that matters most here: a claim of
  * POSSIBLE_INCONSISTENCY must name at least one existing concept as the evidence
- * that disagrees. Edvance does not raise a contradiction it cannot point at.
+ * that disagrees. Oyevolve does not raise a contradiction it cannot point at.
  */
 export function parseAssessmentIntelligence(raw: string): ModelAssessmentIntelligence {
   let parsed: unknown;

@@ -1,5 +1,5 @@
 {
-  "name": "edvance",
+  "name": "oyevolve",
   "version": "0.3.0",
   "private": true,
   "description": "Evidence-first assessment intelligence — learning workspace",
@@ -22,7 +22,10 @@
     "test:mastery": "infisical run --env=dev -- node scripts/test-mastery-intelligence.mjs",
     "test:revision": "infisical run --env=dev -- node scripts/test-targeted-revision.mjs",
     "test:hardening": "infisical run --env=dev -- node scripts/test-product-hardening.mjs",
+    "test:work-queue": "infisical run --env=dev -- node scripts/test-work-queue.mjs",
+    "test:e2e": "playwright test",
     "test:visual": "node scripts/visual-regression.mjs",
+    "test:viewport": "node scripts/visual-regression.mjs --layout-only",
     "verify:remote": "node scripts/verify-remote-deployment.mjs",
     "verify:remote:specific": "node scripts/verify-remote-deployment.mjs https://white-whale.spcf.app",
     "verify:remote:diff": "node scripts/verify-remote-deployment.mjs --diff",
@@ -41,6 +44,7 @@
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@types/node": "^26.6.3",
     "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",

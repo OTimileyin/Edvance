@@ -1,14 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 import { optionalEnv } from "@/lib/env";
+import { TRUNCATED_CODE, TRUNCATED_MESSAGE, retryTruncated, truncationError } from "./truncation";
 import { AiProviderError, type AiRequest, type AiResponse, type EvidenceChunk } from "./types";
 
 /**
- * The one AI provider Edvance uses: Google Gemini, called only from the server.
+ * The one AI provider Oyevolve uses: Google Gemini, called only from the server.
  *
  * Browser code must never import this module. The API key lives in Infisical
  * (`GEMINI_API_KEY`) and is read here, never sent to a client, and never logged.
  *
- * `EDVANCE_AI_MOCK` selects a deterministic, evidence-grounded test provider.
+ * `OYEVOLVE_AI_MOCK` selects a deterministic, evidence-grounded test provider.
  * It exists so the analysis pipeline can be exercised end-to-end without a key
  * or a network call, and it is refused outright in production builds — a mock
  * can never answer a real learner in production.
@@ -23,7 +24,7 @@ export function aiModelName(): string {
 
 /** True when the deterministic test provider is active (never in production). */
 export function isMockProvider(): boolean {
-  return process.env.NODE_ENV !== "production" && Boolean(optionalEnv("EDVANCE_AI_MOCK"));
+  return process.env.NODE_ENV !== "production" && Boolean(optionalEnv("OYEVOLVE_AI_MOCK"));
 }
 
 /** Whether course analysis can run at all: a key, or the test provider. */
@@ -57,6 +58,82 @@ const PROVIDER_RETRY = {
 } as const;
 
 /**
+ * The output cap for one generation.
+ *
+ * This is deliberately far larger than an analysis needs (~1k tokens for a
+ * six-chunk course, measured): a real course may need an order of magnitude
+ * more, and a cap that is merely big enough for the fixture is how the JSON
+ * answer came back cut off mid-object in the first place. Measured on the live
+ * provider with the old 8192 cap: a realistic six-chunk course returned
+ * `finishReason=MAX_TOKENS` after 315 visible tokens, intermittently, and the
+ * pipeline could only report it as JSON it could not parse. 32768 is the largest
+ * value measured as accepted by the pinned model.
+ */
+const MAX_OUTPUT_TOKENS = 32_768;
+
+/**
+ * Thinking is switched off for structured extraction.
+ *
+ * Thinking was the cause of the truncation: on this model reasoning tokens and
+ * the answer are drawn from the same `maxOutputTokens` cap, so a long
+ * deliberation left the JSON answer cut off mid-object. Measurements on the
+ * live provider, same evidence and prompt, interleaved so throttling drift could
+ * not masquerade as a configuration effect:
+ *
+ *   thinkingBudget 0     5.0s /  4.7s   thoughts      0   answer ~1000 tokens
+ *   thinkingBudget 4096   184s         thoughts 31_453   answer ~726 tokens
+ *
+ * The second run was ignored by the model and came within 600 tokens of the cap
+ * — a nonzero thinking allowance cannot be relied on to stay bounded, which is
+ * why only `0` is used and why the cap below is left generous. Both settings
+ * returned the same six evidence-backed concepts, so nothing measurable is lost
+ * by not thinking here: the evidence is already in the prompt and the answer is
+ * schema-constrained.
+ */
+const THINKING_BUDGET = 0;
+
+/**
+ * One provider call. Separated from `generateStructured` so a cut-short answer
+ * can be re-asked without re-reading configuration or rebuilding the request.
+ */
+async function requestOnce(apiKey: string, model: string, request: AiRequest): Promise<AiResponse> {
+  const response = await geminiClient(apiKey).models.generateContent({
+    model,
+    contents: request.userPrompt,
+    config: {
+      systemInstruction: request.systemInstruction,
+      responseMimeType: "application/json",
+      responseJsonSchema: request.jsonSchema,
+      temperature: 0.2,
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
+      thinkingConfig: { thinkingBudget: THINKING_BUDGET },
+    },
+  });
+
+  // Completeness is judged before anything else. A cut-short answer still has
+  // text — a JSON object missing its closing brace — so letting it through
+  // would surface as a syntax error further down and record a cause that is not
+  // the true one.
+  const truncated = truncationError({ finishReason: response.candidates?.[0]?.finishReason });
+  if (truncated) throw truncated;
+
+  const text = response.text;
+  if (!text) {
+    throw new AiProviderError("empty-response", "The analysis service returned nothing.");
+  }
+
+  const usage = response.usageMetadata;
+  return {
+    text,
+    usage: {
+      model,
+      inputTokens: usage?.promptTokenCount ?? undefined,
+      outputTokens: usage?.candidatesTokenCount ?? undefined,
+    },
+  };
+}
+
+/**
  * Sends one structured-generation request and returns the raw JSON text.
  *
  * Failures are normalised to `AiProviderError` with a short code and a
@@ -75,32 +152,10 @@ export async function generateStructured(request: AiRequest): Promise<AiResponse
 
   const model = aiModelName();
   try {
-    const response = await geminiClient(apiKey).models.generateContent({
-      model,
-      contents: request.userPrompt,
-      config: {
-        systemInstruction: request.systemInstruction,
-        responseMimeType: "application/json",
-        responseJsonSchema: request.jsonSchema,
-        temperature: 0.2,
-        maxOutputTokens: 8192,
-      },
-    });
-
-    const text = response.text;
-    if (!text) {
-      throw new AiProviderError("empty-response", "The analysis service returned nothing.");
-    }
-
-    const usage = response.usageMetadata;
-    return {
-      text,
-      usage: {
-        model,
-        inputTokens: usage?.promptTokenCount ?? undefined,
-        outputTokens: usage?.candidatesTokenCount ?? undefined,
-      },
-    };
+    // One automatic re-ask when the answer is cut short: the common case costs
+    // no learner action, and it is bounded so a persistent failure cannot spend
+    // the day's quota. Every other failure is thrown as-is.
+    return await retryTruncated(() => requestOnce(apiKey, model, request));
   } catch (error) {
     if (error instanceof AiProviderError) throw error;
     // Transient retries are handled by the SDK's pinned policy above. Only the
@@ -116,7 +171,7 @@ export async function generateStructured(request: AiRequest): Promise<AiResponse
 }
 
 // ---------------------------------------------------------------------------
-// Deterministic test provider. Selected only by EDVANCE_AI_MOCK, and refused in
+// Deterministic test provider. Selected only by OYEVOLVE_AI_MOCK, and refused in
 // production. It derives concepts from the supplied evidence so every citation
 // it makes is real, which is exactly what the pipeline's validators expect.
 // ---------------------------------------------------------------------------
@@ -182,7 +237,7 @@ function quantityIn(question: string): number | null {
 
 /**
  * Deterministic assessment answer, derived from the concepts it was actually
- * given. It models the one inconsistency Edvance most wants to catch: a question
+ * given. It models the one inconsistency Oyevolve most wants to catch: a question
  * that asks for a number of items the evidence does not establish. Because it
  * only ever names supplied concept ids, the pipeline's validators accept it.
  */
@@ -299,11 +354,17 @@ function mockRevision(
 }
 
 function mockGenerate(request: AiRequest): AiResponse {
-  const scenario = request.mockScenario ?? optionalEnv("EDVANCE_AI_MOCK") ?? "simple";
+  const scenario = request.mockScenario ?? optionalEnv("OYEVOLVE_AI_MOCK") ?? "simple";
   const usage = { model: `mock:${scenario}`, inputTokens: 0, outputTokens: 0 };
 
   if (scenario === "provider-failure") {
     throw new AiProviderError("provider-error", "The analysis service could not be reached.");
+  }
+  if (scenario === "truncated") {
+    // Models the end of the bounded re-ask: both attempts were cut short, so the
+    // run reports exactly what a real truncation reports — its own code and its
+    // own honest summary — with no network call.
+    throw new AiProviderError(TRUNCATED_CODE, TRUNCATED_MESSAGE);
   }
   if (scenario === "malformed") {
     return { text: "not json at all", usage };

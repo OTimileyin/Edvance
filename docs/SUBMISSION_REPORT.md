@@ -1,4 +1,4 @@
-# Edvance — Submission Report
+# Oyevolve — Submission Report
 
 **Date:** 2026-10-02
 **Deployment status last re-checked:** 2026-10-05
@@ -6,7 +6,7 @@
 **Last verified commit:** `9468e85` — `chore(tooling): configure ESLint and Prettier and gate CI on them`
 **Verified at this commit:** `npm run lint` and `npm run format:check` exit 0, `npm run check` → **38 passed / 0 failed**, production build passes; the three required CI checks (`typecheck + unit tests`, `lint + formatting`, `production build`) green on PR #2. The remote suite against Specific (**69 passed / 0 failed**) and the two-deployment diff mode against the not-yet-live Vercel host (**16 passed / 53 failed**) were run at `756c4fb`.
 **Live deployment:** **https://white-whale.spcf.app** (`depl_02f4368hqt4n86q6`)
-**Status:** **EDVANCE — DEPLOYED AND SUBMISSION READY.** The app is live, serves HTTPS, and passed a
+**Status:** **OYEVOLVE — DEPLOYED AND SUBMISSION READY.** The app is live, serves HTTPS, and passed a
 remote end-to-end verification of the complete learner journey (**69 checks, 0 failures**).
 
 ---
@@ -16,7 +16,7 @@ remote end-to-end verification of the complete learner journey (**69 checks, 0 f
 |                         |                                                                                                                                              |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | **URL**                 | https://white-whale.spcf.app (managed HTTPS, HSTS)                                                                                           |
-| **Platform**            | Specific (`specific.hcl`); project `edvance` (`proj_0vqsej2psy3sy4tr`), environment `prod`                                                   |
+| **Platform**            | Specific (`specific.hcl`); project `oyevolve` (`proj_0vqsej2psy3sy4tr`), environment `prod`                                                  |
 | **Active deployment**   | `depl_02f4368hqt4n86q6`                                                                                                                      |
 | **Database**            | Managed PostgreSQL; all 8 migrations applied (`schema_migrations` = 8)                                                                       |
 | **Health**              | `GET /api/health` → `200 {"status":"ok","database":"ok","integrations":{"ai":"configured","storage":"configured","email":"not-configured"}}` |
@@ -25,7 +25,7 @@ remote end-to-end verification of the complete learner journey (**69 checks, 0 f
 
 ### Second deployment target — Vercel (prepared, not yet live)
 
-Edvance carries everything needed for a second, independent deployment on Vercel: `vercel.json` runs
+Oyevolve carries everything needed for a second, independent deployment on Vercel: `vercel.json` runs
 `node scripts/migrate.mjs && next build`, the database URL resolves from either `DATABASE_URL` or the
 `POSTGRES_URL` that Vercel's Postgres integration injects (`lib/env.ts`, `scripts/migrate.mjs`), and
 `docs/VERCEL_DEPLOYMENT_RUNBOOK.md` documents the procedure end to end.
@@ -39,9 +39,9 @@ report records it as live.
 
 ---
 
-## 1. What Edvance is
+## 1. What Oyevolve is
 
-Edvance is an evidence-first assessment intelligence workspace for a learner. It ingests the
+Oyevolve is an evidence-first assessment intelligence workspace for a learner. It ingests the
 materials a course actually provides, extracts location-tagged evidence from them, and then answers
 four questions:
 
@@ -53,7 +53,7 @@ four questions:
 4. **What should they study next?** The smallest useful next action, plus targeted practice written
    for the weak areas.
 
-The product principle throughout: **prefer INSUFFICIENT EVIDENCE over invented certainty.** Edvance
+The product principle throughout: **prefer INSUFFICIENT EVIDENCE over invented certainty.** Oyevolve
 never invents a citation, page number, timestamp, slide number, terminology, mastery result, or
 source.
 
@@ -155,7 +155,7 @@ Attempts to make the app lie, and what happened:
 - **Fabricated concept.** Assessment/revision output naming a concept outside the supplied set is
   rejected (`unknown-concept`); the whole response is discarded rather than partially applied. Pass.
 - **Unjustified contradiction.** A `POSSIBLE_INCONSISTENCY` that names no concept is rejected
-  (`unjustified-inconsistency`) — Edvance never accuses a question of contradicting the evidence
+  (`unjustified-inconsistency`) — Oyevolve never accuses a question of contradicting the evidence
   without pointing at the evidence. Pass.
 - **Cross-user access.** Every read and write is keyed by the signed-in learner; another account gets
   404 on a foreign course and 401 unauthenticated. Verified for courses, materials, analysis,
@@ -238,13 +238,13 @@ infisical run --env=dev -- npx next build   # production build
 End-to-end suites need a dev server with the deterministic provider enabled:
 
 ```
-EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
+OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
 BASE_URL=http://localhost:3260 npm run test:hardening   # and :revision, :mastery, :assessment, :intelligence
 ```
 
 ## 8. Declaration
 
-Edvance is **deployed and submission ready**: every claimed capability is implemented and verified —
+Oyevolve is **deployed and submission ready**: every claimed capability is implemented and verified —
 by automated suites, a live provider run, and a remote end-to-end verification of the running
 application over HTTPS (69 checks, 0 failures) — and the product is honest about its limits. The one
 operational caveat is the Gemini free tier's 20 requests/day/model cap, which the deployment
@@ -254,15 +254,15 @@ surfaces as an honest retryable failure rather than a crash or a fabricated resu
 
 ## 9. Installable PWA
 
-Edvance is an installable Progressive Web App on the live deployment:
+Oyevolve is an installable Progressive Web App on the live deployment:
 
-| Piece            | Where                                                                                                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Web App Manifest | `app/manifest.ts` → `/manifest.webmanifest` (name `Edvance`, `display: standalone`, `start_url` `/`, theme `#1E2A6B`, background `#FAF4E7`) |
-| Service worker   | `public/sw.js`, registered by `components/pwa-register.tsx` (production only)                                                               |
-| Icons            | `public/icons/icon-192.png`, `icon-512.png`, `icon-512-maskable.png` (from the Edvance logo mark); `app/apple-icon.png` (180px)             |
-| Offline notice   | `public/offline.html` — "You are offline. Reconnect to continue using Edvance."                                                             |
-| CSP              | `worker-src 'self'`, `manifest-src 'self'` added to the existing policy; nothing else relaxed                                               |
+| Piece            | Where                                                                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web App Manifest | `app/manifest.ts` → `/manifest.webmanifest` (name `Oyevolve`, `display: standalone`, `start_url` `/`, theme `#1E2A6B`, background `#FAF4E7`) |
+| Service worker   | `public/sw.js`, registered by `components/pwa-register.tsx` (production only)                                                                |
+| Icons            | `public/icons/icon-192.png`, `icon-512.png`, `icon-512-maskable.png` (from the Oyevolve logo mark); `app/apple-icon.png` (180px)             |
+| Offline notice   | `public/offline.html` — "You are offline. Reconnect to continue using Oyevolve."                                                             |
+| CSP              | `worker-src 'self'`, `manifest-src 'self'` added to the existing policy; nothing else relaxed                                                |
 
 **Install verification:** Chrome's own installability verdict (`Page.getInstallabilityErrors`) against
 `https://white-whale.spcf.app` over HTTPS returns **zero errors**; the service worker registers,

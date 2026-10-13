@@ -78,17 +78,17 @@ export default function SignInPage() {
     // only create the account when it is missing — signing up first returned
     // 422 on every repeat visit once the account already existed.
     let result = await authClient.signIn.email({
-      email: "demo@edvance.app",
+      email: "demo@oyevolve.app",
       password: "demo-password-123",
     });
     if (result.error) {
       await authClient.signUp.email({
         name: "Demo learner",
-        email: "demo@edvance.app",
+        email: "demo@oyevolve.app",
         password: "demo-password-123",
       });
       result = await authClient.signIn.email({
-        email: "demo@edvance.app",
+        email: "demo@oyevolve.app",
         password: "demo-password-123",
       });
     }

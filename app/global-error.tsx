@@ -33,11 +33,11 @@ export default function GlobalError({
               color: "#C43A28",
             }}
           >
-            Edvance
+            Oyevolve
           </p>
           <h1 style={{ fontSize: 32, margin: "8px 0 12px" }}>The app could not start</h1>
           <p style={{ color: "#5A5344", lineHeight: 1.6 }}>
-            An unexpected error stopped Edvance from loading. Your data is stored separately and is
+            An unexpected error stopped Oyevolve from loading. Your data is stored separately and is
             unaffected.
           </p>
           <button

@@ -13,6 +13,8 @@ import {
   markIngestionProcessing,
   replaceMaterialChunks,
 } from "@/lib/repo/courses";
+import type { JobResult } from "@/lib/jobs/policy";
+import type { WorkJob } from "@/lib/repo/jobs";
 import { downloadObject } from "@/lib/supabase-storage";
 import type { IngestionStatus } from "@/lib/types";
 
@@ -22,14 +24,33 @@ import type { IngestionStatus } from "@/lib/types";
  *   create job → mark processing → download bytes → extract → chunk →
  *   store chunks → mark completed
  *
- * It is synchronous by design: for a local prototype this keeps the Sources UI
- * truthful without a background-job platform. A failure never deletes the
- * learner's uploaded file — it only records a safe diagnostic on the job.
+ * `ingestMaterial` is the work, and it still runs synchronously — which is what
+ * the Sources "Retry extraction" action needs from it: press a button, get the
+ * answer. What changed with the queue is *who calls it*: the upload route now
+ * enqueues an `ingest` job instead of running this inside the request, and
+ * `runIngestJob` below is that job's handler. The two entry points share one
+ * implementation, so a retry and a queued run cannot drift apart.
+ *
+ * A failure never deletes the learner's uploaded file — it only records a safe
+ * diagnostic. `errorCode` is what decides whether the queue tries again: a file
+ * with no readable text will fail identically forever, while an unreachable
+ * object store is very likely to work in a moment.
  */
 
-export type IngestionOutcome = { found: false } | { found: true; status: IngestionStatus };
+export type IngestionOutcome =
+  | { found: false }
+  | {
+      found: true;
+      status: IngestionStatus;
+      /** Set when `status` is "failed": a short code and a user-safe summary. */
+      errorCode?: string;
+      errorSummary?: string;
+    };
 
-/** Maps any thrown error to a short code and a user-safe summary. */
+/**
+ * Maps any thrown error to a short code and a user-safe summary. Codes used
+ * here are classified as permanent or retryable in `lib/jobs/policy.ts`.
+ */
 function safeFailure(error: unknown): { code: string; summary: string } {
   if (error instanceof MaterialExtractionError) {
     return { code: error.code, summary: error.message };
@@ -50,8 +71,24 @@ export async function ingestMaterial(
   const jobId = await createIngestionJob(materialId);
   await markIngestionProcessing(jobId);
 
+  // Fetching the bytes is the one step here that can fail for reasons that have
+  // nothing to do with the file, so it is classified on its own: a storage
+  // outage is worth retrying, a document that cannot be parsed is not.
+  let bytes: Buffer;
   try {
-    const bytes = await downloadObject(source.storageReference);
+    bytes = await downloadObject(source.storageReference);
+  } catch {
+    const failure = {
+      code: "storage-unavailable",
+      summary:
+        "Oyevolve could not reach its file storage. The file was kept and this will be tried again.",
+    };
+    console.error(`[ingestion] material ${materialId} failed: ${failure.code}`);
+    await failIngestion(jobId, failure.code, failure.summary);
+    return { found: true, status: "failed", ...failure };
+  }
+
+  try {
     const result = await extractMaterial(extensionOf(source.storageReference), bytes);
     const chunks = chunkBlocks(result.blocks);
 
@@ -78,6 +115,40 @@ export async function ingestMaterial(
     // provider secrets.
     console.error(`[ingestion] material ${materialId} failed: ${failure.code}`);
     await failIngestion(jobId, failure.code, failure.summary);
-    return { found: true, status: "failed" };
+    return { found: true, status: "failed", ...failure };
   }
+}
+
+/**
+ * The `ingest` job handler: read one material, and report honestly whether the
+ * queue should try again.
+ *
+ * A material that has been removed is not a failure of the work — there is
+ * simply nothing left to read — but it is permanent, because a retry would look
+ * for the same missing row.
+ */
+export async function runIngestJob(job: WorkJob): Promise<JobResult> {
+  if (!job.targetId) {
+    return {
+      ok: false,
+      code: "material-missing",
+      summary: "This step was queued without naming the file it should read.",
+    };
+  }
+
+  const outcome = await ingestMaterial(job.userId, job.targetId);
+  if (!outcome.found) {
+    return {
+      ok: false,
+      code: "material-missing",
+      summary: "That file is no longer in this course, so there is nothing left to read.",
+    };
+  }
+  if (outcome.status === "completed") return { ok: true };
+
+  return {
+    ok: false,
+    code: outcome.errorCode ?? "extraction-failed",
+    summary: outcome.errorSummary ?? "We couldn't read this material. The file was kept.",
+  };
 }

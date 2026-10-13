@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Edvance — Interface Sheet</title>
-<meta name="description" content="A static mirror of the Edvance interface as it currently stands: landing page, authentication, and the course workspace." />
+<title>Oyevolve — Interface Sheet</title>
+<meta name="description" content="A static mirror of the Oyevolve interface as it currently stands: landing page, authentication, and the course workspace." />
 
 <!-- Same faces the app loads through next/font -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,7 +27,7 @@
 <!-- APP-CSS:BEGIN -->
 <style>
 /* ============================================================
-   Edvance — "Plush" design system
+   Oyevolve — "Plush" design system
    A soft-toy palette: fuzzy cream page, plush royal-blue for
    structure, tomato red for flags, teal-green for growth,
    mustard for highlights. Chunky rounded display (Fredoka)
@@ -1537,7 +1537,9 @@ svg {
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  /* min() lets a track fall below its 300px ideal on a narrow phone instead of
+     forcing the page wider than the viewport. */
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: var(--space-6);
 }
 
@@ -2333,6 +2335,19 @@ tr:last-child td {
   }
 }
 
+/* The wordmark is one character longer than it used to be, which pushed
+   .header-tools 9px past a 320px viewport. Trim the brand and the header
+   padding at the narrowest widths only — 360px and up render as before. */
+@media (max-width: 340px) {
+  .app-header-inner {
+    padding-inline: var(--space-3);
+  }
+
+  .logo-word {
+    font-size: 20px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -2590,7 +2605,7 @@ tr:last-child td {
      ============================================================ -->
 <div class="sheet-bar">
   <div class="sheet-bar-inner">
-    <b>Edvance</b>
+    <b>Oyevolve</b>
     <a href="#landing">Landing</a>
     <a href="#signin">Sign in</a>
     <a href="#courses">Courses</a>
@@ -2606,7 +2621,7 @@ tr:last-child td {
 <main id="main">
 
   <div class="sheet-intro">
-    <p class="kicker">Edvance · Plush</p>
+    <p class="kicker">Oyevolve · Plush</p>
     <h1>The interface, as it stands</h1>
     <p>
       Every screen below is the real markup rendered against the real stylesheet
@@ -2643,7 +2658,7 @@ tr:last-child td {
                 and what to study next.
               </h1>
               <p class="hero-lede">
-                Edvance connects each assessment question to the exact lecture,
+                Oyevolve connects each assessment question to the exact lecture,
                 slide, transcript, and note where the answer was taught — flags
                 where your materials disagree — and scores what you have and
                 haven&rsquo;t mastered.
@@ -2758,7 +2773,7 @@ tr:last-child td {
             </div>
 
             <div class="poster-aside">
-              <div class="evidence-glass" aria-label="Example of an Edvance evidence view">
+              <div class="evidence-glass" aria-label="Example of an Oyevolve evidence view">
                 <div class="eg-head">
                   <span class="badge badge-error">Possible inconsistency</span>
                   <span class="eg-ref">Lesson 2 · slide 7</span>
@@ -2796,7 +2811,7 @@ tr:last-child td {
       <section class="band band--ink" id="features" aria-labelledby="f-heading">
         <div class="container">
           <div class="band-head band-head--rule">
-            <p class="kicker">What Edvance does</p>
+            <p class="kicker">What Oyevolve does</p>
             <h2 class="landing-heading" id="f-heading">Three jobs, done together</h2>
             <p class="landing-leading">
               Mapping, consistency, and mastery are one system. Each feeds the
@@ -2900,7 +2915,7 @@ tr:last-child td {
         <div class="container">
           <div class="band-head">
             <p class="kicker">Why it exists</p>
-            <h2 class="landing-heading" id="q-heading">The four questions Edvance answers</h2>
+            <h2 class="landing-heading" id="q-heading">The four questions Oyevolve answers</h2>
             <p class="landing-leading">
               Assessment intelligence only matters if it resolves real exam
               uncertainty.
@@ -3088,25 +3103,25 @@ tr:last-child td {
             <span class="logo-lockup">
               <svg class="logo-mark" width="44" height="44" viewBox="0 0 40 40" aria-hidden="true">
                 <defs>
-                  <linearGradient id="edvance-seal-auth" x1="0" y1="0" x2="1" y2="1">
+                  <linearGradient id="oyevolve-seal-auth" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0%" stop-color="#4B5CC4" />
                     <stop offset="58%" stop-color="#2F3E92" />
                     <stop offset="100%" stop-color="#1E2A6B" />
                   </linearGradient>
-                  <linearGradient id="edvance-gloss-auth" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="oyevolve-gloss-auth" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.22" />
                     <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
                   </linearGradient>
                 </defs>
-                <rect width="40" height="40" rx="12" fill="url(#edvance-seal-auth)" />
+                <rect width="40" height="40" rx="12" fill="url(#oyevolve-seal-auth)" />
                 <rect x="1.25" y="1.25" width="37.5" height="37.5" rx="11" fill="none" stroke="#FAF4E7" stroke-opacity="0.16" />
-                <rect width="40" height="16" rx="12" fill="url(#edvance-gloss-auth)" />
+                <rect width="40" height="16" rx="12" fill="url(#oyevolve-gloss-auth)" />
                 <rect x="11.5" y="11.6" width="17" height="3.7" rx="1.85" fill="#E8A828" />
                 <rect x="11.5" y="18.15" width="12.6" height="3.7" rx="1.85" fill="#D6452F" />
                 <rect x="11.5" y="24.7" width="8.6" height="3.7" rx="1.85" fill="#1A8E7F" />
               </svg>
               <span class="logo-type">
-                <span class="logo-word">Edvance</span>
+                <span class="logo-word">Oyevolve</span>
                 <span class="logo-tag">Course Intelligence</span>
               </span>
             </span>
@@ -3640,31 +3655,31 @@ tr:last-child td {
         <span class="logo-lockup">
           <svg class="logo-mark" width="52" height="52" viewBox="0 0 40 40" aria-hidden="true">
             <defs>
-              <linearGradient id="edvance-seal-sheet" x1="0" y1="0" x2="1" y2="1">
+              <linearGradient id="oyevolve-seal-sheet" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stop-color="#4B5CC4" />
                 <stop offset="58%" stop-color="#2F3E92" />
                 <stop offset="100%" stop-color="#1E2A6B" />
               </linearGradient>
-              <linearGradient id="edvance-gloss-sheet" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="oyevolve-gloss-sheet" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.22" />
                 <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
               </linearGradient>
             </defs>
-            <rect width="40" height="40" rx="12" fill="url(#edvance-seal-sheet)" />
+            <rect width="40" height="40" rx="12" fill="url(#oyevolve-seal-sheet)" />
             <rect x="1.25" y="1.25" width="37.5" height="37.5" rx="11" fill="none" stroke="#FAF4E7" stroke-opacity="0.16" />
-            <rect width="40" height="16" rx="12" fill="url(#edvance-gloss-sheet)" />
+            <rect width="40" height="16" rx="12" fill="url(#oyevolve-gloss-sheet)" />
             <rect x="11.5" y="11.6" width="17" height="3.7" rx="1.85" fill="#E8A828" />
             <rect x="11.5" y="18.15" width="12.6" height="3.7" rx="1.85" fill="#D6452F" />
             <rect x="11.5" y="24.7" width="8.6" height="3.7" rx="1.85" fill="#1A8E7F" />
           </svg>
           <span class="logo-type">
-            <span class="logo-word" style="font-size: 30px">Edvance</span>
+            <span class="logo-word" style="font-size: 30px">Oyevolve</span>
             <span class="logo-tag">Course Intelligence</span>
           </span>
         </span>
 
         <svg class="logo-mark" width="52" height="52" viewBox="0 0 40 40" aria-hidden="true">
-          <rect width="40" height="40" rx="12" fill="url(#edvance-seal-sheet)" />
+          <rect width="40" height="40" rx="12" fill="url(#oyevolve-seal-sheet)" />
           <rect x="11.5" y="11.6" width="17" height="3.7" rx="1.85" fill="#E8A828" />
           <rect x="11.5" y="18.15" width="12.6" height="3.7" rx="1.85" fill="#D6452F" />
           <rect x="11.5" y="24.7" width="8.6" height="3.7" rx="1.85" fill="#1A8E7F" />
@@ -3673,13 +3688,13 @@ tr:last-child td {
         <span class="sheet-on-dark">
           <span class="logo-lockup">
             <svg class="logo-mark" width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
-              <rect width="40" height="40" rx="12" fill="url(#edvance-seal-sheet)" />
+              <rect width="40" height="40" rx="12" fill="url(#oyevolve-seal-sheet)" />
               <rect x="11.5" y="11.6" width="17" height="3.7" rx="1.85" fill="#E8A828" />
               <rect x="11.5" y="18.15" width="12.6" height="3.7" rx="1.85" fill="#D6452F" />
               <rect x="11.5" y="24.7" width="8.6" height="3.7" rx="1.85" fill="#1A8E7F" />
             </svg>
             <span class="logo-type">
-              <span class="logo-word">Edvance</span>
+              <span class="logo-word">Oyevolve</span>
               <span class="logo-tag">Course Intelligence</span>
             </span>
           </span>
@@ -3688,7 +3703,7 @@ tr:last-child td {
 
       <p class="lede-quiet" style="max-width: 70ch; margin-bottom: var(--space-10)">
         <strong>The idea:</strong> an <em>E</em> built from three stacked source bars.
-        Each bar carries one plush accent (mustard, rust, teal-green); the middle stays rust because Edvance highlights the evidence that matters —
+        Each bar carries one plush accent (mustard, rust, teal-green); the middle stays rust because Oyevolve highlights the evidence that matters —
         and flags the source that disagrees. Lockups: horizontal for header and footer,
         mark alone for the favicon (<code>app/icon.svg</code>) and collapsed chrome.
         Wordmark alone only above 24px. Source: <code>components/logo.tsx</code>,
@@ -3804,29 +3819,29 @@ tr:last-child td {
 <template id="tpl-header-guest">
   <header class="app-header">
     <div class="app-header-inner">
-      <a href="#" class="brand" aria-label="Edvance home">
+      <a href="#" class="brand" aria-label="Oyevolve home">
         <span class="logo-lockup">
           <svg class="logo-mark" width="38" height="38" viewBox="0 0 40 40" aria-hidden="true">
             <defs>
-              <linearGradient id="edvance-seal-tplguest" x1="0" y1="0" x2="1" y2="1">
+              <linearGradient id="oyevolve-seal-tplguest" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stop-color="#4B5CC4" />
                 <stop offset="58%" stop-color="#2F3E92" />
                 <stop offset="100%" stop-color="#1E2A6B" />
               </linearGradient>
-              <linearGradient id="edvance-gloss-tplguest" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="oyevolve-gloss-tplguest" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.22" />
                 <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
               </linearGradient>
             </defs>
-            <rect width="40" height="40" rx="12" fill="url(#edvance-seal-tplguest)" />
+            <rect width="40" height="40" rx="12" fill="url(#oyevolve-seal-tplguest)" />
             <rect x="1.25" y="1.25" width="37.5" height="37.5" rx="11" fill="none" stroke="#FAF4E7" stroke-opacity="0.16" />
-            <rect width="40" height="16" rx="12" fill="url(#edvance-gloss-tplguest)" />
+            <rect width="40" height="16" rx="12" fill="url(#oyevolve-gloss-tplguest)" />
             <rect x="11.5" y="11.6" width="17" height="3.7" rx="1.85" fill="#E8A828" />
             <rect x="11.5" y="18.15" width="12.6" height="3.7" rx="1.85" fill="#D6452F" />
             <rect x="11.5" y="24.7" width="8.6" height="3.7" rx="1.85" fill="#1A8E7F" />
           </svg>
           <span class="logo-type">
-            <span class="logo-word">Edvance</span>
+            <span class="logo-word">Oyevolve</span>
             <span class="logo-tag">Course Intelligence</span>
           </span>
         </span>
@@ -3852,29 +3867,29 @@ tr:last-child td {
 <template id="tpl-header-user">
   <header class="app-header">
     <div class="app-header-inner">
-      <a href="#" class="brand" aria-label="Edvance home">
+      <a href="#" class="brand" aria-label="Oyevolve home">
         <span class="logo-lockup">
           <svg class="logo-mark" width="38" height="38" viewBox="0 0 40 40" aria-hidden="true">
             <defs>
-              <linearGradient id="edvance-seal-tpluser" x1="0" y1="0" x2="1" y2="1">
+              <linearGradient id="oyevolve-seal-tpluser" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stop-color="#4B5CC4" />
                 <stop offset="58%" stop-color="#2F3E92" />
                 <stop offset="100%" stop-color="#1E2A6B" />
               </linearGradient>
-              <linearGradient id="edvance-gloss-tpluser" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="oyevolve-gloss-tpluser" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.22" />
                 <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
               </linearGradient>
             </defs>
-            <rect width="40" height="40" rx="12" fill="url(#edvance-seal-tpluser)" />
+            <rect width="40" height="40" rx="12" fill="url(#oyevolve-seal-tpluser)" />
             <rect x="1.25" y="1.25" width="37.5" height="37.5" rx="11" fill="none" stroke="#FAF4E7" stroke-opacity="0.16" />
-            <rect width="40" height="16" rx="12" fill="url(#edvance-gloss-tpluser)" />
+            <rect width="40" height="16" rx="12" fill="url(#oyevolve-gloss-tpluser)" />
             <rect x="11.5" y="11.6" width="17" height="3.7" rx="1.85" fill="#E8A828" />
             <rect x="11.5" y="18.15" width="12.6" height="3.7" rx="1.85" fill="#D6452F" />
             <rect x="11.5" y="24.7" width="8.6" height="3.7" rx="1.85" fill="#1A8E7F" />
           </svg>
           <span class="logo-type">
-            <span class="logo-word">Edvance</span>
+            <span class="logo-word">Oyevolve</span>
             <span class="logo-tag">Course Intelligence</span>
           </span>
         </span>
@@ -3901,29 +3916,29 @@ tr:last-child td {
 <template id="tpl-footer">
   <footer class="app-footer">
     <div class="app-footer-inner">
-      <a href="#" class="brand" aria-label="Edvance home">
+      <a href="#" class="brand" aria-label="Oyevolve home">
         <span class="logo-lockup">
           <svg class="logo-mark" width="32" height="32" viewBox="0 0 40 40" aria-hidden="true">
             <defs>
-              <linearGradient id="edvance-seal-tplfooter" x1="0" y1="0" x2="1" y2="1">
+              <linearGradient id="oyevolve-seal-tplfooter" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stop-color="#4B5CC4" />
                 <stop offset="58%" stop-color="#2F3E92" />
                 <stop offset="100%" stop-color="#1E2A6B" />
               </linearGradient>
-              <linearGradient id="edvance-gloss-tplfooter" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="oyevolve-gloss-tplfooter" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.22" />
                 <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
               </linearGradient>
             </defs>
-            <rect width="40" height="40" rx="12" fill="url(#edvance-seal-tplfooter)" />
+            <rect width="40" height="40" rx="12" fill="url(#oyevolve-seal-tplfooter)" />
             <rect x="1.25" y="1.25" width="37.5" height="37.5" rx="11" fill="none" stroke="#FAF4E7" stroke-opacity="0.16" />
-            <rect width="40" height="16" rx="12" fill="url(#edvance-gloss-tplfooter)" />
+            <rect width="40" height="16" rx="12" fill="url(#oyevolve-gloss-tplfooter)" />
             <rect x="11.5" y="11.6" width="17" height="3.7" rx="1.85" fill="#E8A828" />
             <rect x="11.5" y="18.15" width="12.6" height="3.7" rx="1.85" fill="#D6452F" />
             <rect x="11.5" y="24.7" width="8.6" height="3.7" rx="1.85" fill="#1A8E7F" />
           </svg>
           <span class="logo-type">
-            <span class="logo-word">Edvance</span>
+            <span class="logo-word">Oyevolve</span>
             <span class="logo-tag">Course Intelligence</span>
           </span>
         </span>
@@ -3934,7 +3949,7 @@ tr:last-child td {
         live AI processing lands.
       </p>
       <div class="footer-tools">
-        <a class="icon-btn icon-btn--quiet" href="#" aria-label="The four questions Edvance answers">
+        <a class="icon-btn icon-btn--quiet" href="#" aria-label="The four questions Oyevolve answers">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <circle cx="12" cy="12" r="9" />
             <path d="M9.6 9a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.8-.9 1.4v.4" />

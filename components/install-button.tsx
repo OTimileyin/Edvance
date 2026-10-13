@@ -12,7 +12,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 /**
- * "Install Edvance" — a real install action, never a fake one.
+ * "Install Oyevolve" — a real install action, never a fake one.
  *
  * The button renders only after the browser fires `beforeinstallprompt`, so it
  * is invisible where installation is not offered (including iOS Safari) and
@@ -69,7 +69,7 @@ export function InstallButton() {
 
   return (
     <button type="button" className="btn btn-secondary" onClick={handleInstall}>
-      Install Edvance
+      Install Oyevolve
     </button>
   );
 }

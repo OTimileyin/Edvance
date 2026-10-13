@@ -19,7 +19,7 @@ export const auth = betterAuth({
   },
   user: {
     additionalFields: {
-      // Edvance workspaces are addressed by the learner's email.
+      // Oyevolve workspaces are addressed by the learner's email.
       // Built-in `name` is used for display; email stays the stable key.
     },
   },

@@ -1,6 +1,9 @@
-# Edvance v2 — the automatic learner loop
+# Oyevolve v2 — the automatic learner loop
 
-**Status:** planned, not implemented. Nothing in this document is built yet.
+**Status:** PR 1 (V2.1) and PR 2 (V2.2) are implemented. PRs 3–8 are not started: analysis, checks, grading,
+revision, the verdict and the recap are all still manual steps, and **the claims have not moved** —
+`app/privacy/page.tsx`, `app/page.tsx`, the README and `Doc/PRD.md` still describe the manual product, which is
+still what runs. Read the rest of this document as direction, not as a description of the app.
 **Supersedes:** the Phase 6–9 "explicit action" stance (PRD Change 15/16/17/18) for the learner-facing
 flow. The evidence-first rules that stance protected are kept — see **What does not change**.
 **Requested by:** Product Owner, 2026-10-08.
@@ -9,9 +12,9 @@ flow. The evidence-first rules that stance protected are kept — see **What doe
 
 ## 1. The change, in one paragraph
 
-Today Edvance is a set of deliberate steps: upload one file, wait for extraction, press **Analyse
+Today Oyevolve is a set of deliberate steps: upload one file, wait for extraction, press **Analyse
 course**, press **Check question**, self-record practice, press **Generate practice**. The product
-becomes a loop that runs itself: drop up to ten files, and Edvance ingests them, analyses the
+becomes a loop that runs itself: drop up to ten files, and Oyevolve ingests them, analyses the
 course, checks the assessments, builds a strengths-and-weaknesses picture, and hands the learner a
 list of what to revise. The learner picks items from that list, is re-assessed on exactly those
 items, and sees whether they passed, why, and how far they are from a course-level verdict — with a
@@ -47,7 +50,7 @@ These are the product's spine and the new flow must not weaken them:
 - **Honest states, never a silent failure.** Every automatic step has a visible state: queued,
   running, done, failed, or "the model's answer could not be verified — retrying / retry".
   **This is not hypothetical: the failure in the pasted screenshot ("The analysis service returned a
-  response Edvance could not verify. Please try again.") is exactly the state that must never be
+  response Oyevolve could not verify. Please try again.") is exactly the state that must never be
   silent once a human is not pressing a button.**
 - **No invented verdicts.** Pass/fail and strengths/weaknesses are computed from recorded attempts by
   stated rules, then explained. A model never decides whether the learner passed.
@@ -227,13 +230,13 @@ judgement nobody can trace.
   learners "Nothing is analysed automatically", and the landing page says analysis runs only when
   asked. Shipping the loop without changing those claims would make the product lie. The PRD gets a
   new Change entry recording the reversal; `app/privacy/page.tsx`, `app/page.tsx`, the README and
-  `docs/EDVANCE_EXECUTION_STATE.md` change with the implementation.
+  `docs/OYEVOLVE_EXECUTION_STATE.md` change with the implementation.
 
 ## 7. Verification plan
 
 - **Unit (existing dependency-free suite):** job claiming/coalescing/backoff, budget accounting,
   objective grading, the strength/weakness derivation, the verdict thresholds, recap arithmetic.
-- **Deterministic end-to-end (`EDVANCE_AI_MOCK`):** upload 10 files → automatic chain → answer →
+- **Deterministic end-to-end (`OYEVOLVE_AI_MOCK`):** upload 10 files → automatic chain → answer →
   grade → revise → re-assess → verdict, with rejection paths and cross-learner isolation.
 - **Live provider:** one real run proving the batched short-answer grading returns evidence-cited
   reasons, and that the auto-chain behaves with the real model's error modes.
@@ -303,6 +306,25 @@ file per request keeps the per-file quota checks exact. New `scripts/test-batch-
 ten real files including one oversized and one unsupported, asserts 8 stored with per-file reasons,
 then cleans up.
 
+**Landed so far.** PR 1 and PR 2 are on `feat/v2-batch-upload`.
+
+- **V2.1** — the drop zone with per-file state, one request per file with bounded concurrency, and a batch that
+  survives leaving the page (the chosen files are kept on the device, the ones that never started are sent again,
+  and the ones whose fate the page could not learn are labelled rather than guessed at).
+- **V2.2** — `db/migrations/0008_work_queue.sql`; `lib/jobs/policy.ts` (the pure rules: coalescing key, backoff,
+  stale-lock threshold, retryability, claim order); `lib/repo/jobs.ts` (enqueue with database-enforced coalescing,
+  atomic claim, retry-or-fail, stale reclaim); `lib/jobs/worker.ts` (one handler registry, an on-demand
+  `drainNow()`, and a loop that cannot die); root `instrumentation.ts` starting that loop; `lib/ingestion.ts`
+  reduced to a job handler that keeps its synchronous entry point for Retry; the upload route enqueueing instead of
+  ingesting inside the request and draining after the response; and the queue surfaced in the Sources UI.
+
+  Verified by `tests/unit/jobs-policy.test.mjs` (11), `scripts/test-work-queue.mjs` (55 checks against real
+  PostgreSQL, including the atomic claim, the retry ceiling and the reclaim sweep), the Playwright suite, and the
+  repo gate (`npm run check`, `lint`, `format:check`, production build).
+
+  **What did not move:** only _reading a file_ runs automatically. Nothing is analysed, checked, graded or revised
+  without a learner asking, which is why §9's claim sweep still belongs to PR 3.
+
 **PR 2 — job queue and worker (V2.2).** `db/migrations/0008_work_queue.sql`; `lib/repo/jobs.ts`
 (enqueue / claim / complete / fail / reclaim / coalesce); `lib/jobs/policy.ts` as the pure,
 unit-testable part (claim order, coalescing key, backoff, stale-lock threshold); a root
@@ -320,7 +342,7 @@ highest-risk PR in the sequence and should land alone.
 ledger in `lib/jobs/*`; a bounded retry around unverifiable model output in `lib/ai/*`; queue and
 **Run now** / **Retry** surfaced on the Intelligence and Assessments tabs; and the claim sweep —
 `app/privacy/page.tsx`, `app/page.tsx`, `README.md`, `Doc/PRD.md` (Change 23) and
-`docs/EDVANCE_EXECUTION_STATE.md`.
+`docs/OYEVOLVE_EXECUTION_STATE.md`.
 
 **PR 4 — the grader view (V2.5), deliberately before answering.** It needs no new model call: it
 reads attempts that already exist. New `lib/grader.ts` (pure: strengths, weaknesses, movement,

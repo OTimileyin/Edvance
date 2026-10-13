@@ -1,9 +1,9 @@
 /**
- * Edvance logo.
+ * Oyevolve logo.
  *
  * The mark is an "E" built from three stacked source bars inside a seal —
  * one plush accent per bar (mustard, rust, teal-green). The middle bar stays
- * rust because Edvance highlights the evidence that matters and flags the
+ * rust because Oyevolve highlights the evidence that matters and flags the
  * source that disagrees; the outer bars carry the growth and highlight
  * accents so the mark reads as the full plush palette.
  *
@@ -24,8 +24,8 @@ export function LogoMark({
   className = "logo-mark",
   title,
 }: LogoMarkProps) {
-  const seal = `edvance-seal-${idSuffix}`;
-  const gloss = `edvance-gloss-${idSuffix}`;
+  const seal = `oyevolve-seal-${idSuffix}`;
+  const gloss = `oyevolve-gloss-${idSuffix}`;
 
   return (
     <svg
@@ -90,7 +90,7 @@ export function Logo({
     <span className={className}>
       <LogoMark size={size} idSuffix={idSuffix} />
       <span className="logo-type">
-        <span className="logo-word">Edvance</span>
+        <span className="logo-word">Oyevolve</span>
         {tag ? <span className="logo-tag">{tag}</span> : null}
       </span>
     </span>
