@@ -53,6 +53,15 @@ export function androidReleasePageUrl(versionCode: number = release.versionCode)
   return `https://github.com/${RELEASE_REPOSITORY}/releases/tag/${tag}`;
 }
 
+/**
+ * Every release, for the case where this build's own release is not there yet.
+ * In that state the useful link is not the one that 404s but the one that shows
+ * what does exist.
+ */
+export function androidReleasesUrl(): string {
+  return `https://github.com/${RELEASE_REPOSITORY}/releases`;
+}
+
 /** The current release, as the site publishes it. */
 export const ANDROID_RELEASE = {
   platform: "android" as const,
@@ -62,4 +71,5 @@ export const ANDROID_RELEASE = {
   releasedAt: release.releasedAt,
   apkUrl: androidApkUrl(),
   releasePageUrl: androidReleasePageUrl(),
+  releasesUrl: androidReleasesUrl(),
 };

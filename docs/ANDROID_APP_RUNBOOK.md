@@ -38,8 +38,8 @@ case — the shell.
 | `android/version.json`                                                | **The single source of the app version.** `android/app/build.gradle` reads `versionCode`/`versionName` from it, and so does the web app. One file, so the built APK and the advertised release cannot disagree.                                                                          |
 | `android/app/src/main/java/app/oyevolve/mobile/LauncherActivity.java` | The entry point. Opens the live site and tags the URL with the installed build number.                                                                                                                                                                                                   |
 | `lib/android-release.ts`                                              | **How the web app reads that version.** The build number, the package id, the APK URL and the release URL, derived from `android/version.json`. `app/api/app/version` and `app/download` both read this one module, so the advertised build and the offered download cannot drift apart. |
-| `app/api/app/version/route.ts`                                        | Public: the current build, and where to download it.                                                                                                                                                                                                                                     |
-| `app/download/page.tsx`                                               | Public: where a learner gets the app — the current build, the APK, the install steps, and what the app does and does not ask for. The page is server-rendered from `lib/android-release.ts`.                                                                                             |
+| `app/api/app/version/route.ts`                                        | Public: the current build, and where to download it.                                                                                                                                                                                                                                     |     | `app/download/page.tsx` | Public: where a learner gets the app — the current build, the APK, the install steps, and what the app does and does not ask for. Rendered from `lib/android-release.ts`, and from the release's actual availability. |
+| `lib/android-release-status.ts`                                       | Whether the advertised release exists: a `HEAD` to the APK, three answers (`published` / `missing` / `unknown`), and the timeout that keeps the page from waiting. See §6.4.                                                                                                             |
 | `app/api/assetlinks/route.ts`                                         | Digital Asset Links, also served at `/.well-known/assetlinks.json`.                                                                                                                                                                                                                      |
 | `components/app-update-banner.tsx`                                    | The "a newer version is available" notice, shown only inside the Android shell.                                                                                                                                                                                                          |
 | `.github/workflows/android.yml`                                       | Builds, signs and publishes the APK.                                                                                                                                                                                                                                                     |
@@ -213,13 +213,48 @@ an account of their own, which is why the APK is not committed into `public/` �
 a binary in the repository would be copied into every clone, forever, and the
 Vercel deployment payload along with it.
 
-Because the URL is derived from the version and not stored anywhere, it also has
-a consequence worth knowing before the first release: this project has a
-`versionCode` of 1 and a `/download` page that advertises build 1, while
-`android-v1` has not been published yet — so until §7 is done once, the download
-button leads to a 404. The page is not wrong about which build is current; there
-simply is no release for it yet. Cutting the tag (§7) is what makes it resolve,
-and nothing else needs changing.
+**The URL is derived from the version, so the version file cannot promise that a
+release exists.** Those are two different facts, and they are committed in two
+different steps: the bump lands on `main`, the tag is pushed later. Today is
+exactly that gap — `versionCode` 1 is what the site and the app both call
+current, and `android-v1` has not been published.
+
+`/download` therefore checks rather than assumes. It asks the release host
+whether this build's APK is there (`lib/android-release-status.ts`), caches the
+answer for five minutes, and renders one of three states:
+
+| State                                        | What the page does                                                                                                                                                                            |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `published` — the APK is there               | Offers the download and the release notes.                                                                                                                                                    |
+| `missing` — 404 or 410                       | **Withholds the button** and says why: the build is current, its release is not published, so there is nothing to download yet. Links to the releases list instead of to the asset that 404s. |
+| `unknown` — timeout, 5xx, 403, anything else | Offers the download and admits the release could not be confirmed. Hiding a working link because GitHub had a bad afternoon would be the worse error.                                         |
+
+The state is derived, never configured — an environment variable saying "the
+release exists" was rejected because it is a second hand-maintained copy of a
+fact that fails in both directions. Cutting the tag (§7) is what moves the page
+from `missing` to `published`, and nothing else needs changing: it fills itself
+in within a few minutes of the release landing.
+
+Two things about the check are load-bearing, and both were found by watching what
+the route actually did rather than what the build output claimed:
+
+- **No `AbortSignal` on the request.** Next.js does not cache a `fetch` that
+  carries a signal, so passing one costs the five-minute cache — the route is
+  then rendered per request and the release host is asked on every visit. The
+  timeout is enforced by racing the request instead.
+- **No `cache: "no-store"`.** Next.js ignores it when it sits beside
+  `next.revalidate`, and the combination reverts the route to dynamic anyway.
+
+Both failures are invisible from the outside: the page still works, it is simply
+no longer static. `tests/unit/android-release-status.test.mjs` pins them, and the
+build output is the other witness — `/download` must read `○ /download` with a
+`Revalidate` of `5m`, not `ƒ`.
+
+A third consequence of the check, for whoever tends the test suite: `/download`
+is in the visual harness's **layout** pass but deliberately not in its **pixel**
+pass. A screenshot baseline would encode today's answer — "this build is not
+published" — as a design fact, and fail the day the release is cut, which is how
+a suite teaches people to re-baseline without looking.
 
 ---
 
@@ -275,24 +310,41 @@ Honest accounting, because the two halves were not equally checkable.
 - It is absent in a plain browser, and absent when the installed build is
   already current.
 - `/download` answers 200 and contains the build it claims to: the version name,
-  the build number, the release date and both links are in the server-rendered
-  HTML, and the APK URL on the page is byte-identical to the `apkUrl`
-  `/api/app/version` returns for the same build (both read
-  `lib/android-release.ts`). The page is emitted as static content, so it needs
-  no JavaScript to read.
+  the build number and the APK URL are in the server-rendered HTML, and that URL
+  is byte-identical to the `apkUrl` `/api/app/version` returns for the same build
+  (both read `lib/android-release.ts`).
+- **The page is prerendered, not rendered per request.** The responses to three
+  separate requests are byte-identical to each other _and_ to
+  `.next/server/app/download.html` from the build — which is what proves the
+  five-minute cache is in use rather than a fresh probe per visit. (Before the
+  signal was removed, successive requests returned _different bytes_ and the
+  first one after a cold start said `unknown`: the request timed out against a
+  cold DNS/TLS path and the page believed it.)
+- **The `missing` state, which is today's, is the one that renders.** Live
+  against a production build: no download button, no link to the tag that does
+  not exist, no claim that anything was released, an explanation of why, a link
+  to what has actually been published, and the version file's date attributed to
+  the version file rather than to a release. The install steps are withheld too —
+  there is nothing to install.
 - The page is reachable: `/download` appears in the header nav and in the
   footer, and the footer link is the one that matters on a phone, since the
   header nav is hidden below 980px.
-- The full-suite phone-width smoke check passes for the new page and for the
-  pages whose footer gained a link: 28/28 page/width combinations fit
-  320/360/375/414px without horizontal scroll.
-- `npm run typecheck`, `npm run lint`, `npm run format:check` and the 131 unit
+- The phone-width smoke check passes for **both** states: 4/4 widths
+  320/360/375/414px fit without horizontal scroll, for the published state and
+  for the unpublished one.
+- `npm run typecheck`, `npm run lint`, `npm run format:check` and the 141 unit
   tests all pass, and `next build` succeeds with all 36 routes emitted.
 
-**Not verified about the download page:** that its download button resolves.
-`android-v1` has not been published, so the URL answers 404 today (see §6.4).
-That is a release step, not a page defect — and it is the one thing a learner
-clicking the button would notice first.
+**How the `published` state was verified, and what that means.** No release has
+been published, so the real "release exists → button appears" path cannot be
+exercised end to end. The published branch was rendered instead by temporarily
+stubbing the probe to return `published`, building, and reading the served HTML:
+the download and release-notes links, the release date, the signing-key
+explanation and the install steps are all present, and none of the unpublished
+wording is. The stub was then reverted **byte-for-byte** (checked with `cmp`) and
+the build repeated, which is also how the `missing` state above was captured.
+What remains unproven is only the part a release would prove: that a 200 from
+GitHub reaches the same rendering.
 
 **The Android half is verified too.** The `android` workflow compiled and signed
 the APK in CI (1m38s), and the artifact was inspected directly rather than taken

@@ -380,7 +380,9 @@ it follows a download link and Android's installer takes over.
 shell lives in `android/` and is built by `.github/workflows/android.yml` from an `android-v<versionCode>`
 tag. `/download` is where someone who has not installed anything yet goes: it is rendered on the
 server from the same `lib/android-release.ts` the update check reads, so the build it advertises and
-the APK it links to cannot disagree with the one the app offers. Read
+the APK it links to cannot disagree with the one the app offers. It also checks whether that build's
+release has actually been published — the version file says what is current, which is not the same
+claim as "released" — and withholds the download button, saying why, until it has. Read
 [docs/ANDROID_APP_RUNBOOK.md](docs/ANDROID_APP_RUNBOOK.md) before the first release — it
 covers the signing key you must create and keep, the four repository secrets, the
 `ANDROID_APP_FINGERPRINT` that hides the browser's address bar, and an honest list of what is and is

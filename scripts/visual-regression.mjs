@@ -3,12 +3,11 @@
  * Visual regression for the plush design.
  *
  * Captures full-page screenshots of the plush surfaces — the landing page,
- * sign-in, sign-up, the offline-revision page, the Android download page, and
- * the two design-document HTML files (design.html,
- * assessment-intelligence.html) — at a desktop and a mobile viewport, then
- * compares them pixel-for-pixel against the baselines committed in
- * tests/visual/baselines/. Any drift (a colour token change, a spacing shift, a
- * component restyle) fails the run and writes the captured image plus a
+ * sign-in, sign-up, the offline-revision page, and the two design-document HTML
+ * files (design.html, assessment-intelligence.html) — at a desktop and a mobile
+ * viewport, then compares them pixel-for-pixel against the baselines committed
+ * in tests/visual/baselines/. Any drift (a colour token change, a spacing
+ * shift, a component restyle) fails the run and writes the captured image plus a
  * highlighted diff into .tmp-scratch/visual/ for inspection.
  *
  * The same pass runs a viewport layout smoke check: every target is also
@@ -67,7 +66,13 @@ const TARGETS = [
   { name: "signin", urlPath: "/signin" },
   { name: "signup", urlPath: "/signup" },
   { name: "offline-revision", urlPath: "/offline-revision" },
-  { name: "download", urlPath: "/download" },
+  // Measured at every phone width, deliberately not pixel-baselined. The page
+  // states whether the current Android build has actually been released, which
+  // is a fact about the world rather than about the design: a baseline would
+  // capture today's answer and fail the day the release is cut, teaching
+  // everyone to re-baseline without looking. It still gets the sideways-scroll
+  // check, and a page that errors still fails the run.
+  { name: "download", urlPath: "/download", layoutOnly: true },
   { name: "design-doc", file: "design.html" },
   { name: "assessment-intelligence-doc", file: "assessment-intelligence.html" },
 ];
@@ -338,6 +343,9 @@ async function main() {
     console.error(`No targets match --grep=${args.grep}`);
     process.exit(2);
   }
+  // Everything is measured and reachability-checked; only the surfaces whose
+  // content is a function of the design alone are compared against baselines.
+  const pixelTargets = targets.filter((t) => !t.layoutOnly);
 
   let server = null;
   let baseUrl = args.baseUrl;
@@ -363,7 +371,7 @@ async function main() {
     // scrolls sideways at a phone width must never be baselined.
     await runLayoutPass(browser, baseUrl, targets, layoutResults);
     if (!args.layoutOnly) {
-      await runPixelPass(browser, baseUrl, targets, args, results);
+      await runPixelPass(browser, baseUrl, pixelTargets, args, results);
     }
   } finally {
     await browser.close();
