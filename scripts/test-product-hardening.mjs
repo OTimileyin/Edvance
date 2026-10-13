@@ -1,9 +1,9 @@
-// Edvance Phase 10 — Product Completion & Hardening end-to-end tests.
+// Oyevolve Phase 10 — Product Completion & Hardening end-to-end tests.
 //
 // Exercises the completed product against a running dev server (the deterministic
 // provider is fine; nothing here needs a model):
 //
-//   EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
+//   OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
 //
 // Covers the health probe and security headers, the error/not-found pages, course
 // and question edit/delete, and the account lifecycle (including storage cleanup).
@@ -155,8 +155,8 @@ async function main() {
   const db = new Client({ connectionString: DATABASE_URL });
   await db.connect();
 
-  const emailA = `hardening-a-${stamp}@edvance.test`;
-  const emailDelete = `hardening-del-${stamp}@edvance.test`;
+  const emailA = `hardening-a-${stamp}@oyevolve.test`;
+  const emailDelete = `hardening-del-${stamp}@oyevolve.test`;
   const cleanupMaterials = [];
 
   try {

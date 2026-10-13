@@ -1,19 +1,19 @@
-# Edvance — Full Conversation Record
+# Oyevolve — Full Conversation Record
 
-> Purpose: a complete, detailed record of the Edvance build conversation — every prompt the Product Owner gave and, in detail, what the AI builder did in response. Created so work can continue in another environment (e.g. Freebuff, with image uploads). The opening section (before "Change 6") is reconstructed from the session record and the steering log in `Doc/PRD.md` Appendix A; wording is faithful but not verbatim. From Change 6 onwards, prompts are quoted verbatim.
+> Purpose: a complete, detailed record of the Oyevolve build conversation — every prompt the Product Owner gave and, in detail, what the AI builder did in response. Created so work can continue in another environment (e.g. Freebuff, with image uploads). The opening section (before "Change 6") is reconstructed from the session record and the steering log in `Doc/PRD.md` Appendix A; wording is faithful but not verbatim. From Change 6 onwards, prompts are quoted verbatim.
 
 - **Dates:** 2026-09-27 (all work done this day)
-- **Repo:** `https://github.com/OTimileyin/Edvance` (branch `main`)
+- **Repo:** `https://github.com/OTimileyin/Oyevolve` (branch `main`)
 - **Stack decided:** Next.js + TypeScript (App Router, Turbopack) · PostgreSQL (local for now) · Better Auth (later) · Cloudflare R2 (later)
 - **Source of truth docs:** `Doc/PRD.md` · `docs/IMPLEMENTATION_PLAN.md` · `conversation.md`
 - **Local run:** `npm run dev` → http://localhost:3000
 
 ---
 
-## Episode 1 — Kickoff: "Build Edvance" (Phase 0, reconstructed)
+## Episode 1 — Kickoff: "Build Oyevolve" (Phase 0, reconstructed)
 
 ### Product Owner prompt
-The Lesson 6 request: build the Edvance product from the PRD under Lesson 6 constraints — no real databases, no hosted dependencies, no live AI, and only what the lesson actually requires. "Do not overbuild."
+The Lesson 6 request: build the Oyevolve product from the PRD under Lesson 6 constraints — no real databases, no hosted dependencies, no live AI, and only what the lesson actually requires. "Do not overbuild."
 
 ### What the AI builder did
 1. **Read the PRD** (`Doc/PRD.md`) and extracted the product essence: evidence-first assessment intelligence. Learners connect assessment questions to the exact lecture/slide/transcript that taught the answer, surface inconsistencies between materials, and track per-concept mastery.
@@ -44,7 +44,7 @@ The Lesson 6 request: build the Edvance product from the PRD under Lesson 6 cons
 ## Episode 2 — Design preview and refinement (Phase 1, reconstructed)
 
 ### Product Owner prompt
-"Build the design system preview page (colours, typography, buttons, inputs, an Edvance component) that I can open in the browser."
+"Build the design system preview page (colours, typography, buttons, inputs, an Oyevolve component) that I can open in the browser."
 
 ### What the AI builder did
 1. Wrote `design.html` — a standalone HTML/CSS design preview using the token system:
@@ -104,7 +104,7 @@ Wrap up Phase 1; make the documentation reflect reality and nothing more.
 ### What the AI builder did
 1. Ran a final repo safety review: **SAFE TO COMMIT** — 0 secret hits, no `.env*`, no key files, no generated directories, no files >1MB.
 2. Committed:
-   - `cd4bcdb` — "feat: build Edvance assessment intelligence prototype" (6 files, +2597/−70).
+   - `cd4bcdb` — "feat: build Oyevolve assessment intelligence prototype" (6 files, +2597/−70).
    - `9090f45` — "docs: rename PRD to Doc/PRD.md" (the old `PRD.md` literal filename was an audit flag; it is now under `Doc/`).
 3. Audited: 31/31 PASS (the two earlier flags were the `PRD.md` filename and the pending push).
 4. Pushed to GitHub `origin/main` — the push paused for a **Git Credential Manager** browser sign-in, which the Product Owner completed, then the push succeeded. `origin/main` = `9090f45`.
@@ -174,11 +174,11 @@ Produced the full session summary: objective, constraints, current phase, comple
 Diagnosed: no dev server is running (the test server was stopped earlier). Restarted it detached in the background:
 
 ```
-Start-Process npm.cmd run dev (output → C:\Users\ADMIN\AppData\Local\Temp\opencode\edvance-dev.log)
+Start-Process npm.cmd run dev (output → C:\Users\ADMIN\AppData\Local\Temp\opencode\oyevolve-dev.log)
 ```
 
 The shell wrapper printed a cosmetic `ChildProcess.kill` error each time, but the server launched fine. Verified:
-- Port 3000 LISTENING (pid captured in `edvance-dev.pid`).
+- Port 3000 LISTENING (pid captured in `oyevolve-dev.pid`).
 - Log shows `GET /courses 200`.
 - Confirmed open http://localhost:3000 (first page load is slower due to on-demand compilation).
 - Also noticed Next 16 auto-generated `AGENTS.md` and `CLAUDE.md` at the repo root (untracked) — left alone.
@@ -201,11 +201,11 @@ The shell wrapper printed a cosmetic `ChildProcess.kill` error each time, but th
 - Understood: the landing page is non-negotiable and independent of the auth choice. Re-confirmed and proceeded:
   - Landing page at `/` + sign-in/sign-up with a **local demo session** (localStorage) — NOT real Better Auth, so the database phase isn't pulled forward. Real Better Auth + PostgreSQL remain Phase 3/4.
 - **Build details:**
-  - `lib/session.ts` — `getSession`/`setSession`/`clearSession` over `localStorage` key `edvance.session.v1` (DemoSession `{name, email}`).
+  - `lib/session.ts` — `getSession`/`setSession`/`clearSession` over `localStorage` key `oyevolve.session.v1` (DemoSession `{name, email}`).
   - `components/header.tsx` — converted to a client component: shows the signed-in user's name + **Sign out**, or **Sign in**; retains the brand and "Demo · mock data" flag.
   - `components/session-guard.tsx` — client guard: if no session, `router.replace("/signin?next=<current path>")`; renders children once a session exists.
   - `app/courses/layout.tsx` — wraps the whole course workspace in the SessionGuard (gates `/courses` and all `[courseId]` sections).
-  - `app/page.tsx` — replaced the 307 redirect with a full landing page (server component): hero ("Know what is tested, where it was taught, and what to study next.") with **Get started** / **Sign in** CTAs; **Four questions** section (01–04); **What Edvance does** feature grid; **How it works** numbered journey (6 steps); **Where the demo stands** honest-status alert + CTAs.
+  - `app/page.tsx` — replaced the 307 redirect with a full landing page (server component): hero ("Know what is tested, where it was taught, and what to study next.") with **Get started** / **Sign in** CTAs; **Four questions** section (01–04); **What Oyevolve does** feature grid; **How it works** numbered journey (6 steps); **Where the demo stands** honest-status alert + CTAs.
   - `app/signin/page.tsx` — email + password form (any input accepted; name derived from email prefix) plus a one-click **Continue with a demo account**; redirects to `next` param or `/courses`.
   - `app/signup/page.tsx` — name/email/password form → demo session → `/courses`; cross-links with sign-in preserving `next`.
   - `app/globals.css` — added landing styles (hero, `cta-row`, `landing-section`/`-alt`, `question-grid`/`feature-grid`, `q-card`, `journey` with counter, `auth-wrap`/`auth-card`, `nav-user`/`nav-action`).
@@ -283,12 +283,12 @@ The three references: a glassmorphism ride-sharing welcome screen, a web-design 
    - Found no running server; installed PostgreSQL 18 via `winget` — **stopped to request OS elevation** (the one thing that cannot be done without the user; approval granted, UAC prompt clicked).
    - The EDB silent install hit a transient resource lock and registered no service initially; diagnosed, re-ran, and the service `postgresql-edvance` came up on `127.0.0.1:5432` with the intended dev password.
    - A parallel manual `initdb` cluster on 5433 was initialized, found redundant, and removed (own artifact, reversible).
-   - Created database `edvance`.
+   - Created database `oyevolve`.
 3. **Integrated Better Auth 1.7**: installed `better-auth` + `pg`; `lib/auth.ts` (Kysely adapter over `pg.Pool`, email/password, `nextCookies()` last); `app/api/auth/[...all]/route.ts` via `toNextJsHandler`; `lib/auth-client.ts` React client; `npx auth migrate` created `user`, `session`, `account`, `verification`.
 4. **Secrets hygiene**: generated a 32-char base64 secret locally; `.env` (git-ignored) holds `DATABASE_URL`/`BETTER_AUTH_SECRET`/`BETTER_AUTH_URL`; committed `.env.example` template. `git status --short` confirmed `.env` never appears.
-5. **Auth flows**: sign-up/sign-in rewritten to `authClient.signUp.email` / `signIn.email` with inline error states (401 mismatch, 422 duplicate, 8-char minimum); "Continue with a demo account" now provisions/signs in a real local `demo@edvance.app`; header driven by `authClient.useSession`; Sign out calls the server (`authClient.signOut`).
+5. **Auth flows**: sign-up/sign-in rewritten to `authClient.signUp.email` / `signIn.email` with inline error states (401 mismatch, 422 duplicate, 8-char minimum); "Continue with a demo account" now provisions/signs in a real local `demo@oyevolve.app`; header driven by `authClient.useSession`; Sign out calls the server (`authClient.signOut`).
 6. **Route protection, server-side**: `app/courses/layout.tsx` converted to an RSC calling `auth.api.getSession({ headers: await headers() })` → `redirect("/signin?next=/courses")`; client `SessionGuard` kept as second layer. This closes the Phase 2 gap where the guard was client-only.
-7. **Per-user workspaces**: `lib/store.ts` and hooks now take the signed-in email and key storage `edvance.courses.v1.<email>`; a `UserBootstrapper` seeds demo workspaces on a user's first visit. (Course rows as DB entities remain Phase 4 — PRD governance kept: no claims beyond what is built.)
+7. **Per-user workspaces**: `lib/store.ts` and hooks now take the signed-in email and key storage `oyevolve.courses.v1.<email>`; a `UserBootstrapper` seeds demo workspaces on a user's first visit. (Course rows as DB entities remain Phase 4 — PRD governance kept: no claims beyond what is built.)
 8. **Verified end-to-end**: typecheck ✓, build ✓ (`/api/auth/[...all]`, `/courses` now dynamic). curl: sign-up → user created; get-session with cookie → session; `/courses` without cookie → **307 → /signin?next=/courses**; with cookie → 200. PostgreSQL shows 2 users with hashed `credential` accounts. Browser: real sign-up (Amara Okafor) → lands on `/courses`, header shows "Amara Okafor · Sign out", workspace renders 6 scoped concept rows. (Sign-up click-through needed `requestSubmit` due to a preview-bridge quirk; form logic itself worked.)
 9. **Docs**: PRD **Change 8** + §16.1 (Phase 3 complete, next Phase 4), plan status + Phase 3 acceptance criteria checked, README prerequisites/run instructions rewritten, this episode appended.
 
@@ -311,7 +311,7 @@ Exactly once: the Windows elevation prompt to install PostgreSQL (requested via 
 
 ### What the AI builder did
 1. **Read the reference then made one call explicitly**: shift the palette to match the reference (deep teal, cream, rust, sage) rather than adopt only its layout. Rationale recorded in PRD Change 9 — the reference's dominant band colour is deep teal, and it is close enough to the old forest green that the *meaning* of every colour survives (rust still = flag, teal still = structure/evidence). Legacy token names (`--forest-*`, `--paper-*`, `--coral-*`, `--oak-*`) were kept as aliases, so the entire workspace retinted with zero component churn — verified on `/courses` and `/courses/ai-foundry/mastery`.
-2. **Designed the logo as a product statement, not decoration.** The mark is a seal containing an "E" built from three stacked source bars; the middle bar is rust, because Edvance highlights the evidence that matters and flags the source that disagrees. Shipped as `components/logo.tsx` (`LogoMark` / `Logo`, with an `idSuffix` so the gradient ids stay unique across header, footer, and auth instances), `app/icon.svg` (Next.js file-convention favicon → new `/icon.svg` route) and `public/logo.svg` (full lockup with a serif fallback stack).
+2. **Designed the logo as a product statement, not decoration.** The mark is a seal containing an "E" built from three stacked source bars; the middle bar is rust, because Oyevolve highlights the evidence that matters and flags the source that disagrees. Shipped as `components/logo.tsx` (`LogoMark` / `Logo`, with an `idSuffix` so the gradient ids stay unique across header, footer, and auth instances), `app/icon.svg` (Next.js file-convention favicon → new `/icon.svg` route) and `public/logo.svg` (full lockup with a serif fallback stack).
 3. **Rebuilt the landing page to the reference's rhythm**: a two-panel printed poster hero — cream paper panel for the words, a hand-drawn SVG poster (sky, seal-sun, layered ranges with snow caps, sea, sailboat, headland with a lighthouse) for the art — then a dark teal band of three captioned illustration tiles, a cream band of four medallions with dotted stitched rims, a sand editorial spread with six step chips and a desk illustration, and a dark teal honest-status band with the stamp.
 4. **Rebuilt header and footer.** Header: logo lockup left, centred anchor nav, circular tool buttons right (the reference's medallion controls). Footer: forest-dark → cream, with circular action buttons and a corrected honesty note.
    - **Honesty fix found along the way:** the footer still claimed "no backend involved", which Change 8 made false. It now says accounts and sessions are real (local PostgreSQL + Better Auth) while course analysis is still mock data.
@@ -364,7 +364,7 @@ Exactly once: the Windows elevation prompt to install PostgreSQL (requested via 
 > Start Phase 4 — Course Data & PostgreSQL: design the schema and migrations for the course/learner data model, add a repository data-access layer, and move the course workspace off localStorage onto real tables.
 
 ### What the AI builder did
-1. **Surveyed what was actually there.** Better Auth already ran on PostgreSQL (`user`, `session`, `account`, `verification`), but its tables had been created by `npx auth migrate` with **no migration files in the repo**, and there was no ORM, no schema, and no data-access layer. Courses lived in `localStorage` under `edvance.courses.v1.<email>`, seeded from `lib/data.ts`.
+1. **Surveyed what was actually there.** Better Auth already ran on PostgreSQL (`user`, `session`, `account`, `verification`), but its tables had been created by `npx auth migrate` with **no migration files in the repo**, and there was no ORM, no schema, and no data-access layer. Courses lived in `localStorage` under `oyevolve.courses.v1.<email>`, seeded from `lib/data.ts`.
 2. **Chose plain SQL migrations over an ORM.** `pg` was already a dependency (Better Auth uses it); the PRD states the model in SQL-shaped terms already. Adding Drizzle or Prisma would have introduced a second schema definition and a generation step for no benefit at this size. The alternative is recorded in PRD Appendix A, Change 11.
 3. **Wrote the §15 schema** — `course`, `learning_material`, `concept`, `assessment_question`, `source_mapping`, `consistency_finding`, `mastery_state` — plus a `schema_migrations` ledger. Two additions beyond the PRD: `course.institution` and `course.lesson` (fields the existing UI already collects) and `concept.ordinal`, because ordering concepts by name would have scrambled the PROMPT-framework sequence the product is built around.
 4. **Added a migration runner** (`scripts/migrate.mjs`, `npm run migrate`) that applies each pending file once, in filename order, inside a transaction. Re-running reports "Database already up to date."
@@ -418,7 +418,7 @@ None of the work was blocked beyond credentials: object storage needs an R2 acco
 ## Episode 19 — Phase 5.5: Storage migrated to Supabase Storage (verified end to end)
 
 ### Product Owner prompt (verbatim, abridged)
-> I have decided to use Supabase Storage instead of Cloudflare R2 for Edvance's course-material storage. … Do NOT replace our existing PostgreSQL database. Do NOT migrate Better Auth to Supabase Auth. Do NOT use Supabase as our application database. … Supabase is being introduced ONLY for private file/object storage. … The browser must never receive the Supabase secret key. … Never print, echo, log, display, or expose secret values. You may only report environment variable NAMES and whether they are PRESENT or MISSING. [Then a nine-step procedure: verify configuration; record the decision in PRD Appendix A and the plan; review the R2 implementation; implement `lib/supabase-storage.ts`; run real end-to-end tests A–E; sanitize errors; typecheck; document verified results; secret-scan and commit.]
+> I have decided to use Supabase Storage instead of Cloudflare R2 for Oyevolve's course-material storage. … Do NOT replace our existing PostgreSQL database. Do NOT migrate Better Auth to Supabase Auth. Do NOT use Supabase as our application database. … Supabase is being introduced ONLY for private file/object storage. … The browser must never receive the Supabase secret key. … Never print, echo, log, display, or expose secret values. You may only report environment variable NAMES and whether they are PRESENT or MISSING. [Then a nine-step procedure: verify configuration; record the decision in PRD Appendix A and the plan; review the R2 implementation; implement `lib/supabase-storage.ts`; run real end-to-end tests A–E; sanitize errors; typecheck; document verified results; secret-scan and commit.]
 
 ### What the AI builder did
 1. **Verified the configuration first, names only.** `infisical export --env=dev --format=dotenv | cut -d= -f1` listed exactly `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET`. All three Supabase names were **PRESENT**; no value was ever read into the transcript.
@@ -489,7 +489,7 @@ Nowhere — the credentials were already in Infisical, and no AI provider was co
 
 ### What the AI builder did
 1. **Checked the key first, honestly.** `infisical export --env=dev` (names only) shows six secrets — `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `DATABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET`, `SUPABASE_URL`. **`GEMINI_API_KEY` is not present.** Every key-independent task below was completed; the live provider call is the one recorded blocker.
-2. **Cleaned up the accepted formats.** `lib/materials.ts` no longer accepts `.doc` or `.ppt` — there is no reliable server-side extractor for the binary Office formats, so accepting them would let a learner upload a file Edvance can never read. `.pdf .txt .md .docx .pptx .vtt .srt` continue to work, and the form hint, upload route rejection (415) and docs all agree. The acceptance test asserts both legacy formats are refused.
+2. **Cleaned up the accepted formats.** `lib/materials.ts` no longer accepts `.doc` or `.ppt` — there is no reliable server-side extractor for the binary Office formats, so accepting them would let a learner upload a file Oyevolve can never read. `.pdf .txt .md .docx .pptx .vtt .srt` continue to work, and the form hint, upload route rejection (415) and docs all agree. The acceptance test asserts both legacy formats are refused.
 3. **Verified the current SDK, then installed one dependency.** Read the official `googleapis/js-genai` README and Google's structured-output docs, then installed `@google/genai@^2.25.0` (pinned below `3.0.0`, which the SDK itself recommends) and confirmed `GenerateContentConfig.responseJsonSchema` in its shipped type definitions before writing any call. `ai.models.generateContent({ model, contents, config: { systemInstruction, responseMimeType: "application/json", responseJsonSchema } })` is the API used.
 4. **Built the server-only intelligence layer.** `lib/ai/types.ts` (shapes + `AiProviderError`/`ModelOutputError`), `schemas.ts` (the structured-output JSON Schema, a strict runtime validator, and `resolveReferences`), `prompts.ts` (evidence-only instructions that demand exact chunk ids and preserve course terminology), `gemini.ts` (the single provider plus an env-gated deterministic test provider), and `course-intelligence.ts` (bounded context → generate → validate → resolve → de-duplicate). The browser never imports any of it.
 5. **Made validation the centre of the design.** Every cited chunk id must have been in the model's input, which was loaded scoped to this learner and this course — so a fabricated, cross-course or cross-user citation rejects the **whole** response. Malformed JSON, out-of-range confidence, unknown evidence states and relationships pointing at undefined concepts are all rejections. Nothing partial is ever stored, and the raw output is never persisted or logged.
@@ -501,16 +501,16 @@ Nowhere — the credentials were already in Infisical, and no AI provider was co
 
 ### Real end-to-end results (2026-10-01)
 - **Typecheck PASS:** `npx tsc --noEmit` exit 0.
-- **Phase 6 PASS:** `scripts/test-course-intelligence.mjs` reported **59 passed, 0 failed** against a dev server on port 3260 started with the deterministic provider (`EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260`).
+- **Phase 6 PASS:** `scripts/test-course-intelligence.mjs` reported **59 passed, 0 failed** against a dev server on port 3260 started with the deterministic provider (`OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260`).
 - **Phase 5.6 regression PASS:** `scripts/test-ingestion.mjs` reported **91 passed, 0 failed** on the same server.
 - **Database and bucket returned to baseline:** `concept_evidence` 0, `concept_relationship` 0, `course_analysis` 0, `material_chunk` 0, `material_ingestion_job` 0; the three existing accounts and their four workspaces untouched.
 - **Not claimed:** the live Google Gemini call has **not** been made — no `GEMINI_API_KEY` exists in the dev environment yet. The pipeline is verified with a deterministic provider that is refused in production; the provider path itself is written and typechecked but unexercised.
 
 ### Where the user was asked to act
-A human-only blocker: adding `GEMINI_API_KEY` to the Infisical `dev` environment. See `docs/EDVANCE_EXECUTION_STATE.md`; after adding it, typing `continue` resumes at the real-Gemini verification.
+A human-only blocker: adding `GEMINI_API_KEY` to the Infisical `dev` environment. See `docs/OYEVOLVE_EXECUTION_STATE.md`; after adding it, typing `continue` resumes at the real-Gemini verification.
 
 ### Files changed
-- New: `db/migrations/0004_course_intelligence.sql`, `lib/ai/{types,schemas,prompts,gemini,course-intelligence}.ts`, `app/api/courses/[courseId]/analyse/route.ts`, `app/courses/[courseId]/intelligence/page.tsx`, `scripts/test-course-intelligence.mjs`, `docs/EDVANCE_EXECUTION_STATE.md`
+- New: `db/migrations/0004_course_intelligence.sql`, `lib/ai/{types,schemas,prompts,gemini,course-intelligence}.ts`, `app/api/courses/[courseId]/analyse/route.ts`, `app/courses/[courseId]/intelligence/page.tsx`, `scripts/test-course-intelligence.mjs`, `docs/OYEVOLVE_EXECUTION_STATE.md`
 - Changed: `lib/materials.ts`, `lib/types.ts`, `lib/data.ts`, `lib/repo/courses.ts`, `lib/useCourses.ts`, `components/badges.tsx`, `app/courses/[courseId]/{layout,page,mastery/page}.tsx`, `package.json`, `package-lock.json`, `.env.example`
 - Docs: `Doc/PRD.md` (Change 15 + §15/§16), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, this episode
 
@@ -519,17 +519,17 @@ A human-only blocker: adding `GEMINI_API_KEY` to the Infisical `dev` environment
 ## Episode 22 — Phase 6 completed: the real Gemini call (verified) and committed
 
 ### Product Owner prompt (verbatim, abridged)
-> [The Product Owner supplied the `GEMINI_API_KEY` value and the standing directive:] on a bare `continue`, recover state, re-check blockers, and resume automatically through subsequent phases; stop only for a genuine human-only blocker or when Edvance is SUBMISSION READY.
+> [The Product Owner supplied the `GEMINI_API_KEY` value and the standing directive:] on a bare `continue`, recover state, re-check blockers, and resume automatically through subsequent phases; stop only for a genuine human-only blocker or when Oyevolve is SUBMISSION READY.
 
 ### What the AI builder did
 1. **Stored the key without ever echoing it.** Verified it lived in the Infisical `dev` environment — `infisical secrets set GEMINI_API_KEY=… --env=dev` — and confirmed it by listing secret *names* only. Nothing entered the repository, a log, or a `NEXT_PUBLIC_` variable, and the secret scan still reports no leaks.
 2. **Checked the key against the live API before trusting it.** A single `generateContent` probe returned 200 and the `models` list resolved, so the key was real. The probe also revealed that this account's Google project now recommends `gemini-3.8-flash` and that `gemini-2.5-flash` is retired for new users — the maintained `gemini-flash-latest` alias answered, so the code's default model was already correct after the SDK check made in Episode 21.
-3. **Wrote the live acceptance check.** `scripts/verify-gemini-live.mjs` is the real-provider counterpart to the deterministic suite: it uploads the FATHOM golden fixture, calls `POST /api/courses/[courseId]/analyse` against a server started **without** `EDVANCE_AI_MOCK`, and asserts the six components, exact instructor terminology, a real `Section: …` location and a verbatim excerpt for every citation, a justified relationship between real concepts, cost control and staleness.
+3. **Wrote the live acceptance check.** `scripts/verify-gemini-live.mjs` is the real-provider counterpart to the deterministic suite: it uploads the FATHOM golden fixture, calls `POST /api/courses/[courseId]/analyse` against a server started **without** `OYEVOLVE_AI_MOCK`, and asserts the six components, exact instructor terminology, a real `Section: …` location and a verbatim excerpt for every citation, a justified relationship between real concepts, cost control and staleness.
 4. **Diagnosed the 503s honestly instead of guessing.** The first live runs failed with 502/503. A direct SDK probe proved the *request* was fine (`gemini-3.6-flash schema=true OK`) — the failures were Google-side capacity (503) and free-tier quota (429). Two findings came out of it: the SDK **already retries** (default up to five attempts with delays growing toward a minute), and quota is **per model**. The first draft added a second retry loop that multiplied requests and drained quota — that was wrong, and was removed.
 5. **Fixed the retry policy properly.** `lib/ai/gemini.ts` now pins the SDK's own retry policy explicitly — three attempts, initial 1 s, capped at 8 s — instead of a duplicate outer loop. Transient 429/5xx are retried a bounded number of times inside one learner action; everything else fails at once. The `dev` environment pins `GEMINI_MODEL=gemini-3.5-flash` because the `-latest` alias was intermittently capacity-limited; the code default remains the maintained alias.
 6. **Verified the real model.** `scripts/verify-gemini-live.mjs` reported **26 passed, 0 failed** against live `gemini-3.5-flash`: all six FATHOM concepts (Frame, Assemble, Trace, Hold, Order, Move), each with `SUPPORTED` status, exact instructor terminology, a real `Section: …` evidence reference and a verbatim excerpt, plus one justified `Frame --prerequisite--> Assemble` relationship. Token usage was recorded (737 in / 718 out) as safe provider metadata only.
 7. **Re-ran the whole gate and returned everything to baseline.** `npx tsc --noEmit` exit 0; the deterministic suite **59 passed**; the Phase 5.6 regression **91 passed** (after clearing `.next`, which a stale route manifest had made 404 the nested material routes); `infisical scan --redact` → no leaks found. The database was exactly at baseline, and the bucket was found to hold **23 orphaned objects** from earlier test runs (all belonging to already-deleted test users, none referenced by a single database row) — those were removed so the bucket is empty again.
-8. **Committed Phase 6 and updated every doc.** `Doc/PRD.md` Change 15 now records the live provider result, `docs/IMPLEMENTATION_PLAN.md` ticks the real-Gemini acceptance box, `README.md` documents the live script and the model pin, and `docs/EDVANCE_EXECUTION_STATE.md` was rewritten for Phase 7. Commit message: `feat(ai): add evidence-grounded course intelligence`.
+8. **Committed Phase 6 and updated every doc.** `Doc/PRD.md` Change 15 now records the live provider result, `docs/IMPLEMENTATION_PLAN.md` ticks the real-Gemini acceptance box, `README.md` documents the live script and the model pin, and `docs/OYEVOLVE_EXECUTION_STATE.md` was rewritten for Phase 7. Commit message: `feat(ai): add evidence-grounded course intelligence`.
 
 ### Real end-to-end results (2026-10-01)
 - **Live Google Gemini PASS:** `scripts/verify-gemini-live.mjs` — **26 passed, 0 failed** — model `gemini-3.5-flash`, six concepts, exact terminology, every citation resolvable and non-fabricated, cost control and staleness holding.
@@ -537,7 +537,7 @@ A human-only blocker: adding `GEMINI_API_KEY` to the Infisical `dev` environment
 - **Phase 5.6 regression PASS:** `scripts/test-ingestion.mjs` — **91 passed, 0 failed**.
 - **Typecheck PASS:** `npx tsc --noEmit` exit 0. **Secret scan PASS:** no leaks found.
 - **Baseline restored:** bucket 0 objects; 3 users, 4 courses, 20 materials, 20 concepts, 8 assessments untouched.
-- **Not claimed:** no second provider, embeddings or vector database; the live model remains a shared free tier, so a transient capacity error can still surface as an honest, retryable "analysis failed" — Edvance would rather say that than invent a concept.
+- **Not claimed:** no second provider, embeddings or vector database; the live model remains a shared free tier, so a transient capacity error can still surface as an honest, retryable "analysis failed" — Oyevolve would rather say that than invent a concept.
 
 ### Where the user was asked to act
 Nowhere further — the key the Product Owner supplied unblocked the last gate. Phase 7 begins automatically.
@@ -545,7 +545,7 @@ Nowhere further — the key the Product Owner supplied unblocked the last gate. 
 ### Files changed
 - New: `scripts/verify-gemini-live.mjs`
 - Changed: `lib/ai/gemini.ts` (pinned SDK retry policy)
-- Docs: `Doc/PRD.md` (Change 15), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/EDVANCE_EXECUTION_STATE.md`, this episode
+- Docs: `Doc/PRD.md` (Change 15), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/OYEVOLVE_EXECUTION_STATE.md`, this episode
 
 ---
 
@@ -563,14 +563,14 @@ Nowhere further — the key the Product Owner supplied unblocked the last gate. 
 6. **Fixed the course verdict while in there.** The course-level consistency is now the most severe, most recent finding, so one inconsistent question is never hidden by a later, milder result; and writing a real signature deletes the seeded course-level narrative, so demo prose is never shown beside genuine analysis.
 7. **Built the per-question UI.** The Assessments tab shows each question's state, verdict, reason and next action, plus the concepts it tests with their own evidence and a short excerpt. Buttons are disabled until the course has concepts.
 8. **Wrote the deterministic suite and extended the live one.** `scripts/test-assessment-intelligence.mjs` — **76 passed, 0 failed** — covers the six-versus-five verdict, a consistent question, source-mapping persistence, cost control, staleness, insufficient evidence, four rejection paths (invalid concept id, unjustified inconsistency, malformed, provider failure), ownership isolation and the demo regression. `scripts/verify-gemini-live.mjs` gained an assessment section and now reports **34 passed, 0 failed**.
-9. **Caught a false-clean typecheck.** `npx tsc --noEmit` reported success while `lib/data.ts` genuinely failed, because a stale `tsconfig.tsbuildinfo` suppressed the errors. Clearing it revealed four real errors — seed assessments needed the new `signature` field. Recorded in `docs/EDVANCE_EXECUTION_STATE.md` as a permanent gotcha: **always `rm -f tsconfig.tsbuildinfo` before typechecking.**
+9. **Caught a false-clean typecheck.** `npx tsc --noEmit` reported success while `lib/data.ts` genuinely failed, because a stale `tsconfig.tsbuildinfo` suppressed the errors. Clearing it revealed four real errors — seed assessments needed the new `signature` field. Recorded in `docs/OYEVOLVE_EXECUTION_STATE.md` as a permanent gotcha: **always `rm -f tsconfig.tsbuildinfo` before typechecking.**
 
 ### Real end-to-end results (2026-10-01)
 - **Deterministic PASS:** `scripts/test-assessment-intelligence.mjs` — **76 passed, 0 failed**. The FATHOM question "What are the five components of the FATHOM framework?" produced `possible-inconsistency`, six tested concepts and six real `source_mapping` rows pointing at six `Section: …` locations.
 - **Live model PASS:** `scripts/verify-gemini-live.mjs` — **34 passed, 0 failed** — `gemini-3.5-flash` returned `possible-inconsistency` with the reason *"The question assumes there are five components in the FATHOM framework, whereas the course evidence shows there are six components: Frame, Assemble, Trace, Hold, Order, and Move."*
 - **Regressions PASS:** Phase 6 **59 passed**, Phase 5.6 **91 passed**. Typecheck exit 0 after clearing the build cache. Secret scan found no leaks.
 - **Baseline restored:** bucket 0 objects; 3 users / 4 courses / 20 materials / 20 concepts / 8 assessments untouched; all analysis tables back to 0.
-- **Not claimed:** no second provider, no embeddings or vector database, and no automatic analysis. Edvance never accuses a question of inconsistency without naming the evidence it disagrees with.
+- **Not claimed:** no second provider, no embeddings or vector database, and no automatic analysis. Oyevolve never accuses a question of inconsistency without naming the evidence it disagrees with.
 
 ### Where the user was asked to act
 Nowhere — Phase 7 ran end to end autonomously. Phase 8 begins automatically.
@@ -578,7 +578,7 @@ Nowhere — Phase 7 ran end to end autonomously. Phase 8 begins automatically.
 ### Files changed
 - New: `db/migrations/0005_assessment_intelligence.sql`, `lib/ai/assessment-intelligence.ts`, `app/api/courses/[courseId]/assessments/[assessmentId]/analyse/route.ts`, `scripts/test-assessment-intelligence.mjs`
 - Changed: `lib/ai/{schemas,prompts,gemini,types}.ts`, `lib/repo/courses.ts`, `lib/types.ts`, `lib/data.ts`, `lib/useCourses.ts`, `app/courses/[courseId]/assessments/page.tsx`, `scripts/verify-gemini-live.mjs`, `package.json`
-- Docs: `Doc/PRD.md` (Change 16), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/EDVANCE_EXECUTION_STATE.md`, this episode
+- Docs: `Doc/PRD.md` (Change 16), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/OYEVOLVE_EXECUTION_STATE.md`, this episode
 
 ---
 
@@ -609,7 +609,7 @@ Nowhere — Phase 8 ran end to end autonomously. Phase 9 begins automatically.
 ### Files changed
 - New: `db/migrations/0006_practice_mastery.sql`, `lib/mastery.ts`, `app/api/courses/[courseId]/practice/route.ts`, `scripts/test-mastery-intelligence.mjs`
 - Changed: `lib/types.ts`, `lib/data.ts`, `lib/repo/courses.ts`, `lib/useCourses.ts`, `app/courses/[courseId]/mastery/page.tsx`, `package.json`
-- Docs: `Doc/PRD.md` (Change 17), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/EDVANCE_EXECUTION_STATE.md`, this episode
+- Docs: `Doc/PRD.md` (Change 17), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/OYEVOLVE_EXECUTION_STATE.md`, this episode
 
 ---
 
@@ -639,7 +639,7 @@ Nowhere — Phase 9 ran end to end autonomously. Phase 10 begins automatically.
 ### Files changed
 - New: `db/migrations/0007_targeted_revision.sql`, `lib/revision.ts`, `lib/ai/revision-intelligence.ts`, `app/api/courses/[courseId]/revision/route.ts`, `app/courses/[courseId]/revision/page.tsx`, `scripts/test-targeted-revision.mjs`
 - Changed: `lib/types.ts`, `lib/data.ts`, `lib/repo/courses.ts`, `lib/useCourses.ts`, `lib/ai/{types,schemas,prompts,gemini}.ts`, `app/courses/[courseId]/layout.tsx`, `package.json`
-- Docs: `Doc/PRD.md` (Change 18), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/EDVANCE_EXECUTION_STATE.md`, this episode
+- Docs: `Doc/PRD.md` (Change 18), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/OYEVOLVE_EXECUTION_STATE.md`, this episode
 
 ---
 
@@ -671,7 +671,7 @@ Nowhere — Phase 10 ran end to end autonomously. Phase 11 begins automatically.
 ### Files changed
 - New: `lib/rate-limit.ts`, `lib/api-rate-limit.ts`, `lib/email.ts`, `app/error.tsx`, `app/global-error.tsx`, `app/not-found.tsx`, `app/api/health/route.ts`, `app/api/account/route.ts`, `app/account/page.tsx`, `app/privacy/page.tsx`, `app/terms/page.tsx`, `app/api/courses/[courseId]/assessments/[assessmentId]/route.ts`, `scripts/test-product-hardening.mjs`, `tests/unit/*.test.mjs`
 - Changed: `next.config.ts`, `lib/materials.ts`, `lib/repo/courses.ts`, `lib/useCourses.ts`, `app/api/courses/[courseId]/route.ts`, `app/api/courses/[courseId]/materials/route.ts`, the four AI/practice routes, `app/courses/[courseId]/page.tsx`, `app/courses/[courseId]/assessments/page.tsx`, `app/layout.tsx`, `components/header.tsx`, `app/globals.css`, `package.json`
-- Docs: `Doc/PRD.md` (Change 19), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/EDVANCE_EXECUTION_STATE.md`, this episode
+- Docs: `Doc/PRD.md` (Change 19), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/OYEVOLVE_EXECUTION_STATE.md`, this episode
 
 ---
 
@@ -695,14 +695,14 @@ Nowhere — Phase 10 ran end to end autonomously. Phase 11 begins automatically.
 **One genuine human action:** authenticate the platform and supply the integration secrets. The Owner chose to prepare rather than deploy, so nothing external was created.
 
 ### Files changed
-- Changed: `specific.hcl`, `README.md`, `Doc/PRD.md` (Change 20), `docs/IMPLEMENTATION_PLAN.md`, `docs/EDVANCE_EXECUTION_STATE.md`, this episode
+- Changed: `specific.hcl`, `README.md`, `Doc/PRD.md` (Change 20), `docs/IMPLEMENTATION_PLAN.md`, `docs/OYEVOLVE_EXECUTION_STATE.md`, this episode
 
 ---
 
-## Episode 28 — Phase 12: Submission Readiness (Edvance declared submission ready)
+## Episode 28 — Phase 12: Submission Readiness (Oyevolve declared submission ready)
 
 ### Product Owner prompt (verbatim, abridged)
-> [Autonomous completion master directive §18, Phase 12.] Run an adversarial audit, sweep for fake features, execute the full test gate, write a submission report, walk the app manually, and declare Edvance submission ready.
+> [Autonomous completion master directive §18, Phase 12.] Run an adversarial audit, sweep for fake features, execute the full test gate, write a submission report, walk the app manually, and declare Oyevolve submission ready.
 
 ### What the AI builder did
 1. **Tried to make the app lie, on purpose.** A fabricated citation, a fabricated concept, an unjustified contradiction, a cross-user read and an untrusted origin were each attempted; each was refused in code, not in prose. The mock provider cannot reach production (`NODE_ENV` guard), no client component imports a server-only module, and no secret is hardcoded or exposed through `NEXT_PUBLIC_`.
@@ -711,7 +711,7 @@ Nowhere — Phase 10 ran end to end autonomously. Phase 11 begins automatically.
 4. **Re-ran the whole gate** from the committed tree: typecheck exit 0; unit **24**; end-to-end **43 / 72 / 48 / 76 / 59 / 91**, all 0 failed; **live Gemini 34 passed** (the real model flagged the six-versus-five inconsistency again); production `next build` passes; secret scan clean; database and bucket restored to baseline.
 5. **Walked the screens.** Public routes render correctly (screenshot-confirmed), the 404 page and `/api/health` behave, unauthenticated `/courses` returns 307 to sign-in, unauthenticated API calls return 401, and Better Auth correctly rejected an untrusted origin ('Invalid origin') — a security feature, not a bug.
 6. **Wrote `docs/SUBMISSION_REPORT.md`** — scope, what is real versus deliberately limited, the verification matrix, the adversarial findings, the manual walkthrough, the deployment status, and how to run everything.
-7. **Declared the status honestly.** Edvance is submission ready; the deployment is carried as a pending human action rather than implied to be done.
+7. **Declared the status honestly.** Oyevolve is submission ready; the deployment is carried as a pending human action rather than implied to be done.
 
 ### Real results (2026-10-02)
 - **Gate PASS:** typecheck 0; unit 24; hardening 43; revision 72; mastery 48; assessment 76; course 59; ingestion 91; live Gemini 34; production build passes; secret scan clean; baseline restored.
@@ -722,14 +722,14 @@ Nowhere — Phase 10 ran end to end autonomously. Phase 11 begins automatically.
 
 ### Files changed
 - New: `docs/SUBMISSION_REPORT.md`
-- Changed: `app/page.tsx`, `app/layout.tsx`, `components/header.tsx` (stale claims), `Doc/PRD.md` (Change 21), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/EDVANCE_EXECUTION_STATE.md`, this episode
+- Changed: `app/page.tsx`, `app/layout.tsx`, `components/header.tsx` (stale claims), `Doc/PRD.md` (Change 21), `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `docs/OYEVOLVE_EXECUTION_STATE.md`, this episode
 
 ---
 
-## Episode 29 — Phase 11 executed: Edvance deployed and verified live
+## Episode 29 — Phase 11 executed: Oyevolve deployed and verified live
 
 ### Product Owner prompt (verbatim, abridged)
-> Proceed with Phase 11 deployment and complete the final submission-readiness checks. Edvance must be deployed for submission. Do NOT add payment/Paystack. Use the existing deployment plan and `docs/EDVANCE_EXECUTION_STATE.md` as source of truth. Once deployment succeeds, run the full remote smoke test, verify the complete learner journey, HTTPS, storage, ingestion, Gemini intelligence, mastery and revision on the deployed app, confirm no secrets are exposed, and update `docs/SUBMISSION_REPORT.md` and `docs/EDVANCE_EXECUTION_STATE.md`.
+> Proceed with Phase 11 deployment and complete the final submission-readiness checks. Oyevolve must be deployed for submission. Do NOT add payment/Paystack. Use the existing deployment plan and `docs/OYEVOLVE_EXECUTION_STATE.md` as source of truth. Once deployment succeeds, run the full remote smoke test, verify the complete learner journey, HTTPS, storage, ingestion, Gemini intelligence, mastery and revision on the deployed app, confirm no secrets are exposed, and update `docs/SUBMISSION_REPORT.md` and `docs/OYEVOLVE_EXECUTION_STATE.md`.
 
 ### What the AI builder did
 1. **Deployed through the only path that works.** The Specific CLI cannot build a tarball on native Windows (`specific.hcl not found in project directory`), so the deploy ran from **WSL Ubuntu**, authenticated as a claimed agent account. Operator secrets were forwarded into WSL with `WSLENV` under `infisical run`, so no secret value ever appeared on a command line or in a log.
@@ -738,27 +738,27 @@ Nowhere — Phase 10 ran end to end autonomously. Phase 11 begins automatically.
 4. **Wrote a re-runnable remote smoke test.** `scripts/verify-remote-deployment.mjs` is HTTP-only (it never touches the production database or bucket directly). It signs up throwaway learners and exercises HTTPS/TLS, the health probe, security headers, the no-fake-claim sweep, sign-up, upload + **synchronous ingestion into evidence chunks**, course analysis (six FATHOM concepts, each citing real evidence), an assessment check naming the inconsistency, mastery, revision, cross-learner isolation and secret non-exposure, then deletes what it created.
 
 ### Real results (2026-10-02)
-- **DEPLOYED:** **https://white-whale.spcf.app** — project `edvance`, environment `prod`, active deployment `depl_02f4368hqt4n86q6`. All 8 migrations applied. `/api/health` → **200** (`database: ok`, ai/storage `configured`, email `not-configured`). Security headers and 404 confirmed live; no secret in any HTML or JSON payload.
+- **DEPLOYED:** **https://white-whale.spcf.app** — project `oyevolve`, environment `prod`, active deployment `depl_02f4368hqt4n86q6`. All 8 migrations applied. `/api/health` → **200** (`database: ok`, ai/storage `configured`, email `not-configured`). Security headers and 404 confirmed live; no secret in any HTML or JSON payload.
 - **Remote suite PASS:** `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` → **69 passed / 0 failed** against the real provider. (Earlier runs failed only on the free-tier daily quota, which the script now survives with bounded retry-with-backoff.)
-- **Committed** `feat(deploy): deploy Edvance and verify the live app end to end` — `specific.hcl`, `scripts/verify-remote-deployment.mjs`, `docs/SUBMISSION_REPORT.md`, `docs/EDVANCE_EXECUTION_STATE.md`.
+- **Committed** `feat(deploy): deploy Oyevolve and verify the live app end to end` — `specific.hcl`, `scripts/verify-remote-deployment.mjs`, `docs/SUBMISSION_REPORT.md`, `docs/OYEVOLVE_EXECUTION_STATE.md`.
 
 ### Where the user was asked to act
 **No human action required** — the deployment is live and the whole journey verified. Two optional notes only: the free-tier quota can be removed with a higher-quota key, and a pre-existing `verify-e2e@edvance.test` account from the Oct-1 verification can be deleted if a pristine database is preferred.
 
 ### Files changed
 - New: `scripts/verify-remote-deployment.mjs`
-- Changed: `specific.hcl` (build placeholders; model pin), `README.md`, `docs/SUBMISSION_REPORT.md`, `docs/EDVANCE_EXECUTION_STATE.md`, this episode
+- Changed: `specific.hcl` (build placeholders; model pin), `README.md`, `docs/SUBMISSION_REPORT.md`, `docs/OYEVOLVE_EXECUTION_STATE.md`, this episode
 
 ---
 
 ## Current state (2026-10-02)
 
-- **Phase 11 (Episode 29, committed `feat(deploy): deploy Edvance and verify the live app end to end`):** Edvance is **deployed and live at https://white-whale.spcf.app** (`depl_02f4368hqt4n86q6`, project `edvance`, environment `prod`). All 8 migrations applied; `/api/health` → 200 (db ok, ai/storage configured, email not-configured); HTTPS + security headers confirmed; the re-runnable HTTP-only smoke test `scripts/verify-remote-deployment.mjs` reports **69 passed / 0 failed** against the real provider. `specific.hcl` gained build-only placeholder env and pins `GEMINI_MODEL=gemini-3-flash-preview` (free tier, 20 req/day/model). Deploys must run from WSL (the Windows CLI fails at tarball creation).
+- **Phase 11 (Episode 29, committed `feat(deploy): deploy Oyevolve and verify the live app end to end`):** Oyevolve is **deployed and live at https://white-whale.spcf.app** (`depl_02f4368hqt4n86q6`, project `oyevolve`, environment `prod`). All 8 migrations applied; `/api/health` → 200 (db ok, ai/storage configured, email not-configured); HTTPS + security headers confirmed; the re-runnable HTTP-only smoke test `scripts/verify-remote-deployment.mjs` reports **69 passed / 0 failed** against the real provider. `specific.hcl` gained build-only placeholder env and pins `GEMINI_MODEL=gemini-3-flash-preview` (free tier, 20 req/day/model). Deploys must run from WSL (the Windows CLI fails at tarball creation).
 - **Committed & pushed:** the interface sheet is commit `f89fdfc`, and it and everything before it are on `origin/main`. The push moved `9090f45..f89fdfc`, carrying four commits that had accumulated locally: Phase 2 + Field Guide (`2af22eb`), Phase 3 Better Auth (`bfe0e4c`), Press Room + logo (`b092460`), interface sheet (`f89fdfc`). Pushing was done in the same working session.
 - **Phase 3 (Episode 14):** Better Auth over local PostgreSQL (service `postgresql-edvance`, db `edvance`); server-side guard on `/courses`; per-user workspaces; Phase 3 docs committed separately.
-- **Press Room redesign + logo (Episode 15, committed `b092460`):** teal/cream/rust/sage palette with legacy aliases; Edvance seal monogram shipped as React components, favicon, and a shareable SVG; landing page, header, and footer rebuilt. Presentation only — no behaviour changed.
+- **Press Room redesign + logo (Episode 15, committed `b092460`):** teal/cream/rust/sage palette with legacy aliases; Oyevolve seal monogram shipped as React components, favicon, and a shareable SVG; landing page, header, and footer rebuilt. Presentation only — no behaviour changed.
 - **Interface sheet (Episode 16, committed `f89fdfc`):** `design.html` now renders the seven shipped screens from the real markup against a verbatim snapshot of `app/globals.css`, labelled by route, with per-screen notes on real versus mock data. Point-in-time by design; re-copy between the `APP-CSS` markers when the stylesheet changes.
-- **Running:** dev server restarted after the editor restart and answering on http://localhost:3000 (`/` → 200, `/courses` → 307 to sign-in when unauthenticated); started detached, log at `/tmp/edvance-dev.log`. PostgreSQL service `postgresql-edvance` listening on 5432.
+- **Running:** dev server restarted after the editor restart and answering on http://localhost:3000 (`/` → 200, `/courses` → 307 to sign-in when unauthenticated); started detached, log at `/tmp/oyevolve-dev.log`. PostgreSQL service `postgresql-edvance` listening on 5432.
 - **Untracked:** `.freebuff/` (editor tooling metadata) is still untracked and was deliberately not committed — it predates this work and is not in `.gitignore`.
 - **Verified:** typecheck ✓ · build ✓ (all routes incl. the three new `/api/courses…`) · migrations apply once and re-run clean ✓ · full API flow with real sessions (seed → read → create → add assessment → read back) ✓ · 401 unauthenticated ✓ · per-learner isolation ✓ · `source_mapping` schema round-trip ✓.
 - **Phase 4 (Episode 17):** course/learner data now lives in PostgreSQL. Schema + migration (`db/migrations/0001_course_data.sql`), migration runner (`npm run migrate`), repository layer (`lib/repo/courses.ts`), three route handlers, and the workspace moved off `localStorage`. `source_mapping` is schema/repository only until Phases 6–7.
@@ -772,7 +772,7 @@ Nowhere — Phase 10 ran end to end autonomously. Phase 11 begins automatically.
 - **Phase 5.6 (Episode 20):** uploaded materials are now **extracted into location-tagged evidence** — PDF by page, slides by slide, transcripts by timestamp range, documents/notes by section or line range — chunked into ordered `material_chunk` rows with a `material_ingestion_job` tracking each attempt (`db/migrations/0003_material_ingestion.sql`, `lib/extraction/`, `lib/ingestion.ts`). Uploads ingest synchronously; failures keep the file and record only a safe code, and Sources shows **Ready for analysis** / Processing / Extraction failed with Retry. Verified with `scripts/test-ingestion.mjs` — **91 passed, 0 failed** — across all seven formats, locations, ordering, isolation, failed states, cascades, typecheck, and a secret scan. No AI provider, prompt, embedding, or vector database was added.
 
 ## Suggested next steps
-0. **Edvance is deployed and submission ready.** It is live at **https://white-whale.spcf.app** and passed the remote end-to-end suite (**69 checks, 0 failures**). Future work starts from the live URL: re-run `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` after any change, and redeploy from WSL. The gate and the exact commands are in `docs/EDVANCE_EXECUTION_STATE.md`.
+0. **Oyevolve is deployed and submission ready.** It is live at **https://white-whale.spcf.app** and passed the remote end-to-end suite (**69 checks, 0 failures**). Future work starts from the live URL: re-run `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` after any change, and redeploy from WSL. The gate and the exact commands are in `docs/OYEVOLVE_EXECUTION_STATE.md`.
 1. Product Owner review passes worth doing by eye: the **Assessments** tab after checking the five-component question (http://localhost:3260 or :3000), and the **Intelligence** tab — screenshots remain non-compositing in this environment, so the UI has not been seen visually yet.
 2. Worth hardening early: the live Gemini free tier is a shared queue, so a bounded retry and a clear learner-facing retry affordance matter more than they look — worth revisiting in Phase 10 alongside rate limiting and upload quotas.
 3. A cheap robustness win: replace TS incremental typechecking's stale-cache trap by making `npm run typecheck` clear `tsconfig.tsbuildinfo` first, so a false-clean cannot reach a commit again.

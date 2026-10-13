@@ -32,7 +32,10 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Local agent tooling (reinstallable skills)
+# Local agent tooling (reinstallable skills). `.claude/` holds vendored copies of
+# third-party skills — reinstallable, not ours to review — while the repository's
+# own account of how to use them lives in docs/SKILLS_PLAYBOOK.md.
+.claude/
 .opencode/
 .specific
 specific.local
@@ -41,3 +44,9 @@ specific.local
 .freebuff/
 .tmp-scratch/
 .playwright-cli/
+
+# End-to-end test artifacts. The saved session cookie jar is per-run state, and
+# the reports and traces are for the run that produced them.
+e2e/.auth/
+playwright-report/
+test-results/

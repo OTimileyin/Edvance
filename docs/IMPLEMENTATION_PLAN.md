@@ -1,6 +1,6 @@
-# Edvance — Implementation Plan
+# Oyevolve — Implementation Plan
 
-**Status:** **Complete — EDVANCE — DEPLOYED AND SUBMISSION READY** (2026-10-02). Phases 5–12 are complete and verified end to end, including a verified live Google Gemini call, a production build, an adversarial submission audit, and a **live deployment** at <https://white-whale.spcf.app> that passed a remote end-to-end suite (**69 checks, 0 failures**). See `docs/SUBMISSION_REPORT.md`.
+**Status:** **Complete — OYEVOLVE — DEPLOYED AND SUBMISSION READY** (2026-10-02). Phases 5–12 are complete and verified end to end, including a verified live Google Gemini call, a production build, an adversarial submission audit, and a **live deployment** at <https://white-whale.spcf.app> that passed a remote end-to-end suite (**69 checks, 0 failures**). See `docs/SUBMISSION_REPORT.md`.
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -50,7 +50,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 - Next.js + TypeScript project that opens locally.
 - `design.html` — standalone design-system preview.
-- An initial working Edvance application page, **separate from** `design.html`.
+- An initial working Oyevolve application page, **separate from** `design.html`.
 - The **Assessment Intelligence View** as the first signature experience.
 - Mock/test data only.
 - No working authentication.
@@ -82,7 +82,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 ### Current Status
 
-**Current phase:** Phase 7 — Assessment Intelligence — **complete and verified end to end, including a real Google Gemini call**: each assessment question is judged against the concepts the course's own materials taught, and the live model correctly flags the canonical six-versus-five inconsistency (see Appendix A, Change 16). It builds on Phase 6 — Course Intelligence — complete and verified end to end (`GEMINI_API_KEY` present in Infisical; see Appendix A, Change 15). It builds on Phase 5.6 — Text Extraction & Evidence Chunking — complete and verified end to end (`Doc/PRD.md` Appendix A, Change 14), which builds on Phase 5 — Course Material Ingestion (Supabase Storage), complete and verified (Changes 12–13). Phase 4 is complete (Change 11), on top of Phases 1–3 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
+**Current phase:** Phase 7 — Assessment Intelligence — **complete and verified end to end, including a real Google Gemini call**: each assessment question is judged against the concepts the course's own materials taught, and the live model correctly flags the canonical six-versus-five inconsistency (see Appendix A, Change 16). It builds on Phase 6 — Course Intelligence — complete and verified end to end (`GEMINI_API_KEY` present in Infisical; see Appendix A, Change 15). It builds on Phase 5.6 — Text Extraction & Evidence Chunking — complete and verified end to end (`Doc/PRD.md` Appendix A, Change 14), which builds on Phase 5 — Course Material Ingestion (Supabase Storage), complete and verified (Changes 12–13). Phase 4 is complete (Change 11), on top of Phases 1–3 with steering additions: landing page and demo sign-in (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Oyevolve logo (Change 9), and the interface sheet re-pointed at the live app (Change 10).
 
 **Completed:**
 
@@ -108,9 +108,9 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
   - Real sign-up/sign-in (HTTP-only cookie sessions); header reflects session; Sign out revokes server-side.
   - Course workspaces scoped per signed-in user; new users seeded with demo workspaces.
   - Secrets only in git-ignored `.env`; `.env.example` committed.
-- "Press Room" redesign & Edvance identity (steering addition, Change 9).
+- "Press Room" redesign & Oyevolve identity (steering addition, Change 9).
   - Palette recalibrated to deep teal / cream / rust / sage, with legacy token names kept as aliases so every workspace surface retinted without component churn.
-  - Edvance logo designed and shipped (`components/logo.tsx`, `public/logo.svg`, `app/icon.svg`) with lockup rules on the `design.html` brand sheet.
+  - Oyevolve logo designed and shipped (`components/logo.tsx`, `public/logo.svg`, `app/icon.svg`) with lockup rules on the `design.html` brand sheet.
   - Landing page restructured from the artisan-poster reference: two-panel poster hero with a hand-drawn SVG scene, dark teal band of captioned tiles, cream medallion row, sand editorial spread, dark teal status band.
   - Header (logo lockup, centred nav, circular controls) and footer (cream, accurate status copy) rebuilt.
   - Presentation only — no route, data, or auth behaviour changed.
@@ -133,7 +133,7 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
   - `lib/ai/` is the server-only intelligence layer: `gemini.ts` (the one provider, plus an env-gated deterministic test provider that is refused in production), `prompts.ts`, `schemas.ts` (the structured-output JSON Schema plus a strict runtime validator and reference resolver), `types.ts`, and `course-intelligence.ts` (bound context → generate → validate → resolve → de-duplicate).
   - `POST /api/courses/[courseId]/analyse` authenticates, verifies ownership, loads evidence scoped to the learner, calls the model, validates every cited chunk against the input, and persists concepts, evidence, relationships and analysis state. It never runs on a page refresh, and it will not spend a model call when the stored intelligence is already up to date.
   - A new **Intelligence** workspace tab shows the analysis state, each concept with its evidence status, definition, instructor term and the exact evidence behind it, plus justified relationships. Stored intelligence becomes **needs re-analysis** as soon as materials change.
-  - Legacy `.doc` and `.ppt` uploads are no longer accepted, since Edvance has no reliable extractor for them; `lib/materials.ts` and the docs were updated.
+  - Legacy `.doc` and `.ppt` uploads are no longer accepted, since Oyevolve has no reliable extractor for them; `lib/materials.ts` and the docs were updated.
   - Verified with `scripts/test-course-intelligence.mjs` — **59 passed, 0 failed** — plus the Phase 5.6 regression (**91 passed, 0 failed**), using an original six-part golden fixture (the fictional **FATHOM** framework). The **live Google Gemini call** is also verified against that same fixture by `scripts/verify-gemini-live.mjs` — **26 passed, 0 failed**: six concepts with exact instructor terminology, every citation resolved to a real `Section: …` chunk, and a justified relationship.
 - Phase 7 — Assessment Intelligence.
   - `db/migrations/0005_assessment_intelligence.sql` adds `assessment_analysis` and the constraints that keep one finding per question and one source mapping per evidence location.
@@ -170,9 +170,9 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 **Outputs:**
 
 - Next.js + TypeScript project structure (App Router, TypeScript strict).
-- Public GitHub repository maintained at https://github.com/OTimileyin/Edvance.
+- Public GitHub repository maintained at https://github.com/OTimileyin/Oyevolve.
 - `docs/IMPLEMENTATION_PLAN.md` (this plan).
-- Updated `README.md` describing Edvance and pointing to the current PRD.
+- Updated `README.md` describing Oyevolve and pointing to the current PRD.
 - `.gitignore` covering `node_modules`, `.env*`, build output, and runtime artifacts.
 - Local development instructions (install, run, test in browser).
 
@@ -187,21 +187,21 @@ The Lesson 6 deliverable is a **single working local page** demonstrating the si
 
 ### Phase 1 — Design System & Assessment Intelligence Prototype
 
-**Goal:** Create the visual language and build one local page that communicates the signature Edvance experience.
+**Goal:** Create the visual language and build one local page that communicates the signature Oyevolve experience.
 
 This is the **Lesson 6 deliverable**.
 
 **Outputs:**
 
 1. `design.html` — standalone design-system preview (opens directly in the browser, no build tooling):
-   - Edvance color palette with tokens as defined in PRD §17.
+   - Oyevolve color palette with tokens as defined in PRD §17.
    - Typography examples using Inter, system-ui, sans-serif.
    - A styled primary button.
    - A styled sample text input.
-   - At least one Edvance-specific component (e.g., Evidence Card, Concept Chip, Consistency Badge, Mastery Indicator, Revision Recommendation Card).
+   - At least one Oyevolve-specific component (e.g., Evidence Card, Concept Chip, Consistency Badge, Mastery Indicator, Revision Recommendation Card).
 
 2. Initial application page, **separate from** `design.html` — an **Assessment Intelligence** page containing:
-   - Edvance product header.
+   - Oyevolve product header.
    - Assessment question.
    - Concepts being tested.
    - Supporting evidence.
@@ -225,7 +225,7 @@ This is the **Lesson 6 deliverable**.
 - [x] Typography examples are visible.
 - [x] Styled primary button is visible.
 - [x] Styled sample input is visible.
-- [x] At least one Edvance-specific component is visible.
+- [x] At least one Oyevolve-specific component is visible.
 - [x] Initial app page opens locally.
 - [x] App page is separate from `design.html`.
 - [x] Mock/test data only is used.
@@ -293,7 +293,7 @@ This is the **Lesson 6 deliverable**.
 
 **Acceptance Criteria:**
 
-- [x] PostgreSQL runs locally and connects to the app (verified: `/api/courses` returns seeded rows from `edvance`).
+- [x] PostgreSQL runs locally and connects to the app (verified: `/api/courses` returns seeded rows from `oyevolve`).
 - [x] Migrations apply cleanly (`npm run migrate` applies `0001_course_data.sql` once; a second run reports "Database already up to date").
 - [x] Courses, materials, concepts, assessments, mappings, consistency findings, and mastery states persist and read back correctly (verified end to end: create course → add assessment → read back from a fresh request; `source_mapping` round-tripped directly against the schema).
 
@@ -496,7 +496,7 @@ This is the **Lesson 6 deliverable**.
 **Delivered:**
 
 - **Edit/delete.** `PATCH`/`DELETE` on `/api/courses/[courseId]` rename or delete a course (the delete cascades in the database and removes its stored files), and on `/api/courses/[courseId]/assessments/[assessmentId]` edit or delete a question. Editing a question discards its stale check so it must be checked again against the evidence. The overview and Assessments tabs expose all of it, and destroying actions require the word DELETE typed.
-- **Account lifecycle.** An `/account` page shows who is signed in, changes the password (revoking other sessions), and deletes the account — which cascades away every course, material, concept, attempt and plan, and removes the stored files. A confirmation email is sent through **Resend** when `RESEND_API_KEY` is configured, and Edvance reports honestly that it did not send one when it is not.
+- **Account lifecycle.** An `/account` page shows who is signed in, changes the password (revoking other sessions), and deletes the account — which cascades away every course, material, concept, attempt and plan, and removes the stored files. A confirmation email is sent through **Resend** when `RESEND_API_KEY` is configured, and Oyevolve reports honestly that it did not send one when it is not.
 - **Hardening.** Security headers and a strict Content-Security-Policy (relaxed only in development) are set in `next.config.ts`; an in-memory fixed-window rate limiter (`lib/rate-limit.ts`) guards model calls, uploads, practice and account actions per learner; and a course is capped at `MAX_MATERIALS_PER_COURSE` materials and `MAX_COURSE_BYTES` of stored content.
 - **Routes.** `app/error.tsx`, `app/global-error.tsx`, `app/not-found.tsx` render honest failures without exposing internals, and `GET /api/health` reports the database as the one hard dependency plus each optional integration as configured or not.
 - **Legal.** `/privacy` and `/terms` describe what is stored, how content is used, and what the product is and is not, and are linked from the footer.
@@ -528,7 +528,7 @@ This is the **Lesson 6 deliverable**.
 - `README.md` gains a **Deployment** section: the prerequisites, the secrets table, the deploy commands, and a verification checklist (health probe, security headers, the full learner loop, confirmation that the production mock is refused, and a re-deploy migration no-op).
 - The local production build the platform runs is verified (`next build` succeeds).
 
-**Executed (2026-10-02):** deployed to the `edvance` project / `prod` environment from **WSL** (the native-Windows CLI cannot build a tarball). All 8 migrations applied; `/api/health` → 200; HTTPS and security headers confirmed; `scripts/verify-remote-deployment.mjs` ran the full learner journey on the live app (**69 passed / 0 failed**) against the real Gemini provider (pinned `gemini-3-flash-preview`). The `build` block supplies build-only placeholder env because the platform builder has no runtime secrets.
+**Executed (2026-10-02):** deployed to the `oyevolve` project / `prod` environment from **WSL** (the native-Windows CLI cannot build a tarball). All 8 migrations applied; `/api/health` → 200; HTTPS and security headers confirmed; `scripts/verify-remote-deployment.mjs` ran the full learner journey on the live app (**69 passed / 0 failed**) against the real Gemini provider (pinned `gemini-3-flash-preview`). The `build` block supplies build-only placeholder env because the platform builder has no runtime secrets.
 
 ---
 
@@ -548,7 +548,7 @@ This is the **Lesson 6 deliverable**.
 - [x] Full test gate green (typecheck, unit, six end-to-end suites, live provider, production build, secret scan, baseline).
 - [x] Manual walkthrough of the shipped screens.
 - [x] `docs/SUBMISSION_REPORT.md` written.
-- [x] Edvance declared submission ready **and deployed live** (the deployment is no longer pending).
+- [x] Oyevolve declared submission ready **and deployed live** (the deployment is no longer pending).
 
 **Delivered:**
 

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy — Edvance",
-  description: "What Edvance stores, why, and how to remove it.",
+  title: "Privacy — Oyevolve",
+  description: "What Oyevolve stores, why, and how to remove it.",
 };
 
 export default function PrivacyPage() {
@@ -13,7 +13,7 @@ export default function PrivacyPage() {
         <span className="kicker">Legal</span>
         <h1 className="page-title">Privacy</h1>
         <p className="page-lede">
-          Edvance is a learning workspace. This page describes, plainly, what it stores and how to
+          Oyevolve is a learning workspace. This page describes, plainly, what it stores and how to
           remove it. It applies to this deployment.
         </p>
       </section>
@@ -44,8 +44,10 @@ export default function PrivacyPage() {
         <p>
           Course analysis sends only the evidence your own materials produced to the configured AI
           provider, and only when you explicitly ask for it. Nothing is analysed automatically.
-          Source citations are validated before anything is stored, and raw model output is never
-          kept.
+          Reading a file you upload — extracting its text and locating it for citations — does
+          happen automatically on Oyevolve&rsquo;s servers once the upload is stored, and it stays
+          inside Oyevolve: the provider is reached only by the analysis you ask for. Source
+          citations are validated before anything is stored, and raw model output is never kept.
         </p>
       </section>
 

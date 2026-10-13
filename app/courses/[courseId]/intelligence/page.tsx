@@ -87,7 +87,7 @@ export default function CourseIntelligencePage() {
         <h1 className="page-title">What this course teaches</h1>
         <p className="page-lede">
           Concepts extracted from your uploaded materials, each one grounded in the exact evidence
-          it came from. Edvance never invents a citation: a concept with no evidence is reported as
+          it came from. Oyevolve never invents a citation: a concept with no evidence is reported as
           insufficient evidence.
         </p>
       </section>
@@ -113,8 +113,8 @@ export default function CourseIntelligencePage() {
           )}
           {intelligence.status === "insufficient-evidence" && (
             <p>
-              The course does not yet contain enough evidence to establish concepts. Edvance reports
-              this honestly rather than inventing them.
+              The course does not yet contain enough evidence to establish concepts. Oyevolve
+              reports this honestly rather than inventing them.
             </p>
           )}
           {intelligence.status === "failed" && (
@@ -150,9 +150,11 @@ export default function CourseIntelligencePage() {
             >
               {analysing
                 ? "Analysing…"
-                : intelligence.status === "ready" || intelligence.status === "needs-reanalysis"
-                  ? "Re-analyse course"
-                  : "Analyse course"}
+                : intelligence.status === "failed"
+                  ? "Retry analysis"
+                  : intelligence.status === "ready" || intelligence.status === "needs-reanalysis"
+                    ? "Re-analyse course"
+                    : "Analyse course"}
             </button>
           </p>
           <p className="form-hint">

@@ -8,6 +8,15 @@ name: check
 on:
   push:
   pull_request:
+  # Manual dispatch with "update-baselines" re-captures the plush visual
+  # baselines on the CI renderer and uploads them as an artifact, which is the
+  # supported way to accept an intentional redesign.
+  workflow_dispatch:
+    inputs:
+      update-baselines:
+        description: "Capture fresh visual baselines on the CI renderer (commit the uploaded artifact)"
+        type: boolean
+        default: false
 
 concurrency:
   group: check-${{ github.ref }}
@@ -72,7 +81,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: edvance
+          POSTGRES_DB: oyevolve
         ports:
           - 5432:5432
         options: >-
@@ -96,14 +105,209 @@ jobs:
       # so re-runs against the fresh service database are a no-op after the first.
       - name: Apply migrations
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/edvance
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/oyevolve
           NEXT_TELEMETRY_DISABLED: 1
         run: node scripts/migrate.mjs
 
       - name: Production build
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/edvance
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/oyevolve
           BETTER_AUTH_SECRET: ci-build-placeholder-secret-not-for-runtime-use
           BETTER_AUTH_URL: http://localhost:3000
           NEXT_TELEMETRY_DISABLED: 1
         run: npm run build
+
+  # Visual regression for the plush design: serves the production build and
+  # screenshots the plush surfaces (landing, sign-in, sign-up, offline
+  # revision, and the two design-document HTML pages) at desktop and mobile
+  # viewports, comparing them pixel-for-pixel against the baselines committed
+  # in tests/visual/baselines. Any redesign drift fails the gate and uploads
+  # the captured images plus highlighted diffs for inspection.
+  #
+  # Baselines are renderer-specific (font rasterisation differs per OS), so
+  # they are captured on this job's own renderer: dispatch the workflow with
+  # "update-baselines" and commit the uploaded artifact — never commit
+  # baselines captured on a developer machine.
+  visual:
+    name: visual regression
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: oyevolve
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The screenshots must come from the same Chromium build on every run,
+      # so the browser is installed from the lockfile-pinned playwright. The
+      # headless shell is what the script actually launches; both are pinned.
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium chromium-headless-shell
+
+      - name: Apply migrations
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/oyevolve
+          NEXT_TELEMETRY_DISABLED: 1
+        run: node scripts/migrate.mjs
+
+      - name: Production build
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/oyevolve
+          BETTER_AUTH_SECRET: ci-build-placeholder-secret-not-for-runtime-use
+          BETTER_AUTH_URL: http://localhost:3000
+          NEXT_TELEMETRY_DISABLED: 1
+        run: npm run build
+
+      # Fails when any surface scrolls horizontally at a phone width. It needs no
+      # baselines, so a layout regression is reported on its own rather than
+      # being buried in pixel drift (and a page that scrolls sideways can never
+      # be baselined by the --update run below).
+      - name: Viewport layout smoke check
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/oyevolve
+          BETTER_AUTH_SECRET: ci-build-placeholder-secret-not-for-runtime-use
+          BETTER_AUTH_URL: http://localhost:3000
+          NEXT_TELEMETRY_DISABLED: 1
+        run: npm run test:viewport
+
+      - name: Compare against plush baselines
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/oyevolve
+          BETTER_AUTH_SECRET: ci-build-placeholder-secret-not-for-runtime-use
+          BETTER_AUTH_URL: http://localhost:3000
+          NEXT_TELEMETRY_DISABLED: 1
+        run: node scripts/visual-regression.mjs ${{ github.event_name == 'workflow_dispatch' && '--update' || '' }}
+
+      # On drift (or a missing baseline) the captured shots and pixel diffs
+      # are uploaded so the change can be reviewed from the run page.
+      - name: Upload visual diff artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-output
+          path: .tmp-scratch/visual/
+          if-no-files-found: ignore
+
+      # Re-baseline flow: the fresh captures land in an artifact that a human
+      # reviews and commits to tests/visual/baselines.
+      - name: Upload fresh baselines
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fresh-visual-baselines
+          path: tests/visual/baselines/
+
+  # The batch-upload drop path, in a real browser, against the real app: the
+  # drop zone, a ten-file batch, per-file refusals, a mixed batch where one file
+  # fails alone, clearing the list and removing a stored material. Object storage
+  # is the suite's own in-memory double (`e2e/support/storage-stub.mjs`), so the
+  # whole path — including the bytes leaving the request and coming back — is
+  # gated here with no cloud credentials. Auth is a real better-auth session,
+  # created once by the `setup` project and reused as a saved cookie jar.
+  #
+  # A failure uploads the Playwright report (traces, screenshots, videos) so the
+  # cause is visible from the run page.
+  e2e:
+    name: end-to-end (batch upload)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: oyevolve
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The suite drives Chromium; the other engines have no coverage here. Both
+      # the full browser and the headless shell are pinned, exactly as the
+      # visual job does: a headless test launches the shell.
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium chromium-headless-shell
+
+      - name: Apply migrations
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/oyevolve
+          NEXT_TELEMETRY_DISABLED: 1
+        run: node scripts/migrate.mjs
+
+      # The queue's most important properties are not unit-testable: a partial
+      # unique index is what makes coalescing survive two simultaneous uploads,
+      # `for update skip locked` is what stops two workers taking one job, and
+      # the reclaim sweep is what makes a restart resumable. This asserts them
+      # against the same ephemeral Postgres the rest of this job uses. No build
+      # is needed — it touches only the database.
+      - name: Run the work-queue suite
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/oyevolve
+          NEXT_TELEMETRY_DISABLED: 1
+        run: node scripts/test-work-queue.mjs
+
+      # `playwright.config.ts` starts the app with `next start`, so the build
+      # must exist. BETTER_AUTH_URL matches the origin the suite browses.
+      - name: Production build
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/oyevolve
+          BETTER_AUTH_SECRET: ci-build-placeholder-secret-not-for-runtime-use
+          BETTER_AUTH_URL: http://localhost:3400
+          NEXT_TELEMETRY_DISABLED: 1
+        run: npm run build
+
+      - name: Run the drop-path suite
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/oyevolve
+          BETTER_AUTH_SECRET: ci-build-placeholder-secret-not-for-runtime-use
+          NEXT_TELEMETRY_DISABLED: 1
+        run: npm run test:e2e
+
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+
+      # Traces and screenshots are copied out of the report directory on failure
+      # so the failure can be read without downloading the whole report.
+      - name: Upload failure traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/
+          if-no-files-found: ignore

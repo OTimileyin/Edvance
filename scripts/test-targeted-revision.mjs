@@ -1,9 +1,9 @@
-// Edvance Phase 9 — Targeted Revision end-to-end tests.
+// Oyevolve Phase 9 — Targeted Revision end-to-end tests.
 //
 // Exercises the real revision pipeline against a running dev server started with
 // the deterministic test provider enabled:
 //
-//   EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
+//   OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
 //
 // The recommendation is derived deterministically from mastery and evidence, so
 // it appears with no model call. Generating practice is the only model call, and
@@ -134,7 +134,7 @@ async function getCourse(session, courseId) {
 }
 
 async function analyseCourse(session, courseId, scenario) {
-  const headers = scenario ? { "x-edvance-mock-scenario": scenario } : {};
+  const headers = scenario ? { "x-oyevolve-mock-scenario": scenario } : {};
   const response = await session.fetch(`/api/courses/${courseId}/analyse`, {
     method: "POST",
     headers,
@@ -144,7 +144,7 @@ async function analyseCourse(session, courseId, scenario) {
 }
 
 async function generateRevision(session, courseId, scenario) {
-  const headers = scenario ? { "x-edvance-mock-scenario": scenario } : {};
+  const headers = scenario ? { "x-oyevolve-mock-scenario": scenario } : {};
   const response = await session.fetch(`/api/courses/${courseId}/revision`, {
     method: "POST",
     headers,
@@ -205,9 +205,9 @@ async function main() {
   const db = new Client({ connectionString: DATABASE_URL });
   await db.connect();
 
-  const emailA = `revision-a-${stamp}@edvance.test`;
-  const emailB = `revision-b-${stamp}@edvance.test`;
-  const emailC = `revision-c-${stamp}@edvance.test`;
+  const emailA = `revision-a-${stamp}@oyevolve.test`;
+  const emailB = `revision-b-${stamp}@oyevolve.test`;
+  const emailC = `revision-c-${stamp}@oyevolve.test`;
   const cleanupMaterials = [];
 
   try {

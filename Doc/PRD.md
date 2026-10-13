@@ -1,6 +1,6 @@
-# Edvance — Product Requirements Document
+# Oyevolve — Product Requirements Document
 
-**Product Name:** Edvance  
+**Product Name:** Oyevolve  
 **Product Descriptor:** Evidence-First Assessment Intelligence  
 **Category:** Impact & Innovation  
 **Document Type:** Product Requirements Document (PRD) / Product Bible  
@@ -13,7 +13,7 @@
 
 ## 1. Product Overview
 
-Edvance is an evidence-first assessment intelligence platform that helps learners understand what an assessment is really testing, where the required knowledge was taught, whether the available course materials agree, and what the learner still needs to master.
+Oyevolve is an evidence-first assessment intelligence platform that helps learners understand what an assessment is really testing, where the required knowledge was taught, whether the available course materials agree, and what the learner still needs to master.
 
 Learners often receive course content through fragmented sources such as lecture videos, transcripts, slides, PDFs, notes, course outlines, assignments, and assessment questions. These materials are rarely connected in a way that helps the learner answer four important questions:
 
@@ -22,9 +22,9 @@ Learners often receive course content through fragmented sources such as lecture
 3. Do the course materials and assessment agree?
 4. What have I not mastered yet?
 
-Edvance turns these disconnected materials into a structured evidence layer around the learner's course.
+Oyevolve turns these disconnected materials into a structured evidence layer around the learner's course.
 
-Edvance is **not** intended to compete primarily as a generic AI summarizer, chatbot, flashcard generator, or quiz generator. Its core value is the relationship between:
+Oyevolve is **not** intended to compete primarily as a generic AI summarizer, chatbot, flashcard generator, or quiz generator. Its core value is the relationship between:
 
 **Course Evidence → Assessment Expectations → Consistency → Learner Mastery**
 
@@ -32,7 +32,7 @@ Edvance is **not** intended to compete primarily as a generic AI summarizer, cha
 
 ## 2. Product Vision
 
-Edvance should help a learner move from:
+Oyevolve should help a learner move from:
 
 > "I have all these materials, but I don't know what matters."
 
@@ -40,7 +40,7 @@ to:
 
 > "I know what is being tested, where it was taught, whether the evidence agrees, what I am missing, and what I should study next."
 
-The long-term vision is for Edvance to become an intelligent evidence layer between course materials, instructors, assessments, and learners.
+The long-term vision is for Oyevolve to become an intelligent evidence layer between course materials, instructors, assessments, and learners.
 
 ---
 
@@ -66,9 +66,9 @@ The central problem is:
 
 ## 4. Product Wedge
 
-The first memorable Edvance experience should solve one narrow, high-value problem extremely well:
+The first memorable Oyevolve experience should solve one narrow, high-value problem extremely well:
 
-> **Given an assessment question, Edvance identifies what concepts are being tested, shows where those concepts were taught, flags possible contradictions in the course evidence, and tells the learner what they still need to revise.**
+> **Given an assessment question, Oyevolve identifies what concepts are being tested, shows where those concepts were taught, flags possible contradictions in the course evidence, and tells the learner what they still need to revise.**
 
 This is the product's first wedge. The larger course-intelligence platform can grow around this capability after it is proven.
 
@@ -115,21 +115,21 @@ The learner wants a faster way to turn scattered course materials into an eviden
 
 ## 7. Jobs To Be Done
 
-When I receive an assessment question, I want Edvance to show what concepts are being tested so that I know what knowledge the question requires.
+When I receive an assessment question, I want Oyevolve to show what concepts are being tested so that I know what knowledge the question requires.
 
-When I need evidence, I want Edvance to show the lecture, slide, note, or transcript section where the relevant knowledge was taught.
+When I need evidence, I want Oyevolve to show the lecture, slide, note, or transcript section where the relevant knowledge was taught.
 
-When course materials appear to disagree, I want Edvance to flag the inconsistency so that I can investigate it rather than unknowingly learning the wrong information.
+When course materials appear to disagree, I want Oyevolve to flag the inconsistency so that I can investigate it rather than unknowingly learning the wrong information.
 
-When preparing for an assessment, I want Edvance to identify the concepts I have not mastered so that I can spend my study time on the areas that matter most.
+When preparing for an assessment, I want Oyevolve to identify the concepts I have not mastered so that I can spend my study time on the areas that matter most.
 
 ---
 
 ## 8. Unique Value Proposition
 
-**Edvance turns fragmented course materials into an evidence-backed map of what a learner is expected to master.**
+**Oyevolve turns fragmented course materials into an evidence-backed map of what a learner is expected to master.**
 
-Instead of only summarizing content, Edvance connects:
+Instead of only summarizing content, Oyevolve connects:
 
 **Course Material + Instructor Terminology + Assessment Questions + Source Evidence + Learner Mastery**
 
@@ -174,9 +174,9 @@ When evidence is inconsistent or incomplete, show the evidence and uncertainty r
 
 ## 10. Signature Experience — Assessment Intelligence
 
-The signature Edvance page is the **Assessment Intelligence View**.
+The signature Oyevolve page is the **Assessment Intelligence View**.
 
-A learner enters or opens an assessment question. Edvance displays:
+A learner enters or opens an assessment question. Oyevolve displays:
 
 1. Assessment Question
 2. Concepts Being Tested
@@ -225,7 +225,7 @@ The learner adds lecture transcripts, slides, PDFs, notes, course outlines, and 
 
 ### Step 3 — Extract Course Concepts
 
-Edvance identifies major concepts, instructor terminology, frameworks, definitions, examples, relationships, and relevant source locations.
+Oyevolve identifies major concepts, instructor terminology, frameworks, definitions, examples, relationships, and relevant source locations.
 
 ### Step 4 — Add an Assessment Question
 
@@ -233,7 +233,7 @@ The learner enters or selects a question.
 
 ### Step 5 — Assessment Intelligence
 
-Edvance identifies the concepts required by the question, strongest supporting evidence, relevant source locations, and instructor terminology.
+Oyevolve identifies the concepts required by the question, strongest supporting evidence, relevant source locations, and instructor terminology.
 
 ### Step 6 — Consistency Check
 
@@ -249,7 +249,7 @@ The learner's performance or self-assessment is connected to the concepts being 
 
 ### Step 8 — Targeted Revision
 
-Edvance recommends the smallest useful revision action based on the learner's weak concepts.
+Oyevolve recommends the smallest useful revision action based on the learner's weak concepts.
 
 ---
 
@@ -312,7 +312,7 @@ Authentication is planned for a later implementation phase. Working sign-in is n
 
 **Supabase Storage**
 
-Private object storage (bucket `edvance-materials`) for course files such as PDFs, slide decks, notes, and transcripts. Supabase is used **only** for object/file storage: PostgreSQL remains the Edvance database, Better Auth remains authentication, and Infisical remains the secrets manager. Cloudflare R2 was previously selected and implemented but never connected; it was replaced in Change 13 (Appendix A).
+Private object storage (bucket `edvance-materials`) for course files such as PDFs, slide decks, notes, and transcripts. Supabase is used **only** for object/file storage: PostgreSQL remains the Oyevolve database, Better Auth remains authentication, and Infisical remains the secrets manager. Cloudflare R2 was previously selected and implemented but never connected; it was replaced in Change 13 (Appendix A).
 
 ### Local Development
 
@@ -410,7 +410,7 @@ No secrets should be committed to the public repository.
 
 ### 16.1 Current Status
 
-**Current Phase:** Phase 5.6 — Text Extraction & Evidence Chunking is **complete and verified end to end** on 2026-10-01 (Appendix A, Change 14). It builds on Phase 5 (course material ingestion via private **Supabase Storage**, verified in Changes 12–13). Phase 4 course data (Change 11), Phase 3 accounts (Change 8), Phase 2, the landing page/demo sign-in steering addition (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Edvance identity (Change 9), and the interface sheet re-pointed at the live app (Change 10) are all delivered. Next phase: Phase 6 — Course Intelligence.
+**Current Phase:** Phase 5.6 — Text Extraction & Evidence Chunking is **complete and verified end to end** on 2026-10-01 (Appendix A, Change 14). It builds on Phase 5 (course material ingestion via private **Supabase Storage**, verified in Changes 12–13). Phase 4 course data (Change 11), Phase 3 accounts (Change 8), Phase 2, the landing page/demo sign-in steering addition (Change 6), the "Field Guide" visual redesign (Change 7), the "Press Room" redesign + Oyevolve identity (Change 9), and the interface sheet re-pointed at the live app (Change 10) are all delivered. Next phase: Phase 6 — Course Intelligence.
 
 **Completed (2026-09-27 – 2026-10-01):**
 
@@ -437,9 +437,9 @@ No secrets should be committed to the public repository.
   - Real email/password sign-up and sign-in replace the localStorage demo session; sessions are HTTP-only cookies.
   - `/courses` and all workspace routes are guarded **server-side** by a Better Auth session check; unauthenticated requests redirect to `/signin?next=…`.
   - Course workspaces are scoped per signed-in user (keyed by email in browser storage) and new users are seeded with demo workspaces on first visit.
-- "Press Room" visual redesign and Edvance identity (steering addition, Appendix A, Change 9).
+- "Press Room" visual redesign and Oyevolve identity (steering addition, Appendix A, Change 9).
   - Design language rebuilt from the Product Owner's artisan-poster reference: deep teal structure, cream page, rust flags, sage growth; italic Fraunces display voice; hand-illustrated poster hero; circular medallions with stitched rims; captioned product tiles; cream editorial footer.
-  - **Edvance logo delivered**: a seal monogram (an "E" built from three stacked source bars, the middle one rust-highlighted) plus a wordmark lockup, app-icon favicon (`app/icon.svg`), and shareable `public/logo.svg`. Documented in the `design.html` interface sheet.
+  - **Oyevolve logo delivered**: a seal monogram (an "E" built from three stacked source bars, the middle one rust-highlighted) plus a wordmark lockup, app-icon favicon (`app/icon.svg`), and shareable `public/logo.svg`. Documented in the `design.html` interface sheet.
   - Landing page restructured to the reference's rhythm: two-panel poster hero → dark teal product band → cream medallion row → sand editorial spread → dark teal honest-status band.
   - Applied to the header (logo lockup, centred nav, circular tool buttons), footer, auth panels, and — through the token layer — every workspace surface.
   - Pure presentation change: no route, data, or authentication behaviour was altered.
@@ -465,7 +465,8 @@ No secrets should be committed to the public repository.
 - Phase 5.6 — Text Extraction & Evidence Chunking (Appendix A, Change 14).
   - `db/migrations/0003_material_ingestion.sql` adds `material_ingestion_job` (status `pending|processing|completed|failed`, start/complete timestamps, safe `error_code`/`error_summary`, derived `metadata`) and `material_chunk` (ordered `ordinal`, `content`, human-readable `source_location`, structured `metadata`). Both cascade from `learning_material`.
   - A **server-only extraction layer** (`lib/extraction/`) parses PDF (`pdfjs-dist`), DOCX (`mammoth`), and PPTX (`jszip` + Open XML) and includes hand-written TXT, Markdown, WebVTT, and SRT parsers. Every extractor normalises to one `{ text, location }` shape; a deterministic chunker then produces ordered, location-tagged evidence chunks without splitting sentences.
-  - **Upload now ingests synchronously:** `POST …/materials` stores the bytes, records the material, then creates a job → marks it processing → downloads the object server-side → extracts → chunks → stores chunks → marks it completed. `POST …/materials/[materialId]/ingest` retries after a failure.
+  - **Upload queues the reading; a worker does it (V2.2, on `feat/v2-batch-upload`):** `POST …/materials` stores the bytes, records the material, enqueues exactly one `ingest` job in `work_job`, and returns — which is what lets ten files be dropped in one action without holding ten requests open. One in-process worker (`instrumentation.ts` → `lib/jobs/worker.ts`) claims the oldest due job, downloads the object server-side, extracts, chunks, stores the chunks and records the outcome. A claim is atomic (`for update skip locked`), retries are bounded and backed off (three attempts, 2 s doubling), and a job left `running` by a process that died is returned to the queue by a sweep that runs at startup and every minute. `POST …/materials/[materialId]/ingest` still retries on demand, and Sources says **Queued to be read** for a stored file nothing has read yet, rather than calling it uploaded-and-done. The former behaviour — create the job, mark it processing, extract and chunk inside the request — is what Change 14 recorded and is no longer true.
+  - **What is automatic today, and what is not.** Reading a file is automatic and queued. Analysis, assessment checks, grading, the mastery verdict and the recap are still explicit learner actions, and every shipped claim about them (this PRD, the privacy page, the landing page, the README) still says so — deliberately, so that no commit claims a capability the code does not have. `docs/PLAN_V2.md` records the steering decision to automate the whole loop, and its schedule moves each of those claims in the PR that makes it true (PR 3 / V2.3 — analysis and checks).
   - **Failures never delete the learner's file.** The job is marked `failed` with a short code and a user-safe summary (`corrupt-file`, `malformed-transcript`, `empty-content`, `unsupported-format`, `extraction-failed`). Raw provider errors and material contents are never logged or stored.
   - **Sources shows real processing state:** "Ready for analysis" (never "Analyzed"), "Processing…", "Extraction failed" with a Retry action, and factual derived metadata only when it was actually derived ("PDF · 14 pages", "Transcript · 37 cues", chunk counts). Seeded demo sources are labelled **Demo source** and are never mixed with real derived locations.
   - **Verified end to end (Change 14):** 91 assertions passing across all seven formats, location correctness, chunk ordering, ownership isolation, failed-ingestion states, delete cascades, typecheck, and a secret scan. **Not claimed:** no AI provider, prompt, concept extraction, embeddings, or vector database was added — those belong to Phase 6.
@@ -500,7 +501,7 @@ No secrets should be committed to the public repository.
 
 ### Phase 1 — Design System & Assessment Intelligence Prototype
 
-**Goal:** Create the visual language and build one local page that communicates the signature Edvance experience.
+**Goal:** Create the visual language and build one local page that communicates the signature Oyevolve experience.
 
 **Outputs:**
 
@@ -516,7 +517,7 @@ No secrets should be committed to the public repository.
 - [x] Typography examples are visible
 - [x] Styled primary button is visible
 - [x] Styled sample input is visible
-- [x] At least one Edvance-specific component is visible
+- [x] At least one Oyevolve-specific component is visible
 - [x] Initial app page opens locally
 - [x] App page is separate from `design.html`
 - [x] Mock/test data only is used
@@ -586,7 +587,7 @@ No secrets should be committed to the public repository.
 
 ### Design Direction
 
-Edvance should feel:
+Oyevolve should feel:
 
 - Clear
 - Evidence-driven
@@ -622,7 +623,7 @@ to the values above so existing components retint without churn.
 ### Brand Identity (Appendix A, Change 9)
 
 - **The mark** is a seal containing an "E" built from three stacked source bars; the middle
-  bar is rust because Edvance highlights the evidence that matters and flags the source that
+  bar is rust because Oyevolve highlights the evidence that matters and flags the source that
   disagrees. It must read at 16px.
 - **Lockups**: horizontal (mark left, wordmark right) for header and footer; mark alone for
   favicons and collapsed chrome; wordmark alone only above 24px.
@@ -657,7 +658,7 @@ The first local application page should be an **Assessment Intelligence** page r
 
 ### Required Sections
 
-- Edvance product header
+- Oyevolve product header
 - Assessment question
 - Concepts being tested
 - Supporting evidence
@@ -775,7 +776,7 @@ The full MVP is successful when a learner can:
 
 ## 24. One-Sentence Product Description
 
-**Edvance is an evidence-first assessment intelligence platform that shows learners what an assessment is testing, where the required knowledge was taught, whether the course evidence agrees, and what they still need to master.**
+**Oyevolve is an evidence-first assessment intelligence platform that shows learners what an assessment is testing, where the required knowledge was taught, whether the course evidence agrees, and what they still need to master.**
 
 ---
 
@@ -797,7 +798,7 @@ The full MVP is successful when a learner can:
 
 ### Steering Question
 
-Before implementation began, the Product Owner asked the AI builder to compare two approaches for Edvance's database/backend at the current development stage:
+Before implementation began, the Product Owner asked the AI builder to compare two approaches for Oyevolve's database/backend at the current development stage:
 
 - **Option A (hosted):** Use a hosted service such as Supabase for the database/backend.
 - **Option B (local):** Run PostgreSQL locally during development and move to hosted infrastructure later.
@@ -811,7 +812,7 @@ The comparison covered: cost, development complexity, control, local development
 
 ### Decision
 
-Use **PostgreSQL locally** during the current Edvance development stage.
+Use **PostgreSQL locally** during the current Oyevolve development stage.
 
 ### Reason
 
@@ -904,7 +905,7 @@ The Product Owner asked the AI builder to:
 
 ### Reason
 
-Lesson 6 only requires a single working local page. Building authentication, production database integration, live AI calls, or the entire Edvance platform now would add unnecessary complexity.
+Lesson 6 only requires a single working local page. Building authentication, production database integration, live AI calls, or the entire Oyevolve platform now would add unnecessary complexity.
 
 ### Decision
 
@@ -1054,8 +1055,8 @@ The approved implementation plan places real accounts (Better Auth) in Phase 3, 
 - **Better Auth 1.7** with the Kysely adapter on `pg` + `Pool` over `DATABASE_URL`; `emailAndPassword.enabled`; `nextCookies()` plugin last so server actions can set cookies. Handler mounted at `/api/auth/[...all]` via `toNextJsHandler` (Next.js 16 proxy-style notes followed from Better Auth's Next.js guide).
 - **Schema** created with `npx auth migrate` (`user`, `session`, `account`, `verification`).
 - **Route protection is server-side**: `app/courses/layout.tsx` (RSC) calls `auth.api.getSession({ headers: await headers() })` and redirects to `/signin?next=/courses` when absent — the check is not bypassable by client code.
-- **Per-user workspaces**: course storage is keyed by the signed-in user's email (`edvance.courses.v1.<email>`), so different accounts see different workspaces. First sign-in seeds demo workspaces. Course data itself is still browser-local mock data — PostgreSQL persistence for courses is Phase 4.
-- **Demo entry preserved**: "Continue with a demo account" provisions/signs in a real local `demo@edvance.app` account (fixed demo password, local-only).
+- **Per-user workspaces**: course storage is keyed by the signed-in user's email (`oyevolve.courses.v1.<email>`), so different accounts see different workspaces. First sign-in seeds demo workspaces. Course data itself is still browser-local mock data — PostgreSQL persistence for courses is Phase 4.
+- **Demo entry preserved**: "Continue with a demo account" provisions/signs in a real local `demo@oyevolve.app` account (fixed demo password, local-only).
 - **Header** is driven by the reactive Better Auth session (`authClient.useSession`) — user name and Sign out reflect real session state; Sign out revokes the server session.
 - **Env**: `.env` (git-ignored) holds `DATABASE_URL`, `BETTER_AUTH_SECRET` (32-char base64), `BETTER_AUTH_URL`; committed `.env.example` documents the shape without values.
 
@@ -1069,7 +1070,7 @@ The approved implementation plan places real accounts (Better Auth) in Phase 3, 
 
 ---
 
-## Change 9 — "Press Room" Redesign & Edvance Identity
+## Change 9 — "Press Room" Redesign & Oyevolve Identity
 
 **Date:** 2026-09-27  
 **Requested by:** Product Owner — "follow this inspiration to redesign the website. don't forget the Apple design skills… also create a logo that sells for me", with an artisan travel-poster reference design attached.  
@@ -1205,9 +1206,9 @@ Phases 2–4 built the workspace and its database, but course materials were sti
 
 **Cloudflare R2 had previously been selected** (Decision 1, Change 12). The R2 implementation was written — a dependency-free SigV4 client — but it was **never successfully connected or tested**: no R2 credentials were ever configured, so no file was ever uploaded or downloaded through it. The Product Owner already had a Supabase account and free development setup available, so Storage could be exercised for real immediately. R2 was therefore replaced with Supabase Storage.
 
-This is **storage only**. It does **not** mean Edvance migrated its database or its authentication to Supabase:
+This is **storage only**. It does **not** mean Oyevolve migrated its database or its authentication to Supabase:
 
-- **PostgreSQL remains the database.** Supabase's Postgres is not used; the app still talks to the local `edvance` database through `pg` and `lib/repo/courses.ts`.
+- **PostgreSQL remains the database.** Supabase's Postgres is not used; the app still talks to the local `oyevolve` database through `pg` and `lib/repo/courses.ts`.
 - **Better Auth remains the authentication system.** Supabase Auth is not used and no Supabase session is created.
 - **Infisical remains the secrets manager.** `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and `SUPABASE_STORAGE_BUCKET` live in the Infisical `dev` environment beside the existing secrets.
 
@@ -1220,7 +1221,7 @@ This is **storage only**. It does **not** mean Edvance migrated its database or 
 ### Decision
 
 - **Supabase Storage becomes the active file-storage provider**, in a **private** bucket (`edvance-materials`). The bucket is never made public.
-- **Server-only access.** `lib/supabase-storage.ts` creates the client with `SUPABASE_URL` and `SUPABASE_SECRET_KEY`, disables session persistence, and is imported only by route handlers. The browser never receives the secret key; downloads are authorised by Edvance and then handed a short-lived **signed URL** (300 seconds).
+- **Server-only access.** `lib/supabase-storage.ts` creates the client with `SUPABASE_URL` and `SUPABASE_SECRET_KEY`, disables session persistence, and is imported only by route handlers. The browser never receives the secret key; downloads are authorised by Oyevolve and then handed a short-lived **signed URL** (300 seconds).
 - **Ownership-safe object key:** `users/{userId}/courses/{courseId}/materials/{materialId}/{safe filename}`. The filename is sanitised and is only ever the final path segment; the path cannot be steered by client input.
 - **The database stays authoritative for deletes:** the `learning_material` row is removed first, then the object is cleaned up on a best-effort basis; a cleanup failure is logged as an orphan rather than failing a delete that already did its job.
 - **Errors are sanitised.** Provider bodies are kept in the server log; the browser sees messages such as "File storage is temporarily unavailable." No secret key, authorisation header, or signed-URL token is logged or returned.
@@ -1255,7 +1256,7 @@ Verified live against the private Supabase bucket through the real application (
 
 ### Reason
 
-Phase 5 made files storable but left them opaque: `learning_material` rows pointed at objects in Supabase Storage with nothing behind them the evidence pipeline could reason over. Every later Edvance feature — assessment-to-source mapping, inconsistency detection, mastery — depends on being able to cite **where** in a real material a claim came from. Phase 5.6 exists so that Phase 6 has trustworthy, location-tagged evidence to analyse, without any AI yet.
+Phase 5 made files storable but left them opaque: `learning_material` rows pointed at objects in Supabase Storage with nothing behind them the evidence pipeline could reason over. Every later Oyevolve feature — assessment-to-source mapping, inconsistency detection, mastery — depends on being able to cite **where** in a real material a claim came from. Phase 5.6 exists so that Phase 6 has trustworthy, location-tagged evidence to analyse, without any AI yet.
 
 ### Alternatives Considered
 
@@ -1305,11 +1306,11 @@ Verified live against the real application (dev server on port 3250 started via 
 
 ### Reason
 
-Phase 5.6 produced trustworthy, location-tagged evidence but nothing yet reasoned over it. Edvance's product promise — what is being tested, where it was taught, whether the evidence agrees — begins with knowing what a course actually teaches and where. Phase 6 turns `material_chunk` into that structured intelligence, without ever inventing a citation.
+Phase 5.6 produced trustworthy, location-tagged evidence but nothing yet reasoned over it. Oyevolve's product promise — what is being tested, where it was taught, whether the evidence agrees — begins with knowing what a course actually teaches and where. Phase 6 turns `material_chunk` into that structured intelligence, without ever inventing a citation.
 
 ### Alternatives Considered
 
-- **Supporting legacy binary `.doc`/`.ppt`:** rejected for the MVP. There is no reliable server-side text extractor for the binary Office formats, so keeping them would let a learner upload a file Edvance can never read. Edvance now accepts only formats it can extract: `.pdf`, `.txt`, `.md`, `.docx`, `.pptx`, `.vtt`, `.srt`.
+- **Supporting legacy binary `.doc`/`.ppt`:** rejected for the MVP. There is no reliable server-side text extractor for the binary Office formats, so keeping them would let a learner upload a file Oyevolve can never read. Oyevolve now accepts only formats it can extract: `.pdf`, `.txt`, `.md`, `.docx`, `.pptx`, `.vtt`, `.srt`.
 - **Multiple AI providers / provider routing:** rejected by the directive and by the dependency policy. One provider (Google Gemini) keeps the surface small.
 - **A schema-only guarantee:** rejected. Structured output constrains generation but does not guarantee truth, so the response is re-validated at runtime and every citation is resolved against the real evidence.
 - **Storing raw model output for debugging:** rejected — it may contain course contents. Only a short failure code and a user-safe summary are persisted.
@@ -1328,7 +1329,7 @@ Phase 5.6 produced trustworthy, location-tagged evidence but nothing yet reasone
 - **Analysis state.** `course_analysis.status` is `not-analyzed` / `analyzing` / `ready` / `failed` / `insufficient-evidence` / `needs-reanalysis`. An `analyzing` status is a light lock. The row also stores an **evidence fingerprint** — the material ids and chunk counts, no contents — so a new, removed or changed material makes the stored intelligence `needs-reanalysis` on the next read, with no model call.
 - **Cost control.** Analysis runs only on `POST /api/courses/[courseId]/analyse`; context is bounded (`MAX_EVIDENCE_CHUNKS` 150, `MAX_EVIDENCE_CHARS` 120 000); an up-to-date course returns `outcome: "up-to-date"` without calling the model; there is no recursion or automatic re-analysis; and only safe usage metadata (model, token counts) is stored.
 - **Schema.** Migration `0004_course_intelligence.sql` adds `course_analysis`, `concept_evidence` and `concept_relationship`, and extends `concept` with `origin` (`seed`/`analysis`), `evidence_status` and `confidence`. Real analysis replaces a course's concepts, so demo concepts are never shown as if extracted. No new database.
-- **Test provider.** `EDVANCE_AI_MOCK` selects a deterministic, evidence-grounded stand-in for Gemini so the pipeline can be tested without a key or a network call. It is refused when `NODE_ENV === production`, so a mock can never answer a real learner.
+- **Test provider.** `OYEVOLVE_AI_MOCK` selects a deterministic, evidence-grounded stand-in for Gemini so the pipeline can be tested without a key or a network call. It is refused when `NODE_ENV === production`, so a mock can never answer a real learner.
 - **Provider resilience.** The SDK's retry policy is pinned explicitly (three attempts, initial 1s, capped at 8s) rather than left at its multi-minute default, so a transient capacity 503 or rate-limit 429 is retried a bounded number of times within one learner action and a non-transient error fails immediately. The live call is exercised by `scripts/verify-gemini-live.mjs`.
 
 ### Verification
@@ -1368,13 +1369,13 @@ The live provider was reached through the running app's `POST /api/courses/[cour
 
 ### Reason
 
-Phase 6 established what a course teaches and where. An assessment question is only useful to a learner if Edvance can say what it actually tests — and, crucially, whether the question agrees with the course's own evidence. A question that asks for "the five components" of a six-part framework is exactly the failure this phase exists to catch, and it must be caught by pointing at the evidence, not by opinion.
+Phase 6 established what a course teaches and where. An assessment question is only useful to a learner if Oyevolve can say what it actually tests — and, crucially, whether the question agrees with the course's own evidence. A question that asks for "the five components" of a six-part framework is exactly the failure this phase exists to catch, and it must be caught by pointing at the evidence, not by opinion.
 
 ### Alternatives Considered
 
 - **Judging a question against the raw material again:** rejected. Re-reading every chunk per question would spend a model call on work the course analysis already did, and would let the question and the course disagree about what the course teaches. The question is judged against the concepts the evidence already established.
 - **Analysing questions automatically when one is added:** rejected for the same reason course analysis is manual — it spends money without the learner asking, and the course may not be analysed yet.
-- **Comparing word counts and numbers mechanically:** rejected. "Five" versus six components is a real signal, but deciding it in code would produce confident nonsense on prose. The model makes the judgement; Edvance only checks that the judgement is grounded in concepts it actually has.
+- **Comparing word counts and numbers mechanically:** rejected. "Five" versus six components is a real signal, but deciding it in code would produce confident nonsense on prose. The model makes the judgement; Oyevolve only checks that the judgement is grounded in concepts it actually has.
 - **Allowing an inconsistency claim with no cited concept:** rejected outright. A verdict of `POSSIBLE_INCONSISTENCY` that names nothing is unverifiable, so the whole response is discarded.
 - **Keeping the seeded course-level narrative alongside real analysis:** rejected. Writing a real signature removes the demo finding, so seeded prose is never shown as if it were evidence.
 
@@ -1407,8 +1408,8 @@ Typecheck (`npx tsc --noEmit`) exit 0. `scripts/test-assessment-intelligence.mjs
 
 - §15 data model: `assessment_analysis` is added (migration `0005`); `source_mapping` and `consistency_finding` move from schema-only to populated.
 - §16.1: Phase 7 is complete and verified end to end against both the deterministic provider and the live Google Gemini API.
-- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
-- **Not claimed:** no second AI provider, embeddings, vector database, or auto-analysis. Edvance never accuses a question of inconsistency without naming the evidence it disagrees with, and never states a number the course's materials do not establish.
+- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/OYEVOLVE_EXECUTION_STATE.md` updated to match.
+- **Not claimed:** no second AI provider, embeddings, vector database, or auto-analysis. Oyevolve never accuses a question of inconsistency without naming the evidence it disagrees with, and never states a number the course's materials do not establish.
 
 ---
 
@@ -1457,7 +1458,7 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. `s
 
 - §15 data model: `practice_attempt` is added (migration `0006`); `mastery_state` gains attempt counts and a last-practised timestamp.
 - §16.1: Phase 8 is complete and verified end to end with no model call.
-- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/OYEVOLVE_EXECUTION_STATE.md` updated to match.
 - **Not claimed:** no AI grades an answer, no AI assigns a mastery, and no status is seeded as if earned. Mastery is a deterministic function of the learner's own recorded attempts.
 
 ---
@@ -1470,7 +1471,7 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. `s
 
 ### Reason
 
-By Phase 8 the learner knows which concepts are weak, but not what to do about it. A mastery profile that stops at a status list leaves the learner to choose their own next step, which is exactly the gap Edvance exists to close. Phase 9 turns evidence and mastery into the smallest useful next action — and practice written for the weak areas, not drawn at random from the course.
+By Phase 8 the learner knows which concepts are weak, but not what to do about it. A mastery profile that stops at a status list leaves the learner to choose their own next step, which is exactly the gap Oyevolve exists to close. Phase 9 turns evidence and mastery into the smallest useful next action — and practice written for the weak areas, not drawn at random from the course.
 
 ### Alternatives Considered
 
@@ -1508,7 +1509,7 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. `s
 
 - §15 data model: `practice_question` and `revision_plan` are added (migration `0007`).
 - §16.1: Phase 9 is complete and verified end to end.
-- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/OYEVOLVE_EXECUTION_STATE.md` updated to match.
 - **Not claimed:** the model never chooses what to revise — that is derived from recorded practice — and never writes practice for a concept outside the learner's actual weak areas, nor cites evidence that was not supplied.
 
 ---
@@ -1527,8 +1528,8 @@ Phases 5–9 built a working, evidence-first pipeline, but a product a real lear
 
 - **Delete-only, no edit:** rejected. A typo in an assessment question should not force deletion, and editing is cheap once the invalidation rule is right.
 - **Editing a checked question while keeping its verdict:** rejected outright. The stored signature judged the _old_ wording; keeping it would present a judgement the learner never asked for. Editing discards the check so it must be run again.
-- **A distributed rate limiter (Redis) or a third-party one:** rejected as scope and dependency creep. Edvance runs as a single process, so an in-memory fixed-window limiter is honest; the call sites do not change if the store later moves.
-- **Faking email delivery when Resend is unconfigured:** rejected. Edvance reports that email is not configured rather than claiming a message was sent.
+- **A distributed rate limiter (Redis) or a third-party one:** rejected as scope and dependency creep. Oyevolve runs as a single process, so an in-memory fixed-window limiter is honest; the call sites do not change if the store later moves.
+- **Faking email delivery when Resend is unconfigured:** rejected. Oyevolve reports that email is not configured rather than claiming a message was sent.
 - **Reformatting the whole repository to add a linter/formatter:** rejected for phase 10 — it would have rewritten unrelated, deliberately untouched files and obscured that phase's diff; static guarantees came from `tsc --noEmit`, the unit suite and the end-to-end suites. The gap was closed afterwards in a dedicated change: ESLint (flat config) and Prettier are configured, the formatting pass landed separately from feature work, and both now gate CI.
 - **Avoiding a production build until deployment:** rejected. The build is the only check that catches server/client boundary and prerender problems, so it is run now.
 
@@ -1560,7 +1561,7 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. Un
 
 - §14/§16.4: security headers, rate limiting, quotas, error/not-found/health routes, and the account lifecycle are implemented.
 - §16.1: Phase 10 is complete and verified end to end, including a production build.
-- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+- `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/OYEVOLVE_EXECUTION_STATE.md` updated to match.
 
 ---
 
@@ -1599,7 +1600,7 @@ Every `secret.*` reference in `specific.hcl` has a matching `secret` declaration
 ### Impact on this document
 
 - §16.5: the deployment specification and procedure are complete; execution is pending human authorisation.
-- `README.md`, `docs/IMPLEMENTATION_PLAN.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+- `README.md`, `docs/IMPLEMENTATION_PLAN.md`, `conversation.md` and `docs/OYEVOLVE_EXECUTION_STATE.md` updated to match.
 
 ---
 
@@ -1607,7 +1608,7 @@ Every `secret.*` reference in `specific.hcl` has a matching `secret` declaration
 
 **Date:** 2026-10-02  
 **Requested by:** Product Owner (autonomous completion directive, §18)  
-**Status:** Complete — Edvance is declared submission ready, with deployment as one pending human action
+**Status:** Complete — Oyevolve is declared submission ready, with deployment as one pending human action
 
 ### Reason
 
@@ -1635,7 +1636,7 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. Un
 ### Impact on this document
 
 - §16.1 / §23: every MVP success criterion is met and verified; the deployment is the one outstanding human action.
-- `docs/SUBMISSION_REPORT.md` is added as the submission deliverable; `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+- `docs/SUBMISSION_REPORT.md` is added as the submission deliverable; `docs/IMPLEMENTATION_PLAN.md`, `README.md`, `conversation.md` and `docs/OYEVOLVE_EXECUTION_STATE.md` updated to match.
 
 ---
 
@@ -1643,7 +1644,7 @@ Typecheck (`npx tsc --noEmit`, after clearing `tsconfig.tsbuildinfo`) exit 0. Un
 
 **Date:** 2026-10-02  
 **Requested by:** Product Owner ("Proceed with Phase 11 deployment and complete the final submission-readiness checks")  
-**Status:** Complete — **Edvance is deployed live at <https://white-whale.spcf.app>** and the full learner journey is verified on it
+**Status:** Complete — **Oyevolve is deployed live at <https://white-whale.spcf.app>** and the full learner journey is verified on it
 
 ### Reason
 
@@ -1659,18 +1660,18 @@ Phase 11 was specified but deliberately not executed, and the Product Owner auth
 
 ### Decision
 
-- **Deployed.** Project `edvance` (`proj_0vqsej2psy3sy4tr`), environment `prod`, active deployment `depl_02f4368hqt4n86q6`. All 8 migrations applied by `pre_deploy`; `/api/health` returns `200` with the database healthy and AI/storage configured (`email: not-configured`).
+- **Deployed.** Project `oyevolve` (`proj_0vqsej2psy3sy4tr`), environment `prod`, active deployment `depl_02f4368hqt4n86q6`. All 8 migrations applied by `pre_deploy`; `/api/health` returns `200` with the database healthy and AI/storage configured (`email: not-configured`).
 - **Remote verification is a first-class artifact.** `scripts/verify-remote-deployment.mjs` drives the live app over HTTP only (it never touches the production database or bucket directly): it signs up throwaway learners and exercises HTTPS/TLS, the health probe, security headers, the no-fake-claim sweep, sign-up, upload and **synchronous ingestion into evidence chunks**, course analysis, an assessment check, mastery, revision, cross-learner isolation and secret non-exposure, then deletes what it created.
 - **Honest degradation holds in production.** With `RESEND_API_KEY` unset, account deletion reports `emailSent: false`; the mock provider is refused under `NODE_ENV=production`.
 
 ### Verification
 
-`BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` → **69 passed / 0 failed** against the real provider (`gemini-3-flash-preview`). Headers verified live (CSP, HSTS, `X-Frame-Options: DENY`, nosniff, Referrer-Policy, Permissions-Policy; no `X-Powered-By`); 404 on unknown routes; 401 on unauthenticated account deletion; no secret in any HTML or JSON payload. Committed as `feat(deploy): deploy Edvance and verify the live app end to end`.
+`BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` → **69 passed / 0 failed** against the real provider (`gemini-3-flash-preview`). Headers verified live (CSP, HSTS, `X-Frame-Options: DENY`, nosniff, Referrer-Policy, Permissions-Policy; no `X-Powered-By`); 404 on unknown routes; 401 on unauthenticated account deletion; no secret in any HTML or JSON payload. Committed as `feat(deploy): deploy Oyevolve and verify the live app end to end`.
 
 ### Impact on this document
 
 - §16.5 / §18: the deployment is executed, and the remote evidence covers the whole learner journey; the deployment is no longer a pending human action.
-- `docs/SUBMISSION_REPORT.md` records the live URL, deployment id and remote run; `README.md`, `docs/IMPLEMENTATION_PLAN.md`, `conversation.md` and `docs/EDVANCE_EXECUTION_STATE.md` updated to match.
+- `docs/SUBMISSION_REPORT.md` records the live URL, deployment id and remote run; `README.md`, `docs/IMPLEMENTATION_PLAN.md`, `conversation.md` and `docs/OYEVOLVE_EXECUTION_STATE.md` updated to match.
 
 ---
 
@@ -1695,7 +1696,7 @@ Phase 11 was specified but deliberately not executed, and the Product Owner auth
 - [x] Typography is visible
 - [x] Styled button is visible
 - [x] Sample input is visible
-- [x] Edvance-specific component is visible
+- [x] Oyevolve-specific component is visible
 - [x] Real design refinement was requested
 - [x] Refinement is visible in `design.html`
 - [x] Refinement is documented in Appendix A
@@ -1717,7 +1718,7 @@ Phase 11 was specified but deliberately not executed, and the Product Owner auth
 # Appendix C — Recommended Task 1 Builder Prompt
 
 ```text
-Review the complete Edvance project folder and read PRD.md carefully before making changes.
+Review the complete Oyevolve project folder and read PRD.md carefully before making changes.
 
 First, create or update a detailed implementation plan divided into ordered phases with concrete outputs.
 
@@ -1734,11 +1735,11 @@ For the current assessment, the application and PostgreSQL database should run l
 Before implementing later phases, explain any major architectural choices and reasonable alternatives so I can review and steer the decisions.
 
 For Phase 1, create design.html as a standalone design-system preview containing:
-- Edvance colors,
+- Oyevolve colors,
 - typography,
 - a styled primary button,
 - a sample input,
-- and at least one Edvance-specific component.
+- and at least one Oyevolve-specific component.
 
 Also prepare the initial single-page Assessment Intelligence prototype using mock/test data only.
 
@@ -1752,7 +1753,7 @@ Stop after the implementation plan and first design preview are ready so I can r
 # Appendix D — Recommended Design Refinement Prompt
 
 ```text
-I have reviewed the first Edvance design preview.
+I have reviewed the first Oyevolve design preview.
 
 Improve the design without changing the core product direction.
 
@@ -1765,7 +1766,7 @@ Focus on:
 - easier-to-scan evidence sections,
 - and a clearer mastery/progress presentation.
 
-Keep Edvance clean, modern, calm, evidence-driven, and education-focused.
+Keep Oyevolve clean, modern, calm, evidence-driven, and education-focused.
 
 After making the changes, update the Agent Steering & Decision Log in PRD.md with:
 1. what I asked you to change,
@@ -1782,7 +1783,7 @@ Do not claim changes that are not actually visible in the implementation.
 ```text
 Proceed with Phase 1 only.
 
-Build a single working Edvance Assessment Intelligence page that opens locally in the browser and uses mock/test data only.
+Build a single working Oyevolve Assessment Intelligence page that opens locally in the browser and uses mock/test data only.
 
 The page should clearly show:
 - an assessment question,
@@ -1792,7 +1793,7 @@ The page should clearly show:
 - learner mastery status,
 - and a recommended revision action.
 
-Use the approved Edvance design system.
+Use the approved Oyevolve design system.
 
 Do not implement real authentication, external APIs, production database functionality, cloud deployment, or real file uploads yet.
 

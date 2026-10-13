@@ -7,9 +7,11 @@
  * it, rather than failing later inside a driver with an opaque error.
  */
 
+import { withLibpqSslCompat } from "./db-url.mjs";
+
 /**
  * Names that may hold the pooled application database URL. `DATABASE_URL` is
- * Edvance's documented name (Specific/Infisical); Vercel's Postgres integration
+ * Oyevolve's documented name (Specific/Infisical); Vercel's Postgres integration
  * does not always inject it and may expose the connection only as
  * `POSTGRES_URL` (or Prisma's `POSTGRES_PRISMA_URL`), so both are accepted.
  */
@@ -17,7 +19,7 @@ const POOLED_DATABASE_URL_NAMES = ["DATABASE_URL", "POSTGRES_URL", "POSTGRES_PRI
 
 function missingEnvMessage(name: string): string {
   return (
-    `Missing required environment variable ${name}. Edvance reads its ` +
+    `Missing required environment variable ${name}. Oyevolve reads its ` +
     "configuration from Infisical — run `npm run dev` (which wraps " +
     "`infisical run --env=dev`), or provide the variable another way. " +
     'See README.md, "Secrets (Infisical)".'
@@ -27,7 +29,7 @@ function missingEnvMessage(name: string): string {
 function missingAnyEnvMessage(names: readonly string[]): string {
   return (
     `Missing a database connection string. Set one of ${names.join(", ")}. ` +
-    "Edvance reads its configuration from Infisical — run `npm run dev` " +
+    "Oyevolve reads its configuration from Infisical — run `npm run dev` " +
     "(which wraps `infisical run --env=dev`) — or, on Vercel, let the Postgres " +
     'integration inject it. See README.md, "Secrets (Infisical)".'
   );
@@ -65,9 +67,13 @@ export function assertEnv(names: readonly string[]): void {
  * The application's pooled database URL, tolerating the variable names Vercel's
  * Postgres integration may use. Throws a readable error (naming every accepted
  * variable) when none is set.
+ *
+ * The URL is normalised through `withLibpqSslCompat` so that a managed URL
+ * carrying `sslmode=require` still connects from Vercel, where `pg`'s parser
+ * would otherwise demand a CA chain the platform does not present.
  */
 export function databaseUrl(): string {
   const value = firstSet(POOLED_DATABASE_URL_NAMES);
   if (!value) throw new Error(missingAnyEnvMessage(POOLED_DATABASE_URL_NAMES));
-  return value;
+  return withLibpqSslCompat(value) ?? value;
 }

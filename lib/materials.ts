@@ -30,7 +30,7 @@ export const MAX_COURSE_BYTES = 200 * 1024 * 1024; // 200 MB across a course
 export const MAX_FILES_PER_UPLOAD = 10;
 
 export type MaterialKind = {
-  /** The Edvance source type this file is ingested as. */
+  /** The Oyevolve source type this file is ingested as. */
   type: SourceType;
   /** Human-readable description shown in the UI and error messages. */
   label: string;
@@ -41,7 +41,7 @@ export type MaterialKind = {
 /**
  * Accepted material formats.
  *
- * Only formats Edvance can actually extract evidence from are accepted: a file
+ * Only formats Oyevolve can actually extract evidence from are accepted: a file
  * that uploads but yields no readable text would give the learner a dead end.
  * Legacy binary `.doc` and `.ppt` are deliberately excluded — there is no
  * reliable text extractor for them, so learners are asked to save as `.docx` or
@@ -155,7 +155,7 @@ export function validateUploadFiles<T extends { name: string; size: number }>(
     if (!materialKindFor(file.name)) {
       rejected.push({
         name: file.name,
-        reason: `Edvance can't read this format yet. Accepted: ${acceptedKindLabels()}.`,
+        reason: `Oyevolve can't read this format yet. Accepted: ${acceptedKindLabels()}.`,
       });
       continue;
     }

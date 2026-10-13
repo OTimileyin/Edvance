@@ -5,7 +5,7 @@ import { optionalEnv } from "./env";
 /**
  * Server-only Supabase Storage client.
  *
- * Edvance uses Supabase **only** for private object storage. The project keeps
+ * Oyevolve uses Supabase **only** for private object storage. The project keeps
  * PostgreSQL as its database and Better Auth as its authentication system;
  * nothing here touches Supabase Auth or the database. Supabase's own docs and
  * the official server-side guide treat the storage API as the single operation

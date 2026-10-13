@@ -9,10 +9,10 @@ import { databaseUrl } from "./env";
  * course/learner repositories. In development the pool is cached on
  * `globalThis` so Next.js hot reloads do not open a new pool on every edit.
  */
-const globalForDb = globalThis as unknown as { edvancePool?: Pool };
+const globalForDb = globalThis as unknown as { oyevolvePool?: Pool };
 
 export const pool =
-  globalForDb.edvancePool ??
+  globalForDb.oyevolvePool ??
   new Pool({
     // Required: throws a readable error at import if neither DATABASE_URL nor
     // the POSTGRES_URL that Vercel's Postgres integration injects is present.
@@ -20,5 +20,5 @@ export const pool =
   });
 
 if (process.env.NODE_ENV !== "production") {
-  globalForDb.edvancePool = pool;
+  globalForDb.oyevolvePool = pool;
 }

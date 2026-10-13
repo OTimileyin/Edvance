@@ -76,7 +76,7 @@ export default function CourseMastery() {
         <span className="kicker">Learner state</span>
         <h1 className="page-title">Mastery</h1>
         <p className="page-lede">
-          Per-concept status for {course.name}, derived from your own recorded practice. Edvance
+          Per-concept status for {course.name}, derived from your own recorded practice. Oyevolve
           never marks a concept mastered for you: a concept with no attempts stays Untested.
         </p>
       </section>
@@ -102,7 +102,7 @@ export default function CourseMastery() {
               <div className="alert alert-neutral">
                 <p>
                   No practice has been recorded yet, so every concept is <strong>Untested</strong>.
-                  Record an attempt below — Edvance derives the status from your attempts and shows
+                  Record an attempt below — Oyevolve derives the status from your attempts and shows
                   the trail, and never invents a result.
                 </p>
               </div>

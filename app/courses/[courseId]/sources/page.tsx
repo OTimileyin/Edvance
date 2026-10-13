@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { removeMaterial, retryIngestion, useCourse } from "@/lib/useCourses";
 import { AddMaterialForm } from "@/components/add-material-form";
@@ -39,19 +39,32 @@ function derivedSummary(source: SourceItem): string | null {
   return `${format} · ${count} ${count === 1 ? nouns[0] : nouns[1]}`;
 }
 
-/** The real processing state to show for a stored material. */
+/**
+ * The real processing state to show for a stored material.
+ *
+ * Reading a material is queued rather than done inside the upload, so a file
+ * whose bytes are stored is no longer the same thing as a file that is ready.
+ * Calling that state "Uploaded" would be the old lie in a new place, so a
+ * material with work outstanding says what is actually happening to it — and a
+ * failure that the queue is going to retry says that too, rather than reporting
+ * the end of a story that has another chapter.
+ */
 function statusBadge(source: SourceItem): { label: string; className: string } {
-  const status = source.ingestion?.status;
-  switch (status) {
+  switch (source.ingestion?.status) {
     case "completed":
       return { label: "Ready for analysis", className: "badge badge-success" };
     case "failed":
-      return { label: "Extraction failed", className: "badge badge-error" };
+      return source.queued
+        ? { label: "Failed — a retry is queued", className: "badge badge-warning" }
+        : { label: "Extraction failed", className: "badge badge-error" };
     case "processing":
+      return { label: "Reading…", className: "badge badge-warning" };
     case "pending":
-      return { label: "Processing…", className: "badge badge-warning" };
+      return { label: "Queued to be read", className: "badge badge-warning" };
     default:
-      return { label: "Uploaded", className: "badge badge-neutral" };
+      return source.queued
+        ? { label: "Queued to be read", className: "badge badge-warning" }
+        : { label: "Uploaded", className: "badge badge-neutral" };
   }
 }
 
@@ -61,6 +74,27 @@ export default function CourseSources() {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Oyevolve now finishes reading after the upload response, so the state this
+  // page fetched is often not the final one. While anything is outstanding the
+  // page looks again; the moment nothing is, it stops. No spinner, no heartbeat
+  // for its own sake.
+  const outstanding =
+    Boolean(course?.queue?.line) ||
+    Boolean(
+      course?.sources.some(
+        (source) =>
+          source.queued ||
+          source.ingestion?.status === "pending" ||
+          source.ingestion?.status === "processing",
+      ),
+    );
+
+  useEffect(() => {
+    if (!ready || !outstanding) return;
+    const timer = setInterval(() => void reload(), 2_000);
+    return () => clearInterval(timer);
+  }, [ready, outstanding, reload]);
 
   async function handleRemove(source: SourceItem) {
     if (!course) return;
@@ -114,6 +148,12 @@ export default function CourseSources() {
         </p>
       )}
 
+      {course.queue?.line && (
+        <p className="form-hint" role="status">
+          {course.queue.line} This page updates by itself.
+        </p>
+      )}
+
       {course.sources.length === 0 ? (
         <div className="empty-state">
           No sources in this workspace yet. Upload a slide deck, notes, PDF, or transcript to start
@@ -140,7 +180,7 @@ export default function CourseSources() {
                     )}
                     <span>{source.location}</span>
                     {derived && <span>{derived}</span>}
-                    {stored && typeof chunks === "number" && chunks > 0 && (
+                    {typeof chunks === "number" && chunks > 0 && (
                       <span>
                         {chunks} {chunks === 1 ? "chunk" : "chunks"}
                       </span>
@@ -154,7 +194,7 @@ export default function CourseSources() {
                         Download
                       </a>
                     )}
-                    {stored && source.ingestion?.status === "failed" && (
+                    {stored && source.ingestion?.status === "failed" && !source.queued && (
                       <button
                         type="button"
                         className="btn btn-secondary btn-sm"

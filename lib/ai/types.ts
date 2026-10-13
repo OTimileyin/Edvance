@@ -1,11 +1,11 @@
 /**
- * Shared types for Edvance's server-only AI layer.
+ * Shared types for Oyevolve's server-only AI layer.
  *
  * Nothing here is React, database or environment aware: these are the shapes
  * the analysis pipeline passes around, so the provider wrapper, the prompt
  * builder and the validator can be reasoned about and tested in isolation.
  *
- * The model never returns Edvance's domain types directly. It returns a raw
+ * The model never returns Oyevolve's domain types directly. It returns a raw
  * *model* shape which is validated against the schema in `schemas.ts` and then
  * resolved against real stored evidence by `course-intelligence.ts`.
  */

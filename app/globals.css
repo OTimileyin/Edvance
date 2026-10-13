@@ -1,5 +1,5 @@
 /* ============================================================
-   Edvance — "Plush" design system
+   Oyevolve — "Plush" design system
    A soft-toy palette: fuzzy cream page, plush royal-blue for
    structure, tomato red for flags, teal-green for growth,
    mustard for highlights. Chunky rounded display (Fredoka)
@@ -419,6 +419,19 @@ svg {
   align-items: center;
   gap: var(--space-2);
   justify-content: flex-end;
+  /* min-width: 0 lets this row shrink inside its grid track instead of pushing
+     the header — and the page — wider than the viewport. */
+  min-width: 0;
+}
+
+/* When the header is squeezed, only the learner's name gives way — the controls
+   keep their size so their labels never wrap or clip. */
+.header-tools > * {
+  flex: none;
+}
+
+.header-tools .nav-user {
+  flex: 0 1 auto;
 }
 
 .nav-user {
@@ -426,6 +439,11 @@ svg {
   font-weight: 600;
   color: var(--color-neutral-950);
   white-space: nowrap;
+  /* A long name or email truncates rather than widening the header: without
+     this the tools row cannot shrink below its text. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nav-action {
@@ -1509,7 +1527,9 @@ svg {
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  /* min() lets a track fall below its 300px ideal on a narrow phone instead of
+     forcing the page wider than the viewport. */
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: var(--space-6);
 }
 
@@ -2219,7 +2239,9 @@ tr:last-child td {
   }
 
   .app-header-inner {
-    grid-template-columns: auto auto;
+    /* The tools column may shrink below its content, so a long signed-in name
+       truncates instead of scrolling the page sideways on a phone. */
+    grid-template-columns: auto minmax(0, auto);
     justify-content: space-between;
   }
 }

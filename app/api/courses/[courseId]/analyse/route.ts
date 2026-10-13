@@ -41,7 +41,7 @@ export async function POST(
   // provider is active, which is impossible in production. It never reaches a
   // real provider call.
   const mockScenario = isMockProvider()
-    ? (request.headers.get("x-edvance-mock-scenario") ?? undefined)
+    ? (request.headers.get("x-oyevolve-mock-scenario") ?? undefined)
     : undefined;
 
   const { courseId } = await params;
@@ -111,17 +111,17 @@ export async function POST(
       return NextResponse.json({ error: error.message }, { status: 502 });
     }
     if (error instanceof ModelOutputError) {
-      // A response Edvance could not verify is rejected whole — nothing partial
+      // A response Oyevolve could not verify is rejected whole — nothing partial
       // is ever stored, and the raw output is never surfaced.
       await failCourseAnalysis(
         courseId,
         "unverified-output",
-        "The analysis service returned a response Edvance could not verify. Please try again.",
+        "The analysis service returned a response Oyevolve could not verify. Please try again.",
       );
       return NextResponse.json(
         {
           error:
-            "The analysis service returned a response Edvance could not verify. Please try again.",
+            "The analysis service returned a response Oyevolve could not verify. Please try again.",
         },
         { status: 502 },
       );

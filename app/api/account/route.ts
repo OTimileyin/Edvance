@@ -11,7 +11,7 @@ import { isEmailConfigured, sendEmail } from "@/lib/email";
  *
  * The database delete cascades first; stored objects are then removed
  * best-effort. A confirmation email is sent when Resend is configured (using the
- * address captured before deletion) — and when it is not, Edvance simply does
+ * address captured before deletion) — and when it is not, Oyevolve simply does
  * not pretend one was sent.
  */
 export async function DELETE() {
@@ -36,9 +36,9 @@ export async function DELETE() {
   if (result.email && isEmailConfigured()) {
     const sent = await sendEmail({
       to: result.email,
-      subject: "Your Edvance account was deleted",
+      subject: "Your Oyevolve account was deleted",
       text: [
-        "Your Edvance account and all of its courses, materials and practice records have been deleted.",
+        "Your Oyevolve account and all of its courses, materials and practice records have been deleted.",
         "",
         "If you did not request this, contact the operator of this deployment immediately.",
       ].join("\n"),

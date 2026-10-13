@@ -1,9 +1,9 @@
-// Edvance Phase 7 — Assessment Intelligence end-to-end tests.
+// Oyevolve Phase 7 — Assessment Intelligence end-to-end tests.
 //
 // Exercises the real assessment pipeline against a running dev server started
 // with the deterministic test provider enabled:
 //
-//   EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
+//   OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
 //
 // The deterministic provider is env-gated and refused in production; a per-test
 // header selects a scenario so one server can exercise every path. For
@@ -22,6 +22,8 @@
 // their prior state.
 
 import { Client } from "pg";
+
+import { waitForQueue } from "./lib/work-queue.mjs";
 
 const BASE_URL = (process.env.BASE_URL ?? "http://localhost:3260").replace(/\/$/, "");
 const TRUSTED_ORIGIN = process.env.BETTER_AUTH_URL ?? BASE_URL;
@@ -129,6 +131,9 @@ async function upload(session, courseId, name, text) {
     body: form,
   });
   const body = await response.json().catch(() => ({}));
+  // Reading the file is queued rather than done in the request (V2.2); the checks
+  // this suite makes need the evidence, so wait for the queue to finish.
+  await waitForQueue(session, courseId);
   return { status: response.status, material: body.material };
 }
 
@@ -148,7 +153,7 @@ async function getCourse(session, courseId) {
 }
 
 async function analyseCourse(session, courseId, scenario) {
-  const headers = scenario ? { "x-edvance-mock-scenario": scenario } : {};
+  const headers = scenario ? { "x-oyevolve-mock-scenario": scenario } : {};
   const response = await session.fetch(`/api/courses/${courseId}/analyse`, {
     method: "POST",
     headers,
@@ -158,7 +163,7 @@ async function analyseCourse(session, courseId, scenario) {
 }
 
 async function analyseQuestion(session, courseId, questionId, scenario) {
-  const headers = scenario ? { "x-edvance-mock-scenario": scenario } : {};
+  const headers = scenario ? { "x-oyevolve-mock-scenario": scenario } : {};
   const response = await session.fetch(
     `/api/courses/${courseId}/assessments/${questionId}/analyse`,
     { method: "POST", headers },
@@ -212,11 +217,11 @@ async function main() {
   const db = new Client({ connectionString: DATABASE_URL });
   await db.connect();
 
-  const emailA = `assess-a-${stamp}@edvance.test`;
-  const emailB = `assess-b-${stamp}@edvance.test`;
+  const emailA = `assess-a-${stamp}@oyevolve.test`;
+  const emailB = `assess-b-${stamp}@oyevolve.test`;
   // A learner who never creates a course of their own, so the demo workspace is
   // still seeded for them (seeding only happens while a learner is empty).
-  const emailC = `assess-c-${stamp}@edvance.test`;
+  const emailC = `assess-c-${stamp}@oyevolve.test`;
   const cleanupMaterials = [];
 
   try {

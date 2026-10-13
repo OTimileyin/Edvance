@@ -1,18 +1,18 @@
-# Edvance
+# Oyevolve
 
 **AI-Powered Course Intelligence Platform**
 
 ## Product Overview
 
-Edvance is an AI-powered course intelligence platform that helps learners understand what their instructor actually taught, determine what they are expected to master, and identify the areas where they still need improvement.
+Oyevolve is an AI-powered course intelligence platform that helps learners understand what their instructor actually taught, determine what they are expected to master, and identify the areas where they still need improvement.
 
-Learners receive course content through many disconnected sources such as lecture videos, slides, PDFs, notes, course outlines, assignments, and assessments. Edvance brings these materials together into a structured learning workspace: it analyzes course content, preserves instructor-specific terminology, maps assessments back to supporting learning materials, identifies inconsistencies between sources, and helps learners focus their revision on genuine mastery gaps.
+Learners receive course content through many disconnected sources such as lecture videos, slides, PDFs, notes, course outlines, assignments, and assessments. Oyevolve brings these materials together into a structured learning workspace: it analyzes course content, preserves instructor-specific terminology, maps assessments back to supporting learning materials, identifies inconsistencies between sources, and helps learners focus their revision on genuine mastery gaps.
 
-Edvance is not another generic AI summarizer. Its core value is understanding the structure and expectations of a specific course.
+Oyevolve is not another generic AI summarizer. Its core value is understanding the structure and expectations of a specific course.
 
 ## Target Users
 
-Edvance is designed for learners in structured programmes:
+Oyevolve is designed for learners in structured programmes:
 
 - University students
 - Bootcamp participants
@@ -37,12 +37,12 @@ The core problem is lack of alignment between learning materials, assessment exp
 
 1. Create a course workspace.
 2. Add learning materials (lectures, slides, PDFs, notes, outlines, assessments).
-3. Edvance analyzes the materials and extracts concepts, terminology, and frameworks.
-4. Edvance builds a course map showing how taught topics relate to each other.
+3. Oyevolve analyzes the materials and extracts concepts, terminology, and frameworks.
+4. Oyevolve builds a course map showing how taught topics relate to each other.
 5. Assessment questions are mapped to relevant lectures, timestamps, slides, notes, and concepts.
-6. Edvance detects possible inconsistencies across sources and shows the evidence.
+6. Oyevolve detects possible inconsistencies across sources and shows the evidence.
 7. The learner answers practice questions, building a mastery profile.
-8. Edvance generates targeted revision focused on weak areas.
+8. Oyevolve generates targeted revision focused on weak areas.
 
 ## Core MVP Features
 
@@ -63,19 +63,19 @@ The core problem is lack of alignment between learning materials, assessment exp
 
 ## Project Status
 
-**Edvance is submission ready.** Phases 1–12 are complete and verified end to end — including a live Google Gemini run, a production build, and an adversarial submission audit. The one outstanding item is the deployment itself, which awaits platform credentials (see Deployment). The full write-up is in [docs/SUBMISSION_REPORT.md](docs/SUBMISSION_REPORT.md).
+**Oyevolve is submission ready.** Phases 1–12 are complete and verified end to end — including a live Google Gemini run, a production build, and an adversarial submission audit. The one outstanding item is the deployment itself, which awaits platform credentials (see Deployment). The full write-up is in [docs/SUBMISSION_REPORT.md](docs/SUBMISSION_REPORT.md).
 
-Phases 1–10 are complete, plus four steering additions (landing page/demo sign-in, Change 6; "Field Guide" visual redesign, Change 7; "Press Room" redesign and the Edvance logo, Change 9; interface sheet re-pointed at the live app, Change 10). Phase 5 (course material upload) and Phase 5.6 (text extraction & evidence chunking) are **complete and verified end to end** against private **Supabase Storage**. The product requirements are defined in `Doc/PRD.md` (source of truth), with the plan in `docs/IMPLEMENTATION_PLAN.md`. The current deliverable is a Next.js learning workspace that runs locally: it opens on a marketing landing page, **sign-up/sign-in create real local accounts** (Better Auth over local PostgreSQL, HTTP-only cookie sessions), and **courses, materials, concepts, assessment questions, consistency findings, and mastery states are stored in PostgreSQL** through a repository layer. **Sources accepts real file uploads** (PDF, PowerPoint, Word, Markdown/plain text, WebVTT/SRT) which are stored in a **private Supabase Storage bucket** and recorded against the course with a `storageReference`; downloads go through the app to a short-lived signed URL, and materials can be deleted. Uploads go **up to ten files at once** — dropped onto the page or chosen with a multi-file picker — each with its own progress and, when one is refused, its own reason, so an unsupported or oversized file never blocks the rest of the batch. **Uploaded materials are now extracted into location-tagged evidence**: PDFs by page, slide decks by slide, transcripts by timestamp range, and documents/notes by section or line range, chunked into ordered evidence stored in `material_chunk` with an `material_ingestion_job` tracking each attempt. The Sources page shows real processing state — **Ready for analysis**, Processing, or Extraction failed — with a Retry action, while seeded demo sources are clearly labelled. Supabase is used **only** for object storage — PostgreSQL is still the database, Better Auth is still authentication, and Infisical is still the secrets manager.
+Phases 1–10 are complete, plus four steering additions (landing page/demo sign-in, Change 6; "Field Guide" visual redesign, Change 7; "Press Room" redesign and the Oyevolve logo, Change 9; interface sheet re-pointed at the live app, Change 10). Phase 5 (course material upload) and Phase 5.6 (text extraction & evidence chunking) are **complete and verified end to end** against private **Supabase Storage**. The product requirements are defined in `Doc/PRD.md` (source of truth), with the plan in `docs/IMPLEMENTATION_PLAN.md`. The current deliverable is a Next.js learning workspace that runs locally: it opens on a marketing landing page, **sign-up/sign-in create real local accounts** (Better Auth over local PostgreSQL, HTTP-only cookie sessions), and **courses, materials, concepts, assessment questions, consistency findings, and mastery states are stored in PostgreSQL** through a repository layer. **Sources accepts real file uploads** (PDF, PowerPoint, Word, Markdown/plain text, WebVTT/SRT) which are stored in a **private Supabase Storage bucket** and recorded against the course with a `storageReference`; downloads go through the app to a short-lived signed URL, and materials can be deleted. Uploads go **up to ten files at once** — dropped onto the page or chosen with a multi-file picker — each with its own progress and, when one is refused, its own reason, so an unsupported or oversized file never blocks the rest of the batch. **Uploaded materials are now extracted into location-tagged evidence**: PDFs by page, slide decks by slide, transcripts by timestamp range, and documents/notes by section or line range, chunked into ordered evidence stored in `material_chunk` with an `material_ingestion_job` tracking each attempt. The Sources page shows real processing state — **Ready for analysis**, Processing, or Extraction failed — with a Retry action, while seeded demo sources are clearly labelled. Supabase is used **only** for object storage — PostgreSQL is still the database, Better Auth is still authentication, and Infisical is still the secrets manager.
 
-**Phase 6 (course intelligence) is implemented.** Uploaded materials are analysed into concepts by **Google Gemini**, called only from the server: concepts carry the course's own instructor terminology, a definition grounded in the evidence, and the exact evidence behind them (material + location). Edvance supports three honest evidence states — **Supported**, **Partly supported**, and **Insufficient evidence** — and never invents a citation: a chunk the model cites must exist, belong to that learner's course, and have been in the model's input, or the whole response is rejected. Relationships (`prerequisite`, `part_of`, `related_to`, `contrasts_with`) are stored only when the evidence justifies them. Analysis runs only when the learner asks for it — never on a page refresh — and new or changed materials mark the stored intelligence **needs re-analysis**. Uploading `.doc` and `.ppt` is no longer accepted (there is no reliable text extractor for them; save as `.docx`/`.pptx`), so a learner can never upload a file Edvance cannot read. **The real Gemini call is verified end to end** — with `GEMINI_API_KEY` in Infisical, the live provider extracted all six components of the golden fixture with exact instructor terminology and real, resolvable evidence; without the key the analyse action honestly reports that analysis is not configured.
+**Phase 6 (course intelligence) is implemented.** Uploaded materials are analysed into concepts by **Google Gemini**, called only from the server: concepts carry the course's own instructor terminology, a definition grounded in the evidence, and the exact evidence behind them (material + location). Oyevolve supports three honest evidence states — **Supported**, **Partly supported**, and **Insufficient evidence** — and never invents a citation: a chunk the model cites must exist, belong to that learner's course, and have been in the model's input, or the whole response is rejected. Relationships (`prerequisite`, `part_of`, `related_to`, `contrasts_with`) are stored only when the evidence justifies them. Analysis runs only when the learner asks for it — never on a page refresh — and new or changed materials mark the stored intelligence **needs re-analysis**. Uploading `.doc` and `.ppt` is no longer accepted (there is no reliable text extractor for them; save as `.docx`/`.pptx`), so a learner can never upload a file Oyevolve cannot read. **The real Gemini call is verified end to end** — with `GEMINI_API_KEY` in Infisical, the live provider extracted all six components of the golden fixture with exact instructor terminology and real, resolvable evidence; without the key the analyse action honestly reports that analysis is not configured.
 
-**Phase 7 (assessment intelligence) is implemented.** Each assessment question is checked against the concepts the course's own materials taught — never against the question's wording alone. Edvance names the concepts a question actually tests (with the evidence behind them) and returns one of three honest verdicts: **Consistent with the evidence**, **Possible inconsistency**, or **Insufficient evidence**. A question that asks for "the five components" of a framework the evidence establishes as six is flagged as a possible inconsistency, with the reason stating both numbers and naming the concepts. A verdict of possible inconsistency must name the evidence it disagrees with, or the whole response is rejected. Questions can only be checked once the course itself has been analysed, since that is where the evidence-grounded concepts come from; checking is always an explicit action and an up-to-date signature is never recomputed. The `source_mapping` table — schema-only since Phase 4 — is now populated and read, and the course-level verdict is the most severe, most recent finding so one inconsistent question is never hidden.
+**Phase 7 (assessment intelligence) is implemented.** Each assessment question is checked against the concepts the course's own materials taught — never against the question's wording alone. Oyevolve names the concepts a question actually tests (with the evidence behind them) and returns one of three honest verdicts: **Consistent with the evidence**, **Possible inconsistency**, or **Insufficient evidence**. A question that asks for "the five components" of a framework the evidence establishes as six is flagged as a possible inconsistency, with the reason stating both numbers and naming the concepts. A verdict of possible inconsistency must name the evidence it disagrees with, or the whole response is rejected. Questions can only be checked once the course itself has been analysed, since that is where the evidence-grounded concepts come from; checking is always an explicit action and an up-to-date signature is never recomputed. The `source_mapping` table — schema-only since Phase 4 — is now populated and read, and the course-level verdict is the most severe, most recent finding so one inconsistent question is never hidden.
 
 **Phase 8 (mastery intelligence) is implemented.** Mastery is derived from the learner's own recorded practice, never assigned by a model. Recording an attempt — practising an assessment question (credited to every concept that question was checked against) or a single concept — re-derives the affected concepts from the complete attempt history by one deterministic rule: no attempts is **Untested**, fewer than half correct is **Weak**, at least half correct is **Developing**, and at least 80% correct over at least three attempts is **Mastered**. A single lucky answer can never earn mastery. The Mastery tab states the rule plainly, shows each concept's attempts and correct count, offers a practice panel, and lists recent practice with the learner's own answer, so every status is traceable to the attempts behind it. A question can only be practised once it has been checked against the course's evidence, and the practice endpoint is always an explicit learner action.
 
-**Phase 9 (targeted revision) is implemented.** The Mastery tab says _what_ is weak; the **Revision** tab says what to do about it. The recommendation is derived deterministically from mastery and the course's own evidence — weakest evidence of mastery first (**Weak**, then **Developing**, then **Untested**; a Mastered concept is never recommended) — and names the single smallest next action with where the course teaches it. Generating practice is an explicit action that sends the model only the weak concepts and the evidence that teaches them, so every question targets a real gap and cites a real `Section: …` location; a question naming an unsupplied concept or citing unsupplied evidence rejects the whole response. Generated practice can be recorded right or wrong straight back into mastery, which re-derives the recommendation and marks the stored practice stale. When nothing is weak, a course is fully mastered, or a weak area has no evidence, Edvance records that honestly without spending a model call.
+**Phase 9 (targeted revision) is implemented.** The Mastery tab says _what_ is weak; the **Revision** tab says what to do about it. The recommendation is derived deterministically from mastery and the course's own evidence — weakest evidence of mastery first (**Weak**, then **Developing**, then **Untested**; a Mastered concept is never recommended) — and names the single smallest next action with where the course teaches it. Generating practice is an explicit action that sends the model only the weak concepts and the evidence that teaches them, so every question targets a real gap and cites a real `Section: …` location; a question naming an unsupplied concept or citing unsupplied evidence rejects the whole response. Generated practice can be recorded right or wrong straight back into mastery, which re-derives the recommendation and marks the stored practice stale. When nothing is weak, a course is fully mastered, or a weak area has no evidence, Oyevolve records that honestly without spending a model call.
 
-**Phase 10 (product completion & hardening) is implemented.** Courses, materials and assessment questions can now be edited and deleted (deleting cleans up stored files, and editing a question discards its stale check so it must be re-checked); an **/account** page shows who is signed in, changes the password, and deletes the account and everything it owns. The deployment is hardened with security headers and a strict Content-Security-Policy, an in-memory per-learner rate limiter over model calls, uploads, practice and account actions, and per-course upload quotas; it ships `error.tsx`/`not-found.tsx`/a `/api/health` probe and `/privacy` and `/terms` pages. Transactional email goes through **Resend** when `RESEND_API_KEY` is configured, and Edvance says so honestly when it is not. A dependency-free unit suite joins the end-to-end suites, and a production `next build` passes. ESLint and Prettier are configured and gate CI: static checks are `tsc --noEmit`, `npm run lint` (the flat config in `eslint.config.mjs` — `eslint-config-next` plus typescript-eslint, with `eslint-config-prettier` deferring to Prettier), `npm run format:check` (Prettier, `printWidth: 100`) and the test suites.
+**Phase 10 (product completion & hardening) is implemented.** Courses, materials and assessment questions can now be edited and deleted (deleting cleans up stored files, and editing a question discards its stale check so it must be re-checked); an **/account** page shows who is signed in, changes the password, and deletes the account and everything it owns. The deployment is hardened with security headers and a strict Content-Security-Policy, an in-memory per-learner rate limiter over model calls, uploads, practice and account actions, and per-course upload quotas; it ships `error.tsx`/`not-found.tsx`/a `/api/health` probe and `/privacy` and `/terms` pages. Transactional email goes through **Resend** when `RESEND_API_KEY` is configured, and Oyevolve says so honestly when it is not. A dependency-free unit suite joins the end-to-end suites, and a production `next build` passes. ESLint and Prettier are configured and gate CI: static checks are `tsc --noEmit`, `npm run lint` (the flat config in `eslint.config.mjs` — `eslint-config-next` plus typescript-eslint, with `eslint-config-prettier` deferring to Prettier), `npm run format:check` (Prettier, `printWidth: 100`) and the test suites.
 
 Material parsing uses three focused, server-only libraries — `pdfjs-dist` (PDF), `mammoth` (DOCX), and `jszip` (PPTX); TXT, Markdown, WebVTT, and SRT are parsed in-repo. Course intelligence uses the official `@google/genai` server SDK. Two end-to-end suites run against a running dev server and verify their work in PostgreSQL — `scripts/test-ingestion.mjs` for extraction (text, locations, chunk order, ownership isolation) and `scripts/test-course-intelligence.mjs` for analysis (concepts, instructor terminology, evidence resolution, rejection of unknown chunk ids, staleness, and cross-user isolation):
 
@@ -92,35 +92,35 @@ BASE_URL=http://localhost:3000 npm run test:batch-upload
 The intelligence suite needs the deterministic test provider enabled, because it verifies the pipeline rather than the model's prose:
 
 ```
-EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
+OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
 BASE_URL=http://localhost:3260 npm run test:intelligence
 ```
 
 A third suite covers assessment intelligence — question-to-concept mapping, the six-versus-five inconsistency, rejection of an unjustified inconsistency, staleness and isolation:
 
 ```
-EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
+OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
 BASE_URL=http://localhost:3260 npm run test:assessment
 ```
 
 A fourth suite covers mastery — the honest Untested baseline, the full status ladder as attempts accumulate, attribution, per-concept isolation, the unchecked-question gate, validation and isolation:
 
 ```
-EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
+OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
 BASE_URL=http://localhost:3260 npm run test:mastery
 ```
 
 A fifth suite covers targeted revision — the deterministic recommendation, practice generated only for weak areas, mastery-driven re-targeting, cost control, the nothing-to-revise boundary, rejection paths and isolation:
 
 ```
-EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
+OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
 BASE_URL=http://localhost:3260 npm run test:revision
 ```
 
 A sixth suite covers product completion and hardening — the health probe, security headers, the 404 page, course and question edit/delete (including storage cleanup and check invalidation), and the account lifecycle:
 
 ```
-EDVANCE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
+OYEVOLVE_AI_MOCK=simple infisical run --env=dev -- npx next dev -p 3260
 BASE_URL=http://localhost:3260 npm run test:hardening
 ```
 
@@ -131,12 +131,12 @@ npm run test:unit
 npm run check
 ```
 
-`EDVANCE_AI_MOCK` selects a deterministic, evidence-grounded stand-in for Gemini and is **refused in production**, so a mock can never answer a real learner. Every suite generates its fixtures in memory (no copyrighted material) and deletes everything it creates, so they leave the bucket and database as they found them.
+`OYEVOLVE_AI_MOCK` selects a deterministic, evidence-grounded stand-in for Gemini and is **refused in production**, so a mock can never answer a real learner. Every suite generates its fixtures in memory (no copyrighted material) and deletes everything it creates, so they leave the bucket and database as they found them.
 
-A third script is the **live** counterpart: it needs a real key and no mock, calls the actual Gemini API through a running dev server, and checks that real model output survives Edvance's validation with no fabricated citation. It is network-dependent, so it is run deliberately rather than in the offline gate:
+A third script is the **live** counterpart: it needs a real key and no mock, calls the actual Gemini API through a running dev server, and checks that real model output survives Oyevolve's validation with no fabricated citation. It is network-dependent, so it is run deliberately rather than in the offline gate:
 
 ```
-# dev server without EDVANCE_AI_MOCK, with GEMINI_API_KEY present
+# dev server without OYEVOLVE_AI_MOCK, with GEMINI_API_KEY present
 BASE_URL=http://localhost:3260 infisical run --env=dev -- node scripts/verify-gemini-live.mjs
 ```
 
@@ -144,11 +144,11 @@ It reports **34 passed, 0 failed**: six concepts with instructor terminology pre
 
 ## Installable PWA
 
-Edvance is an installable Progressive Web App. The pieces:
+Oyevolve is an installable Progressive Web App. The pieces:
 
-- **Manifest** — `app/manifest.ts`, served at `/manifest.webmanifest` (name `Edvance`, `display: standalone`, `start_url`/`scope` `/`, theme `#1E2A6B` on `#FAF4E7`, icons 192px + 512px + a 512px maskable).
+- **Manifest** — `app/manifest.ts`, served at `/manifest.webmanifest` (name `Oyevolve`, `display: standalone`, `start_url`/`scope` `/`, theme `#1E2A6B` on `#FAF4E7`, icons 192px + 512px + a 512px maskable).
 - **Service worker** — `public/sw.js`, registered by `components/pwa-register.tsx` in production only. Navigations are network-first with `public/offline.html` as the fallback notice; hashed `/_next/static/` assets and icons are cache-first. **`/api/*` and every non-GET request are never intercepted**, so no learner data, signed storage URLs, or model responses are ever written to storage.
-- **Icons** — `public/icons/icon-192.png`, `icon-512.png`, `icon-512-maskable.png`, generated from the Edvance logo mark; `app/apple-icon.png` (180px) for iOS; the `app/icon.svg` favicon is unchanged.
+- **Icons** — `public/icons/icon-192.png`, `icon-512.png`, `icon-512-maskable.png`, generated from the Oyevolve logo mark; `app/apple-icon.png` (180px) for iOS; the `app/icon.svg` favicon is unchanged.
 - **CSP** — `worker-src 'self'` and `manifest-src 'self'` in `next.config.ts` explicitly permit the worker and manifest without loosening anything else.
 - **Offline limits** — offline you get the reconnect notice and nothing else: authentication, analysis, assessments, and mastery all require a connection and are never claimed to work offline.
 
@@ -156,7 +156,7 @@ Installability is verified with Chrome's own verdict (`Page.getInstallabilityErr
 
 ## Brand
 
-The Edvance mark is a seal containing an "E" built from three stacked source bars — the middle bar is rust because Edvance highlights the evidence that matters and flags the source that disagrees.
+The Oyevolve mark is a seal containing an "E" built from three stacked source bars — the middle bar is rust because Oyevolve highlights the evidence that matters and flags the source that disagrees.
 
 | Asset                 | Purpose                                                                       |
 | --------------------- | ----------------------------------------------------------------------------- |
@@ -171,7 +171,7 @@ Palette: deep teal `#0D2327`–`#2C6E70` for structure, cream `#FBF6EA` for the 
 
 - Node.js + npm
 - PostgreSQL running locally. This repo expects a server on `127.0.0.1:5432` with a database named `edvance` (the dev machine runs it as the Windows service `postgresql-edvance`).
-- The **Infisical CLI**, authenticated, with this directory linked to the Edvance Infisical project. Secrets are injected through `infisical run`, which `npm run dev` and `npm run migrate` already wrap, so a local `.env` is no longer required. See [Secrets (Infisical)](#secrets-infisical).
+- The **Infisical CLI**, authenticated, with this directory linked to the Oyevolve Infisical project. Secrets are injected through `infisical run`, which `npm run dev` and `npm run migrate` already wrap, so a local `.env` is no longer required. See [Secrets (Infisical)](#secrets-infisical).
 - Optional offline fallback: a `.env` file in the repo root (copy `.env.example`) with `DATABASE_URL`, `BETTER_AUTH_SECRET` (32+ chars), and `BETTER_AUTH_URL` — only needed if you run the app outside `infisical run`.
 - For material uploads (Phase 5): Supabase Storage credentials in the Infisical `dev` environment — `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (a server-side secret key, **never** prefixed with `NEXT_PUBLIC_`), and `SUPABASE_STORAGE_BUCKET` (the private bucket, `edvance-materials`). Without these, the Sources upload form reports that object storage is not configured; everything else works as before.
 
@@ -185,11 +185,11 @@ This applies every pending file in `db/migrations/` once, in order, in a transac
 
 ## Secrets (Infisical)
 
-Edvance reads its configuration from environment variables (`process.env`), the same as any Next.js app. Those values now live centrally in [Infisical](https://infisical.com) instead of a local `.env` file, so nobody has to keep secrets on disk or pass them around out of band.
+Oyevolve reads its configuration from environment variables (`process.env`), the same as any Next.js app. Those values now live centrally in [Infisical](https://infisical.com) instead of a local `.env` file, so nobody has to keep secrets on disk or pass them around out of band.
 
 One-time setup (per machine):
 
-1. Create an account at <https://app.infisical.com> and a project named `edvance`. New projects start with the `dev`, `staging`, and `prod` environments.
+1. Create an account at <https://app.infisical.com> and a project named `oyevolve`. New projects start with the `dev`, `staging`, and `prod` environments.
 2. Import the existing secrets. Either open the project's Secrets Overview for the `dev` environment and drag-and-drop the old `.env` file onto the page, or do the same thing from a terminal (values stay masked):
 
    ```
@@ -200,7 +200,7 @@ One-time setup (per machine):
 
 3. Install the CLI — `winget install infisical` on Windows, or `brew install infisical/get-cli/infisical` on macOS (see the [CLI install docs](https://infisical.com/docs/cli/overview)).
 4. Log in. In WSL 2, a remote SSH session, or Codespaces there is no browser, so use the interactive login: `infisical login -i`. Otherwise `infisical login`.
-5. Link this directory to the project once: `infisical init` and pick the `edvance` project. This writes `.infisical.json`, which holds local project settings only — no secret values — and is safe to commit. It is interactive and needs a real terminal; there is no flag that selects a project for you.
+5. Link this directory to the project once: `infisical init` and pick the `oyevolve` project. This writes `.infisical.json`, which holds local project settings only — no secret values — and is safe to commit. It is interactive and needs a real terminal; there is no flag that selects a project for you.
 
 On Windows, open a **new** terminal after `winget install` so the updated PATH is picked up — otherwise `npm run dev` fails with `'infisical' is not recognized as an internal or external command`.
 
@@ -252,7 +252,7 @@ Or hand the process a machine-identity access token directly, with no login step
 
 ## Deployment (live)
 
-**Edvance is deployed at <https://white-whale.spcf.app>** — Specific project `edvance`, environment
+**Oyevolve is deployed at <https://white-whale.spcf.app>** — Specific project `oyevolve`, environment
 `prod`, active deployment `depl_02f4368hqt4n86q6`. `/api/health` returns **200** with the database, AI
 and storage integrations healthy (`email: not-configured`); all migrations are applied and the app
 serves HTTPS. The deployed app passed the remote end-to-end suite below (**69 checks, 0 failures**).
@@ -373,7 +373,7 @@ npm install
 npm run dev        # infisical run --env=dev -- next dev
 ```
 
-Open `http://localhost:3000` in a browser. The app opens on the landing page; **Get started** (sign-up) or **Sign in** creates/uses a real local account (password must be 8+ characters) and enters the course workspace at `/courses`. Workspaces are scoped to the signed-in user in PostgreSQL — every query is keyed by the account id, and a new account is seeded with demo workspaces on first visit so it is never empty. **Continue with a demo account** provisions and signs in a local `demo@edvance.app` account. Unauthenticated visits to `/courses` (and below) redirect to the sign-in page server-side.
+Open `http://localhost:3000` in a browser. The app opens on the landing page; **Get started** (sign-up) or **Sign in** creates/uses a real local account (password must be 8+ characters) and enters the course workspace at `/courses`. Workspaces are scoped to the signed-in user in PostgreSQL — every query is keyed by the account id, and a new account is seeded with demo workspaces on first visit so it is never empty. **Continue with a demo account** provisions and signs in a local `demo@oyevolve.app` account. Unauthenticated visits to `/courses` (and below) redirect to the sign-in page server-side.
 
 ### Static previews (Phase 1)
 
@@ -388,4 +388,4 @@ The static previews load Fraunces and Inter from Google Fonts, so they look thei
 
 - [Product Requirements Document](Doc/PRD.md) — the full product specification, persona, MVP scope, and success metrics.
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) — ordered phases with outputs, acceptance criteria, and current status.
-- [Conversation Record](conversation.md) — every Product Owner prompt and the detailed builder response for the whole Edvance build, phase by phase.
+- [Conversation Record](conversation.md) — every Product Owner prompt and the detailed builder response for the whole Oyevolve build, phase by phase.

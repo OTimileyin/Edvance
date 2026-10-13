@@ -1,4 +1,4 @@
-// Edvance — remote deployment smoke test.
+// Oyevolve — remote deployment smoke test.
 //
 // Exercises the DEPLOYED app over HTTPS with the REAL provider (no mock): the
 // deterministic suites prove every branch offline; this proves the live system —
@@ -252,6 +252,26 @@ async function ensureRevisionReady(session, courseId) {
   return last;
 }
 
+/**
+ * PR 2 moved extraction to the durable work queue: the upload returns once the
+ * file is stored, and a worker reads it afterwards. Poll the way the Sources
+ * page does and assert the outcome the learner is promised — ingestion reaches
+ * `completed` — within a bounded window, rather than the retired synchronous
+ * contract. A `failed` status ends the wait immediately so a real extraction
+ * error is reported instead of timing out.
+ */
+async function ensureIngestionComplete(session, courseId) {
+  const deadline = Date.now() + 120_000;
+  for (;;) {
+    const { course } = await getCourse(session, courseId);
+    const source = course?.sources?.find((s) => s.ingestion);
+    const status = source?.ingestion?.status;
+    if (status === "completed" || status === "failed") return { course, source };
+    if (Date.now() >= deadline) return { course, source };
+    await sleep(3000);
+  }
+}
+
 function questionNamed(course, text) {
   return course?.assessments?.find((item) => item.question === text);
 }
@@ -267,8 +287,8 @@ async function runSuite(label) {
   recorder = newRecorder();
   const slug = label.replace(/[^a-z0-9]/gi, "").toLowerCase() || "run";
   const stamp = `${slug}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-  const emailA = `remote-a-${stamp}@edvance.test`;
-  const emailB = `remote-b-${stamp}@edvance.test`;
+  const emailA = `remote-a-${stamp}@oyevolve.test`;
+  const emailB = `remote-b-${stamp}@oyevolve.test`;
 
   // --- 1. HTTPS + health probe ---------------------------------------------
   {
@@ -311,10 +331,14 @@ async function runSuite(label) {
         /object-src 'none'/.test(csp),
       csp,
     );
+    // HSTS preload guidance asks for at least a year; the app ships two. Assert
+    // the requirement (a long max-age), not one literal value, so a stronger
+    // setting is not reported as a missing header.
+    const hsts = response.headers.get("strict-transport-security") ?? "";
     check(
       "headers: HSTS enabled",
-      /max-age=31536000/.test(response.headers.get("strict-transport-security") ?? ""),
-      response.headers.get("strict-transport-security"),
+      Number(/max-age=(\d+)/.exec(hsts)?.[1] ?? 0) >= 31_536_000,
+      hsts,
     );
     check(
       "headers: frame options deny",
@@ -380,17 +404,16 @@ async function runSuite(label) {
   );
 
   {
-    const { course } = await getCourse(learnerA, courseId);
-    const source = course?.sources?.find((s) => s.ingestion);
+    const { course, source } = await ensureIngestionComplete(learnerA, courseId);
     check(
       "ingest: a source carries an ingestion record",
       Boolean(source),
       JSON.stringify(course?.sources?.map((s) => s.id)),
     );
     check(
-      "ingest: completed synchronously",
+      "ingest: completed in the background",
       source?.ingestion?.status === "completed",
-      source?.ingestion?.status,
+      `${source?.ingestion?.status} ${source?.ingestion?.errorSummary ?? ""}`,
     );
     check(
       "ingest: produced evidence chunks",
@@ -525,6 +548,15 @@ async function runSuite(label) {
     // A fresh course so there is genuinely something to revise (all Weak).
     const revisionCourse = await createCourse(learnerA, "FATHOM Revision Course");
     await uploadText(learnerA, revisionCourse, "fathom.md", FATHOM_MARKDOWN);
+    // Analysis reasons over stored evidence, so wait for the queue to finish
+    // reading this material — the same wait the Sources page asks of a learner —
+    // rather than analysing a course whose file has not been read yet.
+    const revisionIngest = await ensureIngestionComplete(learnerA, revisionCourse);
+    check(
+      "revision: the uploaded material was read",
+      revisionIngest.source?.ingestion?.status === "completed",
+      `${revisionIngest.source?.ingestion?.status} ${revisionIngest.source?.ingestion?.errorSummary ?? ""}`,
+    );
     const revisionReady = await ensureCourseAnalysisReady(
       learnerA,
       revisionCourse,
@@ -536,7 +568,7 @@ async function runSuite(label) {
     check(
       "revision: the course established concepts to revise",
       revisionConceptIds.length >= 6,
-      String(revisionConceptIds.length),
+      `${revisionConceptIds.length} concepts, analysis ${revisionReady.course?.intelligence?.status} ${revisionReady.course?.intelligence?.errorSummary ?? ""}`,
     );
     for (const conceptId of revisionConceptIds) {
       await practise(learnerA, revisionCourse, { conceptId, correct: false });

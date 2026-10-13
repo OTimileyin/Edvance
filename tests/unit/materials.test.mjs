@@ -10,7 +10,7 @@ import {
   safeMaterialFilename,
 } from "../../lib/materials.ts";
 
-test("accepts the formats Edvance can extract", () => {
+test("accepts the formats Oyevolve can extract", () => {
   for (const name of ["a.pdf", "b.pptx", "c.docx", "d.txt", "e.md", "f.vtt", "g.srt"]) {
     assert.ok(materialKindFor(name), `${name} should be accepted`);
   }

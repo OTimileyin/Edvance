@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 /**
- * The Web App Manifest — what makes Edvance installable.
+ * The Web App Manifest — what makes Oyevolve installable.
  *
  * Installability needs, at minimum: a name, a `start_url`, a `display` mode
  * other than `browser`, and a 192px + 512px icon. The maskable icon lets
@@ -9,8 +9,8 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Edvance",
-    short_name: "Edvance",
+    name: "Oyevolve",
+    short_name: "Oyevolve",
     description: "Evidence-first assessment intelligence for learners.",
     id: "/",
     start_url: "/",

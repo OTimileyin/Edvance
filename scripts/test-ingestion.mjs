@@ -1,4 +1,4 @@
-// Edvance Phase 5.6 — end-to-end ingestion tests.
+// Oyevolve Phase 5.6 — end-to-end ingestion tests.
 //
 // Exercises the real pipeline against a running dev server: sign up two
 // learners, create a course, upload one fixture per supported format, then
@@ -15,6 +15,8 @@
 
 import { Client } from "pg";
 import JSZip from "jszip";
+
+import { waitForQueue } from "./lib/work-queue.mjs";
 
 const BASE_URL = (process.env.BASE_URL ?? "http://localhost:3250").replace(/\/$/, "");
 // Better Auth validates the Origin header against its trusted origins; a Node
@@ -281,6 +283,9 @@ async function upload(session, courseId, fixture) {
     body: form,
   });
   const body = await response.json().catch(() => ({}));
+  // Reading the file is queued rather than done in the request (V2.2), so every
+  // caller of this helper waits for the extraction this suite is here to assert.
+  await waitForQueue(session, courseId);
   return { status: response.status, body };
 }
 
@@ -366,8 +371,8 @@ async function main() {
 
   try {
     // Two learners so ownership isolation can be proved.
-    const emailA = `ingest-a-${stamp}@edvance.test`;
-    const emailB = `ingest-b-${stamp}@edvance.test`;
+    const emailA = `ingest-a-${stamp}@oyevolve.test`;
+    const emailB = `ingest-b-${stamp}@oyevolve.test`;
     const a = await signUp("Test Learner A", emailA);
     const b = await signUp("Test Learner B", emailB);
     check("sign-up: learner A", a.ok, `status ${a.status}`);
@@ -509,7 +514,7 @@ async function main() {
            join learning_material m on m.id = ch.material_id
            join course c on c.id = m.course_id
           where c.user_id = (select id from "user" where email = $1)`,
-        [`ingest-b-${stamp}@edvance.test`],
+        [`ingest-b-${stamp}@oyevolve.test`],
       );
       check("isolation: learner B owns no chunks", rows[0].n === 0, `${rows[0].n} chunks`);
     }
@@ -612,7 +617,7 @@ async function main() {
         // Best effort.
       }
     }
-    for (const email of [`ingest-a-${stamp}@edvance.test`, `ingest-b-${stamp}@edvance.test`]) {
+    for (const email of [`ingest-a-${stamp}@oyevolve.test`, `ingest-b-${stamp}@oyevolve.test`]) {
       try {
         await db.query('delete from "user" where email = $1', [email]);
       } catch {

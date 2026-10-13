@@ -99,6 +99,12 @@ export interface SourceItem {
   sizeBytes?: number | null;
   /** The latest ingestion attempt; null/absent for seeded demo sources. */
   ingestion?: MaterialIngestion | null;
+  /**
+   * True while reading this file is still queued or running. This is what the
+   * Sources list checks before calling a material "Uploaded": the file is stored
+   * the moment the upload finishes, but nothing has read it yet.
+   */
+  queued?: boolean;
 }
 
 /**
@@ -112,7 +118,7 @@ export interface AssessmentSignature {
   errorCode: string | null;
   errorSummary: string | null;
   consistency: ConsistencyStatus;
-  /** Why Edvance reached that verdict, grounded in the evidence. */
+  /** Why Oyevolve reached that verdict, grounded in the evidence. */
   reason: string;
   /** One concrete thing to do about it (review the evidence, attempt it, etc.). */
   nextAction: string;
@@ -212,6 +218,18 @@ export interface CourseConsistency {
   nextAction: string;
 }
 
+/**
+ * A course's outstanding background work: the counts, plus one plain sentence
+ * ("Oyevolve is working on 2 steps.") or null when nothing is outstanding.
+ */
+export interface WorkQueueState {
+  active: number;
+  retrying: number;
+  waiting: number;
+  failed: number;
+  line: string | null;
+}
+
 export interface Course {
   id: string;
   name: string;
@@ -226,4 +244,10 @@ export interface Course {
   /** The learner's recorded practice, most recent first (bounded). */
   attempts: PracticeAttempt[];
   revision: RevisionPlan;
+  /**
+   * The course's outstanding background work, read from the queue itself. Only
+   * present on a single-course read; the courses list does not report it.
+   * `line` is null when nothing is outstanding.
+   */
+  queue?: WorkQueueState;
 }

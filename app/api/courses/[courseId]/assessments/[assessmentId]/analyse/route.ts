@@ -41,7 +41,7 @@ export async function POST(
   // A header can pick a mock scenario only while the deterministic test
   // provider is active, which is impossible in production.
   const mockScenario = isMockProvider()
-    ? (request.headers.get("x-edvance-mock-scenario") ?? undefined)
+    ? (request.headers.get("x-oyevolve-mock-scenario") ?? undefined)
     : undefined;
 
   const { courseId, assessmentId } = await params;
@@ -147,12 +147,12 @@ export async function POST(
       await failAssessmentAnalysis(
         assessment.id,
         "unverified-output",
-        "The analysis service returned a response Edvance could not verify. Please try again.",
+        "The analysis service returned a response Oyevolve could not verify. Please try again.",
       );
       return NextResponse.json(
         {
           error:
-            "The analysis service returned a response Edvance could not verify. Please try again.",
+            "The analysis service returned a response Oyevolve could not verify. Please try again.",
         },
         { status: 502 },
       );

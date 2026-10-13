@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms — Edvance",
-  description: "The terms of use for this Edvance deployment.",
+  title: "Terms — Oyevolve",
+  description: "The terms of use for this Oyevolve deployment.",
 };
 
 export default function TermsPage() {
@@ -12,7 +12,7 @@ export default function TermsPage() {
         <span className="kicker">Legal</span>
         <h1 className="page-title">Terms of use</h1>
         <p className="page-lede">
-          These terms cover this deployment of Edvance. By using it, you agree to them.
+          These terms cover this deployment of Oyevolve. By using it, you agree to them.
         </p>
       </section>
 
@@ -36,9 +36,9 @@ export default function TermsPage() {
       </section>
 
       <section className="section">
-        <h2 className="section-heading">What Edvance is, and is not</h2>
+        <h2 className="section-heading">What Oyevolve is, and is not</h2>
         <p>
-          Edvance identifies the concepts your own materials teach and how they relate to your
+          Oyevolve identifies the concepts your own materials teach and how they relate to your
           assessments. It is a study aid, not an authority: it reports uncertainty rather than
           guessing, and it may be wrong. Always check its findings against your own course.
         </p>

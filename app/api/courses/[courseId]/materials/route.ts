@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getSessionUser } from "@/lib/api-session";
 import { rateLimit } from "@/lib/api-rate-limit";
 import { RATE_LIMITS } from "@/lib/rate-limit";
@@ -8,7 +8,8 @@ import {
   getMaterial,
   ownsCourse,
 } from "@/lib/repo/courses";
-import { ingestMaterial } from "@/lib/ingestion";
+import { drainNow } from "@/lib/jobs/worker";
+import { enqueueJob } from "@/lib/repo/jobs";
 import { deleteObject, isStorageConfigured, putObject } from "@/lib/supabase-storage";
 import {
   MAX_COURSE_BYTES,
@@ -43,6 +44,12 @@ function asUploadedFile(value: unknown): (File & { arrayBuffer(): Promise<ArrayB
  * `storageReference`. Unsupported or
  * oversized files, an unconfigured bucket, and a failed upload all return a
  * specific status and a message the Sources form can show.
+ *
+ * Reading the file is *not* done here. It is queued as an `ingest` job and the
+ * response returns immediately, which is what lets ten files be dropped in one
+ * action without holding ten requests open — and what keeps the promise made by
+ * "uploaded": a restart no longer throws away work the learner was told had
+ * been accepted.
  */
 export async function POST(
   request: Request,
@@ -181,17 +188,14 @@ export async function POST(
   }
 
   // The upload has succeeded, so the material is recorded regardless of what
-  // extraction does next. Ingestion failures are recorded on the job and shown
-  // in the Sources UI; they never delete the learner's file or fail the upload.
-  try {
-    await ingestMaterial(user.id, materialId);
-  } catch (error) {
-    console.error(
-      `[materials] ingestion for ${materialId} could not run: ${
-        error instanceof Error ? error.message : "unknown error"
-      }`,
-    );
-  }
+  // reading it does next. A failure there is recorded on the job and shown in the
+  // Sources UI; it never deletes the learner's file or fails the upload.
+  await enqueueJob({ userId: user.id, courseId, kind: "ingest", targetId: materialId });
+
+  // The response goes out first and the drain runs after it, so the learner never
+  // waits for extraction — and progress does not depend on the worker loop's next
+  // tick either. If this drain cannot run, the job is already durable.
+  after(() => drainNow());
 
   const refreshed = (await getMaterial(user.id, materialId)) ?? material;
   return NextResponse.json({ material: refreshed }, { status: 201 });

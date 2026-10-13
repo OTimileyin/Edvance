@@ -1,4 +1,4 @@
-// Edvance migration runner.
+// Oyevolve migration runner.
 //
 // Applies every file in db/migrations/*.sql, in filename order, exactly once.
 // Each migration runs inside its own transaction; a migration that throws is
@@ -18,18 +18,22 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
+import { withLibpqSslCompat } from "../lib/db-url.mjs";
+
 const here = dirname(fileURLToPath(import.meta.url));
 const migrationsDir = join(here, "..", "db", "migrations");
 
 const DATABASE_URL_NAMES = [
   "DATABASE_URL_UNPOOLED", // Vercel/Neon: direct, non-pooled connection
   "POSTGRES_URL_NON_POOLING", // Vercel Postgres: direct, non-pooled connection
-  "DATABASE_URL", // Edvance's documented name (Infisical, Specific)
+  "DATABASE_URL", // Oyevolve's documented name (Infisical, Specific)
   "POSTGRES_URL", // Vercel Postgres: pooled connection
   "POSTGRES_PRISMA_URL", // Vercel Postgres: pooled (Prisma alias)
 ];
 
-const connectionString = DATABASE_URL_NAMES.map((name) => process.env[name]?.trim()).find(Boolean);
+const connectionString = withLibpqSslCompat(
+  DATABASE_URL_NAMES.map((name) => process.env[name]?.trim()).find(Boolean),
+);
 if (!connectionString) {
   console.error(
     `No database connection string is set. Set one of: ${DATABASE_URL_NAMES.join(", ")}.`,

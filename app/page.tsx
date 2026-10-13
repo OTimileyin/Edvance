@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InstallButton } from "@/components/install-button";
 
 const pipeline = ["Question", "Concept", "Evidence", "Consistency", "Mastery", "Revision"];
 
@@ -451,7 +452,7 @@ export default function Home() {
                 study next.
               </h1>
               <p className="hero-lede">
-                Edvance connects each assessment question to the exact lecture, slide, transcript,
+                Oyevolve connects each assessment question to the exact lecture, slide, transcript,
                 and note where the answer was taught — flags where your materials disagree — and
                 scores what you have and haven&rsquo;t mastered.
               </p>
@@ -462,6 +463,7 @@ export default function Home() {
                 <Link className="btn btn-secondary" href="/signin">
                   Sign in
                 </Link>
+                <InstallButton />
               </div>
               <p className="hero-note">
                 Evidence-first · every citation checked before it is stored
@@ -474,7 +476,7 @@ export default function Home() {
             </div>
 
             <div className="poster-aside">
-              <div className="evidence-glass" aria-label="Example of an Edvance evidence view">
+              <div className="evidence-glass" aria-label="Example of an Oyevolve evidence view">
                 <div className="eg-head">
                   <span className="badge badge-error">Possible inconsistency</span>
                   <span className="eg-ref">Lesson 2 · slide 7</span>
@@ -509,7 +511,7 @@ export default function Home() {
       <section className="band band--ink" id="features" aria-labelledby="f-heading">
         <div className="container">
           <div className="band-head band-head--rule">
-            <p className="kicker">What Edvance does</p>
+            <p className="kicker">What Oyevolve does</p>
             <h2 className="landing-heading" id="f-heading">
               Three jobs, done together
             </h2>
@@ -540,7 +542,7 @@ export default function Home() {
           <div className="band-head">
             <p className="kicker">Why it exists</p>
             <h2 className="landing-heading" id="q-heading">
-              The four questions Edvance answers
+              The four questions Oyevolve answers
             </h2>
             <p className="landing-leading">
               Assessment intelligence only matters if it resolves real exam uncertainty.
