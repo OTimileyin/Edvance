@@ -27,6 +27,9 @@ export function AppHeader() {
           <Link href="/#questions">Questions</Link>
           <Link href="/#features">Features</Link>
           <Link href="/#how-it-works">How it works</Link>
+          {/* The Android app. It lives in the footer too, because this nav is
+              hidden below 980px — and a phone is exactly who wants it. */}
+          <Link href="/download">Get the app</Link>
         </nav>
 
         <div className="header-tools">

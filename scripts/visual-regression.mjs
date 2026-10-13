@@ -3,12 +3,13 @@
  * Visual regression for the plush design.
  *
  * Captures full-page screenshots of the plush surfaces — the landing page,
- * sign-in, sign-up, the offline-revision page, and the two design-document
- * HTML files (design.html, assessment-intelligence.html) — at a desktop and a
- * mobile viewport, then compares them pixel-for-pixel against the baselines
- * committed in tests/visual/baselines/. Any drift (a colour token change, a
- * spacing shift, a component restyle) fails the run and writes the captured
- * image plus a highlighted diff into .tmp-scratch/visual/ for inspection.
+ * sign-in, sign-up, the offline-revision page, the Android download page, and
+ * the two design-document HTML files (design.html,
+ * assessment-intelligence.html) — at a desktop and a mobile viewport, then
+ * compares them pixel-for-pixel against the baselines committed in
+ * tests/visual/baselines/. Any drift (a colour token change, a spacing shift, a
+ * component restyle) fails the run and writes the captured image plus a
+ * highlighted diff into .tmp-scratch/visual/ for inspection.
  *
  * The same pass runs a viewport layout smoke check: every target is also
  * measured at each phone width in scripts/lib/viewport-layout.mjs, and the run
@@ -66,6 +67,7 @@ const TARGETS = [
   { name: "signin", urlPath: "/signin" },
   { name: "signup", urlPath: "/signup" },
   { name: "offline-revision", urlPath: "/offline-revision" },
+  { name: "download", urlPath: "/download" },
   { name: "design-doc", file: "design.html" },
   { name: "assessment-intelligence-doc", file: "assessment-intelligence.html" },
 ];

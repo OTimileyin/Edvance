@@ -81,7 +81,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               real — PostgreSQL, object storage, and an AI provider called only from the server.
               Seeded demo content is labelled as demo.
             </p>
-            <nav className="footer-links" aria-label="Legal">
+            <nav className="footer-links" aria-label="Footer">
+              {/* Reachable at every width, unlike the header nav, which
+                  collapses below 980px. */}
+              <Link href="/download">Get the Android app</Link>
+              <span aria-hidden="true"> · </span>
               <Link href="/privacy">Privacy</Link>
               <span aria-hidden="true"> · </span>
               <Link href="/terms">Terms</Link>

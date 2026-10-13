@@ -32,15 +32,17 @@ case — the shell.
 
 ## 2. What is where
 
-| Path                                                                  | What it is                                                                                                                                                                                                      |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `android/`                                                            | The Gradle project. A rendered copy of Google's Bubblewrap template (`GoogleChromeLabs/bubblewrap`, Apache-2.0), committed rather than regenerated — see §3.                                                    |
-| `android/version.json`                                                | **The single source of the app version.** `android/app/build.gradle` reads `versionCode`/`versionName` from it, and so does the web app. One file, so the built APK and the advertised release cannot disagree. |
-| `android/app/src/main/java/app/oyevolve/mobile/LauncherActivity.java` | The entry point. Opens the live site and tags the URL with the installed build number.                                                                                                                          |
-| `app/api/app/version/route.ts`                                        | Public: the current build, and where to download it.                                                                                                                                                            |
-| `app/api/assetlinks/route.ts`                                         | Digital Asset Links, also served at `/.well-known/assetlinks.json`.                                                                                                                                             |
-| `components/app-update-banner.tsx`                                    | The "a newer version is available" notice, shown only inside the Android shell.                                                                                                                                 |
-| `.github/workflows/android.yml`                                       | Builds, signs and publishes the APK.                                                                                                                                                                            |
+| Path                                                                  | What it is                                                                                                                                                                                                                                                                               |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `android/`                                                            | The Gradle project. A rendered copy of Google's Bubblewrap template (`GoogleChromeLabs/bubblewrap`, Apache-2.0), committed rather than regenerated — see §3.                                                                                                                             |
+| `android/version.json`                                                | **The single source of the app version.** `android/app/build.gradle` reads `versionCode`/`versionName` from it, and so does the web app. One file, so the built APK and the advertised release cannot disagree.                                                                          |
+| `android/app/src/main/java/app/oyevolve/mobile/LauncherActivity.java` | The entry point. Opens the live site and tags the URL with the installed build number.                                                                                                                                                                                                   |
+| `lib/android-release.ts`                                              | **How the web app reads that version.** The build number, the package id, the APK URL and the release URL, derived from `android/version.json`. `app/api/app/version` and `app/download` both read this one module, so the advertised build and the offered download cannot drift apart. |
+| `app/api/app/version/route.ts`                                        | Public: the current build, and where to download it.                                                                                                                                                                                                                                     |
+| `app/download/page.tsx`                                               | Public: where a learner gets the app — the current build, the APK, the install steps, and what the app does and does not ask for. The page is server-rendered from `lib/android-release.ts`.                                                                                             |
+| `app/api/assetlinks/route.ts`                                         | Digital Asset Links, also served at `/.well-known/assetlinks.json`.                                                                                                                                                                                                                      |
+| `components/app-update-banner.tsx`                                    | The "a newer version is available" notice, shown only inside the Android shell.                                                                                                                                                                                                          |
+| `.github/workflows/android.yml`                                       | Builds, signs and publishes the APK.                                                                                                                                                                                                                                                     |
 
 ---
 
@@ -115,6 +117,12 @@ navigation inside the app.
 **Which build is current.** `GET /api/app/version` answers from the same
 `android/version.json`, and derives the download URL from the version alone:
 `https://github.com/<owner>/<repo>/releases/download/android-v<N>/oyevolve-<N>.apk`.
+
+**Which build a new phone should install.** `/download` is the human half of the
+same answer, for someone who has not installed anything yet: it reads
+`lib/android-release.ts` too, so it advertises the build and the URL the update
+check would offer, and a version bump moves both at once. Nothing about it is a
+second source of truth.
 
 **What happens when the first is behind the second.** A dismissible notice
 appears. "Update now" follows the link; the browser downloads the APK and
@@ -205,6 +213,14 @@ an account of their own, which is why the APK is not committed into `public/` �
 a binary in the repository would be copied into every clone, forever, and the
 Vercel deployment payload along with it.
 
+Because the URL is derived from the version and not stored anywhere, it also has
+a consequence worth knowing before the first release: this project has a
+`versionCode` of 1 and a `/download` page that advertises build 1, while
+`android-v1` has not been published yet — so until §7 is done once, the download
+button leads to a 404. The page is not wrong about which build is current; there
+simply is no release for it yet. Cutting the tag (§7) is what makes it resolve,
+and nothing else needs changing.
+
 ---
 
 ## 7. Releasing a new build
@@ -258,8 +274,25 @@ Honest accounting, because the two halves were not equally checkable.
   persists across in-session navigation where the URL carries no parameters.
 - It is absent in a plain browser, and absent when the installed build is
   already current.
+- `/download` answers 200 and contains the build it claims to: the version name,
+  the build number, the release date and both links are in the server-rendered
+  HTML, and the APK URL on the page is byte-identical to the `apkUrl`
+  `/api/app/version` returns for the same build (both read
+  `lib/android-release.ts`). The page is emitted as static content, so it needs
+  no JavaScript to read.
+- The page is reachable: `/download` appears in the header nav and in the
+  footer, and the footer link is the one that matters on a phone, since the
+  header nav is hidden below 980px.
+- The full-suite phone-width smoke check passes for the new page and for the
+  pages whose footer gained a link: 28/28 page/width combinations fit
+  320/360/375/414px without horizontal scroll.
 - `npm run typecheck`, `npm run lint`, `npm run format:check` and the 131 unit
-  tests all pass, and `next build` succeeds with all 35 routes emitted.
+  tests all pass, and `next build` succeeds with all 36 routes emitted.
+
+**Not verified about the download page:** that its download button resolves.
+`android-v1` has not been published, so the URL answers 404 today (see §6.4).
+That is a release step, not a page defect — and it is the one thing a learner
+clicking the button would notice first.
 
 **The Android half is verified too.** The `android` workflow compiled and signed
 the APK in CI (1m38s), and the artifact was inspected directly rather than taken
