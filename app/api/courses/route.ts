@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/api-session";
-import { createCourse, ensureSeeded, listCourses } from "@/lib/repo/courses";
+import { createCourse, listCourses } from "@/lib/repo/courses";
 
 export async function GET() {
   const user = await getSessionUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  await ensureSeeded(user.id);
   return NextResponse.json({ courses: await listCourses(user.id) });
 }
 

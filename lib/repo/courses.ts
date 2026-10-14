@@ -2149,11 +2149,9 @@ async function backfillSeedEvidence(client: PoolClient, userId: string): Promise
 }
 
 /**
- * Seeds a brand-new learner with the demo workspaces so their first visit is
- * never empty. Idempotent and concurrency-safe: it takes a per-user advisory
- * lock, re-checks that the learner still has no courses, and writes everything
- * in one transaction. Real ingestion (Phase 5) replaces this with materials the
- * learner uploads.
+ * Retained demo seeder; intentionally unused by application routes and layouts.
+ * Idempotent and concurrency-safe: it takes a per-user advisory lock, re-checks
+ * whether the learner has courses, and writes everything in one transaction.
  *
  * Every demo source is stored with the evidence the extraction pipeline would
  * have produced for it, so a demo course can actually be analysed — while the

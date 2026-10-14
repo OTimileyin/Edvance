@@ -14,6 +14,8 @@ export const auth = betterAuth({
   database: new Pool({
     connectionString: databaseUrl(),
   }),
+  // GET session checks stay read-only; the client refreshes sessions via POST.
+  session: { deferSessionRefresh: true },
   emailAndPassword: {
     enabled: true,
   },

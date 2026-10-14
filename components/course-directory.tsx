@@ -63,7 +63,17 @@ export function CourseDirectory() {
           Your courses
         </h2>
         {courses.length === 0 ? (
-          <div className="empty-state">No courses yet. Create your first workspace below.</div>
+          <div className="empty-state">
+            <h3>No courses yet</h3>
+            <p>Create your first course to start adding learning materials.</p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => document.getElementById("course-name")?.focus()}
+            >
+              Create course
+            </button>
+          </div>
         ) : (
           <div className="card-grid">
             {courses.map((course) => (
