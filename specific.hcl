@@ -50,7 +50,7 @@ service "web" {
     # requests/day/model, so this is a model the operator's key can actually
     # serve today (the code default, gemini-flash-latest, currently aliases a
     # model whose free quota is spent). Change it to any available flash model.
-    GEMINI_MODEL   = "gemini-3-flash-preview"
+    GEMINI_MODEL   = "gemini-3.6-flash"
 
     # --- File storage (Supabase, private bucket) ----------------------------
     # Without these the app runs, but uploads honestly report that storage is not

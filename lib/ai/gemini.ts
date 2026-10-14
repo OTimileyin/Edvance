@@ -15,7 +15,7 @@ import { AiProviderError, type AiRequest, type AiResponse, type EvidenceChunk } 
  * can never answer a real learner in production.
  */
 
-const DEFAULT_MODEL = "gemini-flash-latest";
+const DEFAULT_MODEL = "gemini-3.6-flash";
 
 /** The model id, overridable so a deployment can pin a specific version. */
 export function aiModelName(): string {

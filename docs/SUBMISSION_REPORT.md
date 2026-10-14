@@ -1,5 +1,32 @@
 # Oyevolve — Submission Report
 
+> **Source review, 2026-10-14:** The re-analysis and empty-workspace changes below
+> are verified locally and have not been deployed. Deployment records dated
+> 2026-10-13 describe the earlier production version, not this branch. Production
+> model and database settings still require access to the owning Vercel account.
+>
+> Current changes preserve concept IDs, archive omissions, and retain mastery and
+> practice. New accounts receive no demo courses. Two archived normalized-name
+> matches reject the whole analysis rather than choosing an identity. Archived
+> assessment mappings remain stored and require re-checking. Local checks passed:
+> 148 unit tests, 7 integration tests, the original destructive save's expected
+> regression failure, and two real-Gemini browser runs on `gemini-3-flash-preview`.
+> These two live runs demonstrate the path; they are not a reliability estimate.
+>
+> Follow-up acceptance on `gemini-3.6-flash`: two complete local browser runs
+> passed. Each re-analysis returned three existing IDs from the model, zero
+> name fallbacks, and one new concept. A provider 503 required a retry in one
+> run; the earlier attempt also stopped on a 503. The source default and
+> Specific recipe now pin this tested stable model. The Vercel override has
+> not yet been verified or changed; production rollout remains blocked.
+>
+> SELECT-only legacy-data audit: the six seed-signature courses are in local
+> `127.0.0.1:5432/edvance`, across three accounts with one pair each. All match
+> the legacy seed baseline and contain no added/edited sources or assessments,
+> practice, analysis, generated revision, or mappings. None was deleted. A
+> local custom-format backup was restored successfully into a disposable
+> database. This is not a production audit or production backup.
+
 **Date:** 2026-10-02
 **Deployment status last re-checked:** 2026-10-13
 **Branch:** `main`
@@ -63,9 +90,10 @@ four questions:
 4. **What should they study next?** The smallest useful next action, plus targeted practice written
    for the weak areas.
 
-The product principle throughout: **prefer INSUFFICIENT EVIDENCE over invented certainty.** Oyevolve
-never invents a citation, page number, timestamp, slide number, terminology, mastery result, or
-source.
+The product principle throughout: **prefer INSUFFICIENT EVIDENCE over invented certainty.**
+Citation IDs are checked against supplied source chunks, and displayed excerpts and locations
+come from stored source text. Definitions, rationales and question answerability are not
+semantically verified: a model can misinterpret a real citation.
 
 ## 2. What is real, and what is deliberately limited
 
@@ -84,7 +112,8 @@ source.
   (consistent / possible inconsistency / insufficient evidence), and a reason that must name the
   evidence it disagrees with.
 - Practice-based mastery — derived from recorded attempts by one deterministic rule; no model is
-  involved and no status is seeded as if earned.
+  involved. Legacy seeded courses can still display stored demo mastery without attempts;
+  new accounts are no longer seeded.
 - Targeted revision — a deterministic recommendation plus model-written practice, sent only the weak
   concepts and the evidence that teaches them.
 - Edit/delete, account lifecycle (password change, account deletion with storage cleanup),
@@ -93,12 +122,12 @@ source.
 
 **Deliberately limited (documented, not hidden)**
 
-- **The Gemini free tier is 20 requests/day/model.** The deployment pins one available model; a
-  burst can still surface as an honest, retryable provider failure, and a very heavy day can exhaust
-  the model's quota. The model is a one-line change in `specific.hcl`; a key with quota removes the
-  limit entirely.
+- **Gemini quotas vary by model and account.** Rate limits and exhausted quota can surface as
+  provider failures. The code uses `GEMINI_MODEL`; changing a model requires validation against
+  the same structured-generation configuration and acceptance tests.
 - **Rate limiting is in-memory per process**; a multi-instance deployment would need a shared store.
-- **Ingestion is synchronous**, so a large file holds the upload request open.
+- **Ingestion runs in a durable work queue**, with retries and per-file status. Course analysis,
+  assessment checking and revision generation still run in their API requests.
 - **Scanned/image-only PDFs fail** as `empty-content` — there is no OCR.
 - **No embeddings or vector database**; context is bounded (`MAX_EVIDENCE_CHUNKS` 150,
   `MAX_EVIDENCE_CHARS` 120 000, `MAX_PRACTICE_QUESTIONS` 12).
@@ -108,8 +137,13 @@ source.
   generate revision. Each gate exists because the next step genuinely needs the previous output.
 - **Live Gemini is a shared free tier**, so a transient 503/429 can surface as an honest, retryable
   failure.
-- **The seeded demo workspace** carries demo consistency and mastery until the learner's first real
-  analysis and practice replace them; it is labelled as demo.
+- **Automatic demo seeding is disabled.** The seed dataset and helper are retained but unused.
+  Existing seeded courses have no course-level demo flag and must be audited for real work before
+  cleanup; titles alone do not prove provenance. Legacy mastery presets are not earned practice.
+- **Re-analysis identity fallback is exact after normalization** (lowercase, trim, collapsed
+  whitespace). Synonyms require the model to reuse an explicit ID. Omitted identities are archived,
+  with history retained. Ambiguous normalized-name fallback rejects the whole analysis; a user
+  recovery flow is not yet implemented.
 - The landing page's evidence card is an **illustrative example**, labelled as such for assistive
   technology.
 
@@ -283,9 +317,8 @@ Oyevolve is an installable Progressive Web App on the live deployment:
 activates, and controls the page. The conservative worker never intercepts `/api/*` or non-GET
 requests, so no learner data, signed Supabase URLs, or Gemini responses are cached.
 
-**Offline limitations (honest):** offline the app serves only the reconnect notice. Authentication,
-AI analysis, assessment intelligence, mastery and revision all require a connection; nothing is
-claimed to work offline.
+**Offline limitations:** saved revision snapshots can be opened at `/offline-revision`.
+Authentication, new AI analysis and saving practice to the server require a connection.
 
 ---
 
