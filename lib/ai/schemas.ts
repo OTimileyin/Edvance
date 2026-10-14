@@ -40,6 +40,7 @@ export type RelationshipKind = (typeof RELATIONSHIP_KINDS)[number];
 
 /** A single concept as the model returns it, before reference resolution. */
 export type ModelConcept = {
+  id: string | null;
   key: string;
   name: string;
   instructorTerm: string;
@@ -72,6 +73,11 @@ export const COURSE_INTELLIGENCE_JSON_SCHEMA = {
       items: {
         type: "object",
         properties: {
+          id: {
+            type: ["string", "null"],
+            description:
+              "Reuse the exact supplied existing concept id for the same idea; null only for a new concept.",
+          },
           key: {
             type: "string",
             description: 'A short unique local id for this concept, e.g. "c1".',
@@ -120,6 +126,7 @@ export const COURSE_INTELLIGENCE_JSON_SCHEMA = {
           },
         },
         required: [
+          "id",
           "key",
           "name",
           "instructorTerm",
@@ -529,6 +536,7 @@ export function parseCourseIntelligence(raw: string): ModelCourseIntelligence {
     });
 
     return {
+      id: entry.id === null ? null : requireString(entry.id, `concepts[${index}].id`, 200),
       key,
       name: requireString(entry.name, `concepts[${index}].name`, 200),
       instructorTerm: requireString(entry.instructorTerm, `concepts[${index}].instructorTerm`, 200),

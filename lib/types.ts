@@ -56,7 +56,12 @@ export interface CourseIntelligence {
   relationshipCount: number;
   analyzedAt: string | null;
   /** Safe provider metadata (model and token counts); never prompt contents. */
-  provider: { model?: string; inputTokens?: number; outputTokens?: number } | null;
+  provider: {
+    model?: string;
+    inputTokens?: number;
+    outputTokens?: number;
+    conceptIdentity?: { modelIds: number; nameFallbacks: number; newConcepts: number };
+  } | null;
   concepts: CourseConcept[];
   relationships: CourseRelationship[];
 }

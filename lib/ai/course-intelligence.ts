@@ -1,4 +1,5 @@
 import { generateStructured } from "./gemini";
+import { normaliseConceptName as normaliseName, resolveConceptIds } from "./concept-identity";
 import { COURSE_INTELLIGENCE_SYSTEM_INSTRUCTION, buildCourseIntelligencePrompt } from "./prompts";
 import {
   COURSE_INTELLIGENCE_JSON_SCHEMA,
@@ -9,7 +10,7 @@ import {
   type ModelConcept,
   type RelationshipKind,
 } from "./schemas";
-import { ModelOutputError, type AiUsage, type EvidenceChunk } from "./types";
+import { ModelOutputError, type AiUsage, type EvidenceChunk, type ExistingConcept } from "./types";
 
 /**
  * The course-intelligence pipeline, minus persistence.
@@ -27,6 +28,7 @@ export const MAX_EVIDENCE_CHUNKS = 150;
 export const MAX_EVIDENCE_CHARS = 120_000;
 
 export type AnalyzedConcept = {
+  id: string | null;
   key: string;
   name: string;
   instructorTerm: string;
@@ -77,11 +79,6 @@ function statusRank(status: EvidenceStatus): number {
   return EVIDENCE_STATUSES.indexOf(status);
 }
 
-/** Normalises a name for de-duplication (case/space insensitive). */
-function normaliseName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, " ").trim();
-}
-
 /**
  * Merges concepts the model reported more than once for the same idea.
  *
@@ -96,6 +93,7 @@ function mergeConcepts(concepts: ModelConcept[]): AnalyzedConcept[] {
     const existing = byName.get(nameKey);
     if (!existing) {
       byName.set(nameKey, {
+        id: concept.id,
         key: concept.key,
         name: concept.name,
         instructorTerm: concept.instructorTerm,
@@ -106,6 +104,13 @@ function mergeConcepts(concepts: ModelConcept[]): AnalyzedConcept[] {
       });
       continue;
     }
+    if (existing.id && concept.id && existing.id !== concept.id) {
+      throw new ModelOutputError(
+        "duplicate-identity",
+        "Distinct existing concepts cannot be merged.",
+      );
+    }
+    existing.id ??= concept.id;
     const seen = new Set(existing.evidence.map((entry) => entry.chunkId));
     for (const entry of concept.evidence) {
       if (!seen.has(entry.chunkId)) existing.evidence.push(entry);
@@ -130,11 +135,13 @@ export async function analyseCourseEvidence(input: {
   courseName: string;
   lesson: string;
   evidence: EvidenceChunk[];
+  existingConcepts?: ExistingConcept[];
   /** Test-only scenario selector for the mock provider; ignored in production. */
   mockScenario?: string;
 }): Promise<AnalyzedIntelligence> {
   const bounded = boundEvidence(input.evidence);
   const allowedChunkIds = new Set(bounded.map((chunk) => chunk.id));
+  const existingConcepts = input.existingConcepts ?? [];
 
   const response = await generateStructured({
     systemInstruction: COURSE_INTELLIGENCE_SYSTEM_INSTRUCTION,
@@ -142,16 +149,26 @@ export async function analyseCourseEvidence(input: {
       courseName: input.courseName,
       lesson: input.lesson,
       evidence: bounded,
+      existingConcepts,
     }),
     jsonSchema: COURSE_INTELLIGENCE_JSON_SCHEMA,
     evidence: bounded,
+    existingConcepts,
     mockScenario: input.mockScenario,
   });
 
   let model;
+  const conceptIdentity = { modelIds: 0, nameFallbacks: 0, newConcepts: 0 };
   try {
     model = parseCourseIntelligence(response.text);
     resolveReferences(model, allowedChunkIds);
+    const resolved = resolveConceptIds(model.concepts, existingConcepts);
+    model.concepts.forEach((concept, index) => {
+      if (concept.id !== null) conceptIdentity.modelIds++;
+      else if (resolved[index].id !== null) conceptIdentity.nameFallbacks++;
+      else conceptIdentity.newConcepts++;
+    });
+    model.concepts = resolved;
   } catch (error) {
     if (error instanceof ModelOutputError) {
       // The raw output is never logged — it may contain course contents.
@@ -190,6 +207,6 @@ export async function analyseCourseEvidence(input: {
     overall: model.overallEvidenceStatus,
     concepts,
     relationships,
-    usage: response.usage,
+    usage: { ...response.usage, conceptIdentity },
   };
 }

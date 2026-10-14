@@ -20,6 +20,7 @@
     "test:intelligence": "infisical run --env=dev -- node scripts/test-course-intelligence.mjs",
     "test:assessment": "infisical run --env=dev -- node scripts/test-assessment-intelligence.mjs",
     "test:mastery": "infisical run --env=dev -- node scripts/test-mastery-intelligence.mjs",
+    "test:reanalysis": "infisical run --env=dev -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/integration/reanalysis.test.mjs",
     "test:revision": "infisical run --env=dev -- node scripts/test-targeted-revision.mjs",
     "test:hardening": "infisical run --env=dev -- node scripts/test-product-hardening.mjs",
     "test:work-queue": "infisical run --env=dev -- node scripts/test-work-queue.mjs",

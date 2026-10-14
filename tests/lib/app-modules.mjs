@@ -15,7 +15,7 @@
 // It rewrites only specifiers the project itself uses; anything else (a package,
 // a `node:` built-in) is left to Node.
 
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { registerHooks } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -27,7 +27,7 @@ const SUFFIXES = [".ts", ".tsx", ".mjs", "/index.ts", "/index.tsx"];
 
 /** The file `base` names, or the first file an extensionless `base` implies. */
 function firstExisting(base) {
-  if (existsSync(base)) return base;
+  if (existsSync(base) && statSync(base).isFile()) return base;
   for (const suffix of SUFFIXES) {
     if (existsSync(`${base}${suffix}`)) return `${base}${suffix}`;
   }
