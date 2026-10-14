@@ -1,0 +1,84 @@
+import groovy.json.JsonSlurper
+
+/*
+ * The app module. The version is read from `android/version.json` — the same
+ * file the web app reads to answer "is there a newer build?" — so the two can
+ * never disagree about what "latest" means.
+ */
+plugins {
+    id 'com.android.application'
+}
+
+def releaseInfo = new JsonSlurper().parse(file('../version.json'))
+def appVersionCode = releaseInfo.versionCode as int
+def appVersionName = releaseInfo.versionName as String
+
+// A release build is signed only when CI has decoded the keystore. Without it
+// the release build still compiles (producing an unsigned APK), which is what
+// lets the compile gate run on a fork or before the secret exists.
+def keystorePath = System.getenv('ANDROID_KEYSTORE_PATH')
+
+android {
+    // API 36 (Android 16) is what Google Play requires for new submissions from
+    // 31 August 2026. Building to it now means the shell does not have to be
+    // re-cut on that deadline.
+    compileSdk 36
+    namespace "app.oyevolve.mobile"
+
+    defaultConfig {
+        applicationId "app.oyevolve.mobile"
+        // Android 7.0. Custom Tab and TWA support is complete from here, and it
+        // is the floor the current androidbrowserhelper release supports.
+        minSdk 24
+        targetSdk 36
+        versionCode appVersionCode
+        versionName appVersionName
+    }
+
+    // BuildConfig.VERSION_CODE is how the shell tells the website which build it
+    // is, so the web app can offer an update when a newer one exists. AGP 8
+    // stopped generating BuildConfig by default; this turns it back on.
+    buildFeatures {
+        buildConfig true
+    }
+
+    signingConfigs {
+        release {
+            if (keystorePath) {
+                storeFile file(keystorePath)
+                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            // Left on: this app is a thin launcher and R8 has nothing to win,
+            // while stripping anything the TWA library reaches reflectively
+            // would produce an app that breaks only at runtime, on a device.
+            minifyEnabled false
+            shrinkResources false
+            if (keystorePath) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+    }
+}
+
+dependencies {
+    // The TWA launcher, splash screen, Custom Tab fallback and site-settings
+    // shortcut all come from here. Version pinned to match the Bubblewrap
+    // release this project was rendered from.
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.7.4'
+}

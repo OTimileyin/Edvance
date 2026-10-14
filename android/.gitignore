@@ -1,0 +1,12 @@
+# Gradle build output and caches for the Android shell.
+build/
+.gradle/
+
+# Written by the Android SDK tooling on a developer machine; it holds the SDK
+# path for whoever is building, so it is never shared.
+local.properties
+
+# Signing material. A keystore is a credential: it belongs in a repository
+# secret (see docs/ANDROID_APP_RUNBOOK.md), never in a commit.
+*.jks
+*.keystore

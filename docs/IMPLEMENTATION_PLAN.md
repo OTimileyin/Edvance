@@ -1,6 +1,6 @@
 # Oyevolve — Implementation Plan
 
-**Status:** **Complete — OYEVOLVE — DEPLOYED AND SUBMISSION READY** (2026-10-02). Phases 5–12 are complete and verified end to end, including a verified live Google Gemini call, a production build, an adversarial submission audit, and a **live deployment** at <https://white-whale.spcf.app> that passed a remote end-to-end suite (**69 checks, 0 failures**). See `docs/SUBMISSION_REPORT.md`.
+**Status:** **Complete — OYEVOLVE — DEPLOYED AND SUBMISSION READY** (2026-10-02; deployment re-checked 2026-10-13). Phases 5–12 are complete and verified end to end, including a verified live Google Gemini call, a production build, an adversarial submission audit, and **two live deployments**: the Vercel primary at <https://oyevolve.vercel.app>, which passed the remote end-to-end suite (**70 checks, 0 failures**), and the Specific backup at <https://white-whale.spcf.app> (**69 checks, 0 failures**). See `docs/SUBMISSION_REPORT.md`.
 **Source of truth:** `Doc/PRD.md` (PRD v2.0)
 **Scope of this document:** Ordered, phased implementation plan with concrete outputs and acceptance criteria.
 
@@ -529,6 +529,8 @@ This is the **Lesson 6 deliverable**.
 - The local production build the platform runs is verified (`next build` succeeds).
 
 **Executed (2026-10-02):** deployed to the `oyevolve` project / `prod` environment from **WSL** (the native-Windows CLI cannot build a tarball). All 8 migrations applied; `/api/health` → 200; HTTPS and security headers confirmed; `scripts/verify-remote-deployment.mjs` ran the full learner journey on the live app (**69 passed / 0 failed**) against the real Gemini provider (pinned `gemini-3-flash-preview`). The `build` block supplies build-only placeholder env because the platform builder has no runtime secrets.
+
+**Executed (2026-10-13):** the **Vercel** target went live and became the primary deployment. `<https://oyevolve.vercel.app>` serves the build made from `main` at `64b115c` — the merge that carried the Oyevolve rebrand and `lib/db-url.mjs` onto `main`. That shim was the blocker: without it, `node scripts/migrate.mjs` dies in Vercel's build sandbox with `SELF_SIGNED_CERT_IN_CHAIN` and four consecutive `main` builds had failed. With it, the build was this project's first successful git-sourced production deployment. `/api/health` → 200 (`database: ok`, ai/storage `configured`, email `not-configured`); the remote suite against the new URL reports **70 passed / 0 failed**. Specific stays live as the **backup**. Note the environment scoping: Vercel's Postgres variables are Production-only, so branch **preview builds stop at the migrate step** until those variables are given a Preview scope (against a separate database).
 
 ---
 

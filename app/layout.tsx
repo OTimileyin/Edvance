@@ -3,6 +3,7 @@ import { Fredoka, Nunito } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { AppHeader } from "@/components/header";
+import { AppUpdateBanner } from "@/components/app-update-banner";
 import { Logo } from "@/components/logo";
 import { PwaRegister } from "@/components/pwa-register";
 
@@ -61,7 +62,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         <AppHeader />
-        <main id="main">{children}</main>
+        <main id="main">
+          {/*
+            Renders only inside the Android app, and only when its installed
+            build is older than the published one. Everywhere else — browser,
+            installed web app — it is null.
+          */}
+          <AppUpdateBanner />
+          {children}
+        </main>
         <footer className="app-footer">
           <div className="app-footer-inner">
             <Link href="/" className="brand" aria-label="Oyevolve home">
@@ -72,7 +81,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               real — PostgreSQL, object storage, and an AI provider called only from the server.
               Seeded demo content is labelled as demo.
             </p>
-            <nav className="footer-links" aria-label="Legal">
+            <nav className="footer-links" aria-label="Footer">
+              {/* Reachable at every width, unlike the header nav, which
+                  collapses below 980px. */}
+              <Link href="/download">Get the Android app</Link>
+              <span aria-hidden="true"> · </span>
               <Link href="/privacy">Privacy</Link>
               <span aria-hidden="true"> · </span>
               <Link href="/terms">Terms</Link>

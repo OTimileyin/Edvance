@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    No launcher shortcuts. The file exists because the manifest points at it;
+    declaring shortcuts the site cannot honour would be a promise the app breaks.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android" />

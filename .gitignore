@@ -50,3 +50,10 @@ specific.local
 e2e/.auth/
 playwright-report/
 test-results/
+
+# Signing material for the Android app. A keystore is the app's identity, and
+# losing it means no future build can install over an existing one — so it lives
+# outside the repository (see docs/ANDROID_APP_RUNBOOK.md) and these patterns
+# exist only so that a keystore generated here by mistake cannot be committed.
+*.keystore
+*.jks

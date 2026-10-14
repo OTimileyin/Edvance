@@ -1,0 +1,26 @@
+/*
+ * Root build file. The Android Gradle Plugin version is pinned here so a build
+ * is reproducible; `gradle/wrapper/gradle-wrapper.properties` pins the Gradle
+ * distribution that runs it. Both are bumped deliberately, never floated.
+ */
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.9.1'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
+}

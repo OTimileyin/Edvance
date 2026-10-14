@@ -252,16 +252,21 @@ Or hand the process a machine-identity access token directly, with no login step
 
 ## Deployment (live)
 
-**Oyevolve is deployed at <https://white-whale.spcf.app>** — Specific project `oyevolve`, environment
-`prod`, active deployment `depl_02f4368hqt4n86q6`. `/api/health` returns **200** with the database, AI
-and storage integrations healthy (`email: not-configured`); all migrations are applied and the app
-serves HTTPS. The deployed app passed the remote end-to-end suite below (**69 checks, 0 failures**).
+**Oyevolve runs on two platforms. The primary is Vercel, at <https://oyevolve.vercel.app>** — project
+`oyevolve`, production branch `main`, serving the build made from `main` at `64b115c`. `/api/health`
+returns **200** with the database, AI and storage integrations healthy (`email: not-configured`); all
+migrations are applied and the app serves HTTPS. It passed the remote end-to-end suite below
+(**70 checks, 0 failures**).
 
-A second, independent deployment target is **prepared but not yet live**: [docs/VERCEL_DEPLOYMENT_RUNBOOK.md](docs/VERCEL_DEPLOYMENT_RUNBOOK.md)
-walks a first-time deployer through importing the repository into Vercel, wiring Vercel Postgres,
-setting the environment variables, and verifying the result. It becomes a submission link only once
-`/api/health` responds and the remote suite reports 69/0; until then the live deployment is the
-Specific URL above.
+The original deployment remains live as the **backup**: <https://white-whale.spcf.app> — Specific
+project `oyevolve`, environment `prod`, active deployment `depl_02f4368hqt4n86q6`, verified at
+**69 passed / 0 failed** before the Vercel target took over. The two share the AI and storage
+integration keys but have separate databases and separate session secrets, so breaking one never
+affects the other.
+[docs/VERCEL_DEPLOYMENT_RUNBOOK.md](docs/VERCEL_DEPLOYMENT_RUNBOOK.md) documents the Vercel target end
+to end: the Postgres integration, the environment variables, the build traps worth knowing about (the
+first-deploy database failure, the `SELF_SIGNED_CERT_IN_CHAIN` shim, and preview builds having no
+database), and the verification gate.
 
 `specific.hcl` is the deployment spec for the **Specific** platform: a Node build, a `next start`
 service behind a public HTTPS endpoint, a managed PostgreSQL instance, a `/api/health` health check,
@@ -356,11 +361,32 @@ build fails with `Missing required environment variable DATABASE_URL`.
   use the real Gemini key or report that analysis is not configured.
 - Re-run `specific deploy` and confirm migrations are a no-op and data survives.
 - Re-run the deployed smoke test end to end:
-  `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs`. It signs up
-  throwaway learners over HTTP only and exercises HTTPS/TLS, security headers, sign-up, upload +
-  ingestion into evidence chunks, course and assessment analysis against the live provider, mastery,
-  revision, cross-learner isolation and secret non-exposure (**69 checks**), then deletes what it
-  created.
+  `npm run verify:remote -- https://oyevolve.vercel.app` (or `https://white-whale.spcf.app` for the
+  backup). It signs up throwaway learners over HTTP only and exercises HTTPS/TLS, security headers,
+  sign-up, upload + ingestion into evidence chunks, course and assessment analysis against the live
+  provider, mastery, revision, cross-learner isolation and secret non-exposure (**70 checks**), then
+  deletes what it created.
+
+## Android app
+
+Oyevolve also ships as an Android app: a **Trusted Web Activity** that opens the live site in the
+device's own browser engine. That split is the whole update story — a web change reaches every phone
+the moment it is deployed, and only the shell itself (icon, name, permissions, target API level) is
+versioned, signed and released as an APK. The app reports its own build number at launch, compares it
+against `/api/app/version`, and offers a newer APK when one exists. It never installs anything itself:
+it follows a download link and Android's installer takes over.
+
+`android/version.json` is the single source of the version, read by both Gradle and the web app. The
+shell lives in `android/` and is built by `.github/workflows/android.yml` from an `android-v<versionCode>`
+tag. `/download` is where someone who has not installed anything yet goes: it is rendered on the
+server from the same `lib/android-release.ts` the update check reads, so the build it advertises and
+the APK it links to cannot disagree with the one the app offers. It also checks whether that build's
+release has actually been published — the version file says what is current, which is not the same
+claim as "released" — and withholds the download button, saying why, until it has. Read
+[docs/ANDROID_APP_RUNBOOK.md](docs/ANDROID_APP_RUNBOOK.md) before the first release — it
+covers the signing key you must create and keep, the four repository secrets, the
+`ANDROID_APP_FINGERPRINT` that hides the browser's address bar, and an honest list of what is and is
+not verified.
 
 ## Running the Local Prototype
 

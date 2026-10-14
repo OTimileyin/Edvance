@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The only path the app shares. It holds the splash image the TWA library
+    writes before handing it to the browser as a content:// URI.
+-->
+<paths>
+    <files-path
+        name="twa_splash"
+        path="twa_splash/" />
+</paths>

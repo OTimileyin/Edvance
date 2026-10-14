@@ -1,41 +1,51 @@
 # Oyevolve — Submission Report
 
 **Date:** 2026-10-02
-**Deployment status last re-checked:** 2026-10-05
+**Deployment status last re-checked:** 2026-10-13
 **Branch:** `main`
-**Last verified commit:** `9468e85` — `chore(tooling): configure ESLint and Prettier and gate CI on them`
-**Verified at this commit:** `npm run lint` and `npm run format:check` exit 0, `npm run check` → **38 passed / 0 failed**, production build passes; the three required CI checks (`typecheck + unit tests`, `lint + formatting`, `production build`) green on PR #2. The remote suite against Specific (**69 passed / 0 failed**) and the two-deployment diff mode against the not-yet-live Vercel host (**16 passed / 53 failed**) were run at `756c4fb`.
-**Live deployment:** **https://white-whale.spcf.app** (`depl_02f4368hqt4n86q6`)
-**Status:** **OYEVOLVE — DEPLOYED AND SUBMISSION READY.** The app is live, serves HTTPS, and passed a
-remote end-to-end verification of the complete learner journey (**69 checks, 0 failures**).
+**Last verified commit:** `64b115c` — `Merge pull request #6 from OTimileyin/feat/v2-batch-upload`
+**Verified at this commit:** CI green on `main` (`lint + formatting`, `typecheck + unit tests`, `production build`, `visual regression`, `end-to-end (batch upload)`, `Supabase Preview`); the Vercel production deployment READY and serving <https://oyevolve.vercel.app>; `/api/health` → **200** (`database: ok`, ai/storage `configured`, email `not-configured`); the remote suite against Vercel → **70 passed / 0 failed**.
+**Live deployments:** **https://oyevolve.vercel.app** (Vercel, primary) · **https://white-whale.spcf.app** (Specific, backup)
+**Status:** **OYEVOLVE — DEPLOYED AND SUBMISSION READY.** The app is live on both platforms, serves
+HTTPS, and the primary passed a remote end-to-end verification of the complete learner journey
+(**70 checks, 0 failures**).
+
+> **Earlier verification record (unchanged).** At `9468e85`, `npm run lint` and `npm run format:check`
+> exited 0, `npm run check` reported **38 passed / 0 failed**, the production build passed, and the three
+> required CI checks were green on PR #2. At `756c4fb`, the remote suite reported Specific **69 passed /
+> 0 failed** and the two-deployment diff mode reported **16 passed / 53 failed** against the Vercel host —
+> which was then not yet live. That last result is historical: the host now serves the app and passes
+> 70/0.
 
 ---
 
 ## 0. Live deployment
 
-|                         |                                                                                                                                              |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **URL**                 | https://white-whale.spcf.app (managed HTTPS, HSTS)                                                                                           |
-| **Platform**            | Specific (`specific.hcl`); project `oyevolve` (`proj_0vqsej2psy3sy4tr`), environment `prod`                                                  |
-| **Active deployment**   | `depl_02f4368hqt4n86q6`                                                                                                                      |
-| **Database**            | Managed PostgreSQL; all 8 migrations applied (`schema_migrations` = 8)                                                                       |
-| **Health**              | `GET /api/health` → `200 {"status":"ok","database":"ok","integrations":{"ai":"configured","storage":"configured","email":"not-configured"}}` |
-| **Model**               | `gemini-3-flash-preview` (pinned in `specific.hcl`)                                                                                          |
-| **Remote verification** | `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` → **69 passed / 0 failed**                                 |
+|                         |                                                                                                                                                                                                     |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Primary URL**         | https://oyevolve.vercel.app (Vercel, managed HTTPS)                                                                                                                                                 |
+| **Backup URL**          | https://white-whale.spcf.app (Specific, managed HTTPS, HSTS)                                                                                                                                        |
+| **Platform**            | Vercel, project `oyevolve` (`prj_mlviOKz6aPa1Dmqly0aGS9Iu9tEY`), production branch `main`; Specific (`specific.hcl`), project `oyevolve` (`proj_0vqsej2psy3sy4tr`), environment `prod`              |
+| **Active deployments**  | Vercel `oyevolve-1kuipdmhh` (from `main` at `64b115c`); Specific `depl_02f4368hqt4n86q6`                                                                                                            |
+| **Database**            | Two separate managed PostgreSQL instances. Vercel: all 9 migrations in `db/migrations/` applied — its build log lists `0000`–`0008` as already applied. Specific: applied by its `pre_deploy` step. |
+| **Health**              | `GET /api/health` → `200 {"status":"ok","database":"ok","integrations":{"ai":"configured","storage":"configured","email":"not-configured"}}`                                                        |
+| **Model**               | `gemini-3-flash-preview` (pinned in `specific.hcl` and the Vercel environment)                                                                                                                      |
+| **Remote verification** | `npm run verify:remote -- https://oyevolve.vercel.app` → **70 passed / 0 failed**; the Specific URL previously passed the 69-check suite                                                            |
 
-### Second deployment target — Vercel (prepared, not yet live)
+### Second deployment — Vercel (live, and now the primary)
 
-Oyevolve carries everything needed for a second, independent deployment on Vercel: `vercel.json` runs
+Oyevolve runs a second, independent deployment on Vercel: `vercel.json` runs
 `node scripts/migrate.mjs && next build`, the database URL resolves from either `DATABASE_URL` or the
 `POSTGRES_URL` that Vercel's Postgres integration injects (`lib/env.ts`, `scripts/migrate.mjs`), and
 `docs/VERCEL_DEPLOYMENT_RUNBOOK.md` documents the procedure end to end.
 
-This target is **not live, and is not a submission URL**. The Vercel project has no successful
-production deployment: its domain answers with Vercel's `DEPLOYMENT_NOT_FOUND`, and the project has
-served zero CDN requests and zero function invocations. **https://white-whale.spcf.app remains the
-live deployment.** Completing the second target needs one dashboard action — connect Vercel Postgres
-and redeploy the latest `main` — after which the same remote suite must report 69/0 before this
-report records it as live.
+This target is **live at <https://oyevolve.vercel.app>** and passed the full remote suite at
+**70 passed / 0 failed**. Its production branch is `main`, so a merge deploys without a manual step.
+Two things were needed to get there, and both are worth keeping: `lib/db-url.mjs` — the shim that
+appends `uselibpqcompat=true` to the Postgres URL — because without it the migrate step dies in
+Vercel's build sandbox with `SELF_SIGNED_CERT_IN_CHAIN`, which failed four consecutive `main` builds;
+and the Oyevolve rebrand and the rest of PR #6 landing on `main` at all. **Specific remains live as the
+backup**, not as the primary.
 
 ---
 
@@ -118,7 +128,8 @@ source.
 | Phase 6 — course intelligence     | `npm run test:intelligence`                                                       | **59 passed / 0 failed**                                                                                                                                                  |
 | Phase 5.6 — ingestion             | `npm run test:ingestion`                                                          | **91 passed / 0 failed**                                                                                                                                                  |
 | Live provider                     | `node scripts/verify-gemini-live.mjs`                                             | **34 passed / 0 failed** (`gemini-3.5-flash`)                                                                                                                             |
-| **Remote (deployed)**             | `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` | **69 passed / 0 failed** (`gemini-3-flash-preview`)                                                                                                                       |
+| **Remote (deployed) — Vercel**    | `npm run verify:remote -- https://oyevolve.vercel.app`                            | **70 passed / 0 failed** (`gemini-3-flash-preview`, primary, at `64b115c`)                                                                                                |
+| **Remote (deployed) — Specific**  | `BASE_URL=https://white-whale.spcf.app node scripts/verify-remote-deployment.mjs` | **69 passed / 0 failed** (`gemini-3-flash-preview`; the backup, recorded before the Vercel target took over)                                                              |
 | Production build                  | `infisical run --env=dev -- npx next build`                                       | **passes** (13 static pages)                                                                                                                                              |
 | Production build (no env)         | `npx next build` with only the `specific.hcl` build args                          | **passes** — the env-free builder succeeds                                                                                                                                |
 | Secret scan                       | `infisical scan --redact`                                                         | **no leaks found**                                                                                                                                                        |
@@ -219,11 +230,13 @@ Two deployment facts are worth recording:
 The operator can manage the deployment (logs, metrics, secrets, database) from
 https://dashboard.specific.dev.
 
-A second target, **Vercel**, is prepared but not live (see §0). Its build command applies migrations
-the same way, and `scripts/verify-remote-deployment.mjs --diff <urlA> <urlB>` — or
+A second target, **Vercel**, is live at <https://oyevolve.vercel.app> and is now the primary
+deployment (see §0). Its build command applies migrations the same way, and
+`scripts/verify-remote-deployment.mjs --diff <urlA> <urlB>` — or
 `npm run verify:remote:diff -- <urlA> <urlB>` — reports check by check which of two deployments
-agree. Run against the not-yet-live Vercel host it currently reports **16 passed / 53 failed**
-against Specific's **69 / 0**, every difference downstream of no deployment being served.
+agree. It is the natural way to confirm the two still behave identically: while the Vercel host served
+nothing it reported **16 passed / 53 failed** against Specific's **69 / 0**, every difference
+downstream of no deployment being served — a result that no longer describes either host.
 
 ## 7. How to run it
 
@@ -246,7 +259,8 @@ BASE_URL=http://localhost:3260 npm run test:hardening   # and :revision, :master
 
 Oyevolve is **deployed and submission ready**: every claimed capability is implemented and verified —
 by automated suites, a live provider run, and a remote end-to-end verification of the running
-application over HTTPS (69 checks, 0 failures) — and the product is honest about its limits. The one
+application over HTTPS (70 checks, 0 failures, against the primary Vercel deployment) — and the
+product is honest about its limits. The one
 operational caveat is the Gemini free tier's 20 requests/day/model cap, which the deployment
 surfaces as an honest retryable failure rather than a crash or a fabricated result.
 

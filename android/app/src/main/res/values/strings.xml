@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appName" translatable="false">Oyevolve</string>
+    <string name="launcherName" translatable="false">Oyevolve</string>
+
+    <!--
+        The origin this shell opens. It must match the host whose
+        /.well-known/assetlinks.json lists this app's signing certificate — the
+        site serves that file from its own route, so the two cannot drift.
+    -->
+    <string name="hostName" translatable="false">oyevolve.vercel.app</string>
+
+    <!--
+        The launch URL, without the identity query string: LauncherActivity
+        appends `app` and `v` at launch time from the build's own version code.
+    -->
+    <string name="launchUrl" translatable="false">https://oyevolve.vercel.app/</string>
+
+    <string name="webManifestUrl" translatable="false">https://oyevolve.vercel.app/manifest.webmanifest</string>
+
+    <string name="providerAuthority" translatable="false">app.oyevolve.mobile.fileprovider</string>
+    <string name="generatorApp" translatable="false">oyevolve-android</string>
+
+    <!--
+        `customtabs` is the fallback when no TWA-capable browser is installed:
+        the site opens in a Custom Tab, with browser UI, instead of in a WebView
+        this project would then have to keep patched.
+    -->
+    <string name="fallbackType" translatable="false">customtabs</string>
+
+    <string name="orientation" translatable="false">any</string>
+
+    <integer name="splashScreenFadeOutDuration">300</integer>
+
+    <!--
+        The site-to-app Digital Asset Links statement: it names the origin this
+        app is allowed to hand URLs to. The app-to-site direction — the one that
+        hides the address bar — is served by the site itself at
+        /.well-known/assetlinks.json, because it has to name the signing
+        certificate and only the deployment knows that.
+    -->
+    <string name="assetStatements" translatable="false">
+        [{
+            \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+            \"target\": {
+                \"namespace\": \"web\",
+                \"site\": \"https://oyevolve.vercel.app\"
+            }
+        }]
+    </string>
+</resources>

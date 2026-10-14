@@ -26,3 +26,11 @@ CLAUDE.md
 # `npx claude-code-templates --skill …`). Not this project's source, so they
 # must not fail the formatting gate.
 .claude/
+
+# The Android shell is a Gradle/Java/XML project, not web source. Prettier has
+# no parser for .gradle, .java, .xml, .properties or .jar, so it is kept out of
+# the web formatting gate on purpose: Android Studio's formatter is the
+# convention there. The one file the web app also reads, android/version.json,
+# is still covered — `tsc` resolves it at build time and fails if it stops being
+# valid JSON.
+android/
