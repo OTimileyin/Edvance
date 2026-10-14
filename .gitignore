@@ -58,3 +58,6 @@ test-results/
 # exist only so that a keystore generated here by mistake cannot be committed.
 *.keystore
 *.jks
+
+# Video project capture credentials — never commit
+**/.capture-credentials.json
