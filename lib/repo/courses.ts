@@ -844,6 +844,49 @@ export async function getCourse(userId: string, courseId: string): Promise<Cours
   return course;
 }
 
+/** Small polling response used while one upload batch is being extracted. */
+export async function getMaterialIngestionStatuses(
+  userId: string,
+  courseId: string,
+  materialIds: string[],
+): Promise<{
+  materials: Pick<SourceItem, "id" | "queued" | "ingestion">[];
+  analysisStatus: AnalysisStatus | null;
+}> {
+  const { rows } = await pool.query<{
+    id: string;
+    ingestion_status: IngestionStatus | null;
+    chunk_count: number;
+    queued: boolean;
+    analysis_status: AnalysisStatus | null;
+  }>(
+    `select m.id, j.status as ingestion_status, ca.status as analysis_status,
+            (select count(*)::int from material_chunk ch where ch.material_id = m.id) as chunk_count,
+            exists (select 1 from work_job w
+                     where w.target_id = m.id and w.kind = 'ingest'
+                       and w.status in ('pending', 'running')) as queued
+       from learning_material m
+       join course c on c.id = m.course_id and c.user_id = $2
+       left join course_analysis ca on ca.course_id = c.id
+       left join lateral (
+         select status from material_ingestion_job
+          where material_id = m.id order by created_at desc limit 1
+       ) j on true
+      where m.course_id = $1 and m.id = any($3::text[])`,
+    [courseId, userId, materialIds],
+  );
+  return {
+    materials: rows.map((row) => ({
+      id: row.id,
+      queued: row.queued,
+      ingestion: row.ingestion_status
+        ? { status: row.ingestion_status, chunkCount: Number(row.chunk_count) }
+        : null,
+    })),
+    analysisStatus: rows[0]?.analysis_status ?? null,
+  };
+}
+
 export async function createCourse(
   userId: string,
   input: { name: string; institution: string; lesson: string },
