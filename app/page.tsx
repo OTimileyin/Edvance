@@ -426,7 +426,7 @@ const questions = [
     tone: "var(--rust-600)",
     icon: masteryIcon,
     title: "What have I not mastered yet?",
-    text: "Concepts scored by evidence, so the next revision is obvious.",
+    text: "Concept mastery from your recorded practice, with a clear next revision step.",
   },
 ];
 
@@ -454,7 +454,7 @@ export default function Home() {
               <p className="hero-lede">
                 Oyevolve connects each assessment question to the exact lecture, slide, transcript,
                 and note where the answer was taught — flags where your materials disagree — and
-                scores what you have and haven&rsquo;t mastered.
+                tracks mastery from your recorded practice.
               </p>
               <div className="cta-row">
                 <Link className="btn btn-primary" href="/signup">
@@ -466,13 +466,13 @@ export default function Home() {
                 <InstallButton />
               </div>
               <p className="hero-note">
-                Evidence-first · every citation checked before it is stored
+                Evidence-first · citation IDs verified against supplied sources before saving
               </p>
             </div>
 
             <div className="poster-art">
               <PosterScene />
-              <span className="poster-tag">Evidence checked · 6 sources</span>
+              <span className="poster-tag">Illustrative example · 6 sources</span>
             </div>
 
             <div className="poster-aside">
@@ -589,8 +589,8 @@ export default function Home() {
             <p className="kicker">How it works</p>
             <h2 id="h-heading">From a blank workspace to a list worth revising</h2>
             <p className="lede-quiet">
-              Six steps, each producing evidence the next one builds on. Nothing is inferred that
-              the material doesn&rsquo;t actually support.
+              Six steps, starting with your materials and recorded practice. Follow citation links
+              to review the sources behind the AI&rsquo;s interpretations.
             </p>
             <ol className="step-chips">
               {steps.map((step) => (
@@ -602,7 +602,7 @@ export default function Home() {
                 Create your workspace
               </Link>
               <Link className="btn btn-secondary" href="/signin">
-                Explore the demo
+                Sign in
               </Link>
             </div>
           </div>
@@ -621,13 +621,14 @@ export default function Home() {
                 Everything you use is <strong>real</strong>: accounts and sessions (Better Auth over
                 PostgreSQL), private file storage, text extraction, AI course and assessment
                 analysis, practice-based mastery, and targeted revision. Analysis runs only when you
-                ask for it, and the model is called from the server alone. Seeded demo workspaces
-                are clearly labelled and are replaced by your own materials.
+                ask for it, and the model is called from the server alone. New accounts start with
+                an empty workspace. Citation IDs are verified against supplied sources; the AI&rsquo;s
+                interpretations still need your review.
               </p>
             </div>
             <div className="cta-row" style={{ marginTop: "var(--space-8)" }}>
               <Link className="btn btn-coral" href="/signin">
-                Try the demo
+                Sign in
               </Link>
               <Link className="btn btn-ghost" href="/signup">
                 Create an account
@@ -637,8 +638,8 @@ export default function Home() {
           <div className="stamp" aria-hidden="true">
             Evidence
             <br />
-            checked
-            <br />· no gaps ·
+            linked
+            <br />· keep learning ·
           </div>
         </div>
       </section>

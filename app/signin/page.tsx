@@ -71,35 +71,6 @@ export default function SignInPage() {
     navigate();
   }
 
-  async function handleDemo() {
-    setBusy(true);
-    setError("");
-    // The shared demo account is provisioned on the fly. Sign in first and
-    // only create the account when it is missing — signing up first returned
-    // 422 on every repeat visit once the account already existed.
-    let result = await authClient.signIn.email({
-      email: "demo@oyevolve.app",
-      password: "demo-password-123",
-    });
-    if (result.error) {
-      await authClient.signUp.email({
-        name: "Demo learner",
-        email: "demo@oyevolve.app",
-        password: "demo-password-123",
-      });
-      result = await authClient.signIn.email({
-        email: "demo@oyevolve.app",
-        password: "demo-password-123",
-      });
-    }
-    setBusy(false);
-    if (result.error) {
-      setError(result.error.message ?? "Demo sign-in failed. Try again.");
-      return;
-    }
-    navigate();
-  }
-
   return (
     <div className="auth-split">
       <AuthForest />
@@ -141,14 +112,6 @@ export default function SignInPage() {
             ) : null}
             <button className="btn btn-primary" type="submit" disabled={busy}>
               {busy ? "Signing in…" : "Sign in"}
-            </button>
-            <button
-              className="btn btn-secondary"
-              type="button"
-              onClick={handleDemo}
-              disabled={busy}
-            >
-              Continue with a demo account
             </button>
           </form>
           <p className="auth-alt">
