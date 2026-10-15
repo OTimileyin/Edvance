@@ -4,10 +4,7 @@ import { getMaterialIngestionStatuses, ownsCourse } from "@/lib/repo/courses";
 
 const MAX_BATCH_FILES = 10;
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ courseId: string }> },
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ courseId: string }> }) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

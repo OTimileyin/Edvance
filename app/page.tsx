@@ -622,8 +622,8 @@ export default function Home() {
                 PostgreSQL), private file storage, text extraction, AI course and assessment
                 analysis, practice-based mastery, and targeted revision. Analysis runs only when you
                 ask for it, and the model is called from the server alone. New accounts start with
-                an empty workspace. Citation IDs are verified against supplied sources; the AI&rsquo;s
-                interpretations still need your review.
+                an empty workspace. Citation IDs are verified against supplied sources; the
+                AI&rsquo;s interpretations still need your review.
               </p>
             </div>
             <div className="cta-row" style={{ marginTop: "var(--space-8)" }}>

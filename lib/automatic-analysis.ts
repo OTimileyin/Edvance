@@ -22,8 +22,7 @@ export function batchReadiness(materialIds: string[], sources: SourceItem[]): Ba
   }
 
   return selected.some(
-    (source) =>
-      source.ingestion?.status === "completed" && (source.ingestion.chunkCount ?? 0) > 0,
+    (source) => source.ingestion?.status === "completed" && (source.ingestion.chunkCount ?? 0) > 0,
   )
     ? "ready"
     : "unreadable";

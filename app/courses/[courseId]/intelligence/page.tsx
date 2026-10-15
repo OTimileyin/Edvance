@@ -168,8 +168,8 @@ export default function CourseIntelligencePage() {
             </button>
           </p>
           <p className="form-hint">
-            New uploads are analysed automatically after they have been read. Use this button to
-            run the analysis again.
+            New uploads are analysed automatically after they have been read. Use this button to run
+            the analysis again.
           </p>
         </div>
       </section>
