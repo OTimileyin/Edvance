@@ -42,12 +42,15 @@ export default function PrivacyPage() {
       <section className="section">
         <h2 className="section-heading">How your content is used</h2>
         <p>
-          Course analysis sends only the evidence your own materials produced to the configured AI
-          provider, and only when you explicitly ask for it. Nothing is analysed automatically.
-          Reading a file you upload — extracting its text and locating it for citations — does
-          happen automatically on Oyevolve&rsquo;s servers once the upload is stored, and it stays
-          inside Oyevolve: the provider is reached only by the analysis you ask for. Source
-          citations are validated before anything is stored, and raw model output is never kept.
+          Course analysis runs automatically after an uploaded batch has finished reading, and you
+          can also request it again. Analysis sends the configured AI provider the course name,
+          lesson, evidence chunks extracted from your materials, and existing concept IDs, names,
+          and definitions, including archived concepts. Reading a file you upload — extracting its
+          text and locating it for citations — does happen automatically on Oyevolve&rsquo;s servers
+          once the upload is stored, and it stays inside Oyevolve until analysis sends its inputs to
+          the provider. Citation IDs are checked against the evidence supplied for analysis before
+          results are saved; model interpretations still need your review. Raw model output is not
+          retained.
         </p>
       </section>
 

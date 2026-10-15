@@ -4,6 +4,7 @@ import { pool } from "@/lib/db";
 import { SEED_COURSES, seedExtractionMetadata, type SeedSource } from "@/lib/data";
 import { chunkBlocks } from "@/lib/extraction";
 import { deriveMastery } from "@/lib/mastery";
+import { normaliseConceptName, resolveConceptIds } from "@/lib/ai/concept-identity";
 import {
   buildRevisionFocus,
   buildRevisionNextAction,
@@ -354,7 +355,7 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
          from concept c
          left join mastery_state m
            on m.concept_id = c.id and m.user_id = $2
-        where c.course_id = any($1::text[])
+         where c.course_id = any($1::text[]) and c.archived_at is null
         order by c.ordinal asc, c.name asc`,
       [ids, userId],
     ),
@@ -391,7 +392,7 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
     pool.query<CourseConceptRow>(
       `select id, course_id, name, instructor_term, definition, evidence_status, confidence
          from concept
-        where course_id = any($1::text[]) and origin = 'analysis'
+         where course_id = any($1::text[]) and origin = 'analysis' and archived_at is null
         order by ordinal asc, name asc`,
       [ids],
     ),
@@ -413,7 +414,7 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
       `select m.assessment_question_id, m.concept_id, m.material_id, m.source_location
          from source_mapping m
          join assessment_question q on q.id = m.assessment_question_id
-        where q.course_id = any($1::text[])
+         where q.course_id = any($1::text[])
         order by m.id asc`,
       [ids],
     ),
@@ -439,9 +440,10 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
               q.question_text, q.rationale, m.title as material_title,
               q.source_location, q.created_at
          from practice_question q
-         left join concept c on c.id = q.concept_id
-         left join learning_material m on m.id = q.source_material_id
-        where q.course_id = any($1::text[])
+          left join concept c on c.id = q.concept_id
+          left join learning_material m on m.id = q.source_material_id
+         where q.course_id = any($1::text[])
+           and (q.concept_id is null or c.archived_at is null)
         order by q.created_at asc, q.id asc`,
       [ids],
     ),
@@ -463,8 +465,9 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
               cf.name as from_name, ct.name as to_name, r.kind, r.justification
          from concept_relationship r
          join concept cf on cf.id = r.from_concept_id
-         join concept ct on ct.id = r.to_concept_id
-        where r.course_id = any($1::text[])
+          join concept ct on ct.id = r.to_concept_id
+         where r.course_id = any($1::text[])
+           and cf.archived_at is null and ct.archived_at is null
         order by r.created_at asc`,
       [ids],
     ),
@@ -617,10 +620,14 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
   }
 
   const conceptsByQuestion = new Map<string, CourseConcept[]>();
+  const questionsWithInactiveMappings = new Set<string>();
   for (const row of mappings.rows) {
     if (!row.concept_id) continue;
     const concept = conceptById.get(row.concept_id);
-    if (!concept) continue;
+    if (!concept) {
+      questionsWithInactiveMappings.add(row.assessment_question_id);
+      continue;
+    }
     const list = conceptsByQuestion.get(row.assessment_question_id) ?? [];
     if (!list.some((entry) => entry.id === concept.id)) list.push(concept);
     conceptsByQuestion.set(row.assessment_question_id, list);
@@ -675,6 +682,7 @@ async function hydrate(userId: string, courseRows: CourseRow[]): Promise<Course[
           conceptsByQuestion.get(item.id) ?? [],
           fingerprint,
           intelligence.status,
+          questionsWithInactiveMappings.has(item.id),
         ),
       })),
       consistency: consistencyByCourse.get(row.id) ?? DEFAULT_CONSISTENCY,
@@ -751,13 +759,16 @@ function mapSignature(
   concepts: CourseConcept[],
   currentFingerprint: string,
   courseStatus: AnalysisStatus,
+  hasInactiveMappings: boolean,
 ): AssessmentSignature {
   if (!row) return { ...DEFAULT_SIGNATURE, concepts };
 
   let status = row.status as AnalysisStatus;
   if (
     (status === "ready" || status === "insufficient-evidence") &&
-    (row.evidence_fingerprint !== currentFingerprint || courseStatus === "needs-reanalysis")
+    (row.evidence_fingerprint !== currentFingerprint ||
+      courseStatus === "needs-reanalysis" ||
+      hasInactiveMappings)
   ) {
     status = "needs-reanalysis";
   }
@@ -768,7 +779,9 @@ function mapSignature(
     errorSummary: row.error_summary,
     consistency: consistencyFromStatus(finding?.status),
     reason: finding?.description ?? DEFAULT_SIGNATURE.reason,
-    nextAction: finding?.next_action ?? DEFAULT_SIGNATURE.nextAction,
+    nextAction: hasInactiveMappings
+      ? "Course concepts changed. Re-check this question against the current course analysis."
+      : (finding?.next_action ?? DEFAULT_SIGNATURE.nextAction),
     analyzedAt: row.analyzed_at ? row.analyzed_at.toISOString() : null,
     provider: row.provider_metadata ?? null,
     concepts,
@@ -829,6 +842,49 @@ export async function getCourse(userId: string, courseId: string): Promise<Cours
   );
   const [course] = await hydrate(userId, rows);
   return course;
+}
+
+/** Small polling response used while one upload batch is being extracted. */
+export async function getMaterialIngestionStatuses(
+  userId: string,
+  courseId: string,
+  materialIds: string[],
+): Promise<{
+  materials: Pick<SourceItem, "id" | "queued" | "ingestion">[];
+  analysisStatus: AnalysisStatus | null;
+}> {
+  const { rows } = await pool.query<{
+    id: string;
+    ingestion_status: IngestionStatus | null;
+    chunk_count: number;
+    queued: boolean;
+    analysis_status: AnalysisStatus | null;
+  }>(
+    `select m.id, j.status as ingestion_status, ca.status as analysis_status,
+            (select count(*)::int from material_chunk ch where ch.material_id = m.id) as chunk_count,
+            exists (select 1 from work_job w
+                     where w.target_id = m.id and w.kind = 'ingest'
+                       and w.status in ('pending', 'running')) as queued
+       from learning_material m
+       join course c on c.id = m.course_id and c.user_id = $2
+       left join course_analysis ca on ca.course_id = c.id
+       left join lateral (
+         select status from material_ingestion_job
+          where material_id = m.id order by created_at desc limit 1
+       ) j on true
+      where m.course_id = $1 and m.id = any($3::text[])`,
+    [courseId, userId, materialIds],
+  );
+  return {
+    materials: rows.map((row) => ({
+      id: row.id,
+      queued: row.queued,
+      ingestion: row.ingestion_status
+        ? { status: row.ingestion_status, chunkCount: Number(row.chunk_count) }
+        : null,
+    })),
+    analysisStatus: rows[0]?.analysis_status ?? null,
+  };
 }
 
 export async function createCourse(
@@ -1631,7 +1687,9 @@ export async function getConceptEvidenceChunks(
        join material_chunk ch on ch.id = e.chunk_id
        join learning_material m on m.id = ch.material_id
        join course c on c.id = m.course_id
+       join concept co on co.id = e.concept_id and co.course_id = c.id
       where c.id = $1 and c.user_id = $2 and e.concept_id = any($3::text[])
+        and co.archived_at is null
       order by m.uploaded_at asc, ch.ordinal asc`,
     [courseId, userId, conceptIds],
   );
@@ -1761,6 +1819,22 @@ export async function failCourseAnalysis(
   );
 }
 
+/** Include archived identities so a returning concept regains its practice history. */
+export async function getExistingConcepts(userId: string, courseId: string) {
+  const { rows } = await pool.query<{
+    id: string;
+    name: string;
+    instructorTerm: string | null;
+    definition: string | null;
+  }>(
+    `select c.id, c.name, c.instructor_term as "instructorTerm", c.definition
+       from concept c join course co on co.id = c.course_id
+      where co.id = $1 and co.user_id = $2 order by c.ordinal, c.id`,
+    [courseId, userId],
+  );
+  return rows;
+}
+
 export type IntelligenceToSave = {
   status: "ready" | "insufficient-evidence";
   concepts: AnalyzedConcept[];
@@ -1768,17 +1842,12 @@ export type IntelligenceToSave = {
   usage: AiUsage;
 };
 
-function normaliseConceptName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, " ").trim();
-}
-
 /**
  * Replaces a course's intelligence with a freshly validated result, in one
  * transaction.
  *
- * The course's existing concepts — including the demo concepts seeded for a new
- * workspace — are removed first, so after a real analysis a learner only ever
- * sees concepts their own materials taught. Every evidence row is resolved
+ * Existing identities are updated and omitted concepts archived. Mastery and
+ * practice are never deleted. Every evidence row is resolved
  * against the exact evidence that was sent to the model: a cited chunk that did
  * not exist, or belonged to another course, simply has no stored row to attach
  * to and is dropped rather than persisted.
@@ -1793,19 +1862,37 @@ export async function saveCourseIntelligence(
   const client = await pool.connect();
   try {
     await client.query("begin");
+    // Serialize replacements for this course and validate IDs again at the DB boundary.
+    await client.query("select id from course where id = $1 for update", [courseId]);
+    const { rows: existing } = await client.query<{ id: string; name: string }>(
+      "select id, name from concept where course_id = $1",
+      [courseId],
+    );
+    const resolvedConcepts = resolveConceptIds(result.concepts, existing);
+    const retainedIds = resolvedConcepts.flatMap((concept) => (concept.id ? [concept.id] : []));
     await client.query("delete from concept_relationship where course_id = $1", [courseId]);
-    await client.query("delete from concept where course_id = $1", [courseId]);
+    await client.query(
+      `update concept set archived_at = coalesce(archived_at, now())
+        where course_id = $1 and not (id = any($2::text[]))`,
+      [courseId, retainedIds],
+    );
 
     const idByName = new Map<string, string>();
     let ordinal = 0;
-    for (const concept of result.concepts) {
-      const conceptId = newId("concept");
+    for (const concept of resolvedConcepts) {
+      const conceptId = concept.id ?? newId("concept");
       idByName.set(normaliseConceptName(concept.name), conceptId);
       await client.query(
         `insert into concept
            (id, course_id, name, instructor_term, definition, source_reference,
             ordinal, origin, evidence_status, confidence)
-         values ($1, $2, $3, $4, $5, $6, $7, 'analysis', $8, $9)`,
+          values ($1, $2, $3, $4, $5, $6, $7, 'analysis', $8, $9)
+          on conflict (id) do update set
+            name = excluded.name, instructor_term = excluded.instructor_term,
+            definition = excluded.definition, source_reference = excluded.source_reference,
+            ordinal = excluded.ordinal, origin = 'analysis',
+            evidence_status = excluded.evidence_status, confidence = excluded.confidence,
+            archived_at = null`,
         [
           conceptId,
           courseId,
@@ -1819,6 +1906,8 @@ export async function saveCourseIntelligence(
         ],
       );
       ordinal += 1;
+
+      await client.query("delete from concept_evidence where concept_id = $1", [conceptId]);
 
       for (const reference of concept.evidence) {
         const chunk = chunkById.get(reference.chunkId);
@@ -2103,11 +2192,9 @@ async function backfillSeedEvidence(client: PoolClient, userId: string): Promise
 }
 
 /**
- * Seeds a brand-new learner with the demo workspaces so their first visit is
- * never empty. Idempotent and concurrency-safe: it takes a per-user advisory
- * lock, re-checks that the learner still has no courses, and writes everything
- * in one transaction. Real ingestion (Phase 5) replaces this with materials the
- * learner uploads.
+ * Retained demo seeder; intentionally unused by application routes and layouts.
+ * Idempotent and concurrency-safe: it takes a per-user advisory lock, re-checks
+ * whether the learner has courses, and writes everything in one transaction.
  *
  * Every demo source is stored with the evidence the extraction pipeline would
  * have produced for it, so a demo course can actually be analysed — while the

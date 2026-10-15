@@ -2,10 +2,8 @@ import type { ExtractedBlock, SourceLocationType } from "./extraction/types";
 import type { Course, IngestionMetadata, SourceItem } from "./types";
 
 /**
- * Demo seed content. Phase 4 moved course storage into PostgreSQL, so this is
- * no longer read by the UI: it is the dataset the repository inserts the first
- * time a learner opens their workspace. Real ingestion (Phase 5) will replace
- * it with materials the learner actually uploads.
+ * Retained demo seed content. Automatic seeding is disabled: new accounts start
+ * with no courses. This dataset is available for an explicit future demo flow.
  */
 /**
  * Demo workspaces have no real intelligence: nothing has been analysed, and

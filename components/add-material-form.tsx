@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { uploadMaterialWithProgress } from "@/lib/useCourses";
+import { queueAutomaticAnalysis } from "@/lib/automatic-analysis";
 import {
   MAX_FILES_PER_UPLOAD,
   MAX_MATERIAL_BYTES,
@@ -71,6 +72,7 @@ export function AddMaterialForm({ courseId, onAdded }: { courseId: string; onAdd
   // A file may only start once its place on the device has been decided, so a
   // reload can never find a file marked "queued" whose request was already sent.
   const settled = useRef(new Set<string>());
+  const uploadedMaterialIds = useRef<string[]>([]);
   const restoredCourses = useRef(new Set<string>());
 
   const [batch, setBatch] = useState<BatchFile[]>([]);
@@ -168,6 +170,15 @@ export function AddMaterialForm({ courseId, onAdded }: { courseId: string; onAdd
     };
   }, [courseId]);
 
+  // Once every accepted file in this upload batch has reached a terminal
+  // upload state, wait for its extraction jobs and analyse the course once.
+  useEffect(() => {
+    const busy = batch.some((entry) => entry.state === "waiting" || entry.state === "uploading");
+    if (busy || uploadedMaterialIds.current.length === 0) return;
+    const materialIds = uploadedMaterialIds.current.splice(0);
+    queueAutomaticAnalysis(courseId, materialIds);
+  }, [batch, courseId]);
+
   // The pump: whoever can start, starts. Running after every change is what
   // keeps `UPLOAD_CONCURRENCY` files in flight until the batch drains.
   useEffect(() => {
@@ -188,7 +199,8 @@ export function AddMaterialForm({ courseId, onAdded }: { courseId: string; onAdd
       uploadMaterialWithProgress(courseId, file, (percent) =>
         setBatch((current) => markProgress(current, id, percent)),
       )
-        .then(() => {
+        .then((material) => {
+          uploadedMaterialIds.current.push(material.id);
           filesById.current.delete(id);
           setBatch((current) => markDone(current, id));
           void forgetUploads(courseId, [id]);

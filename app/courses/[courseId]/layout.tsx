@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
+import { CourseAutoAnalysisStatus } from "@/components/course-auto-analysis-status";
 import { SessionGuard } from "@/components/session-guard";
 import { useCourse } from "@/lib/useCourses";
 
@@ -84,7 +85,10 @@ function WorkspaceShell({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
-        <div className="workspace-content">{children}</div>
+        <div className="workspace-content">
+          <CourseAutoAnalysisStatus courseId={course.id} />
+          {children}
+        </div>
       </div>
     </>
   );

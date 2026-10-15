@@ -15,7 +15,7 @@ import { AiProviderError, type AiRequest, type AiResponse, type EvidenceChunk } 
  * can never answer a real learner in production.
  */
 
-const DEFAULT_MODEL = "gemini-flash-latest";
+const DEFAULT_MODEL = "gemini-3.6-flash";
 
 /** The model id, overridable so a deployment can pin a specific version. */
 export function aiModelName(): string {
@@ -140,7 +140,31 @@ async function requestOnce(apiKey: string, model: string, request: AiRequest): P
  * user-safe summary; the raw provider error is never surfaced to a learner.
  */
 export async function generateStructured(request: AiRequest): Promise<AiResponse> {
-  if (isMockProvider()) return mockGenerate(request);
+  if (isMockProvider()) {
+    const response = mockGenerate(request);
+    if ((request.kind ?? "course") === "course") {
+      // Keep the test provider on the same identity contract as Gemini.
+      try {
+        const output = JSON.parse(response.text);
+        for (const concept of output.concepts ?? []) {
+          if (request.mockScenario === "null-concept-ids") {
+            concept.id = null;
+            concept.name = `  ${concept.name.toUpperCase().replace(/\s+/g, " \t ")}  `;
+            continue;
+          }
+          concept.id =
+            request.existingConcepts?.find(
+              (existing) =>
+                existing.name.toLowerCase().trim() === concept.name.toLowerCase().trim(),
+            )?.id ?? null;
+        }
+        response.text = JSON.stringify(output);
+      } catch {
+        /* Malformed-output scenarios must still reach the validator. */
+      }
+    }
+    return response;
+  }
 
   const apiKey = optionalEnv("GEMINI_API_KEY");
   if (!apiKey) {

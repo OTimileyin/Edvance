@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { analyseCourse, useCourse } from "@/lib/useCourses";
 import type { AnalysisStatus, EvidenceStatus } from "@/lib/types";
@@ -12,7 +12,8 @@ import type { AnalysisStatus, EvidenceStatus } from "@/lib/types";
  * Every concept here was extracted from real evidence chunks, and every piece
  * of evidence links back to a real material and location. When the course has
  * not been analysed, or the evidence is too thin, the page says so rather than
- * guessing. Analysis only ever starts from the button on this page.
+ * guessing. New uploaded batches are analysed automatically after extraction;
+ * the button below can also start a manual re-analysis.
  */
 
 const ANALYSIS_LABELS: Record<AnalysisStatus, { label: string; className: string }> = {
@@ -56,6 +57,15 @@ export default function CourseIntelligencePage() {
   const { course, ready, reload } = useCourse(params.courseId);
   const [analysing, setAnalysing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    function onStatus(event: Event) {
+      const detail = (event as CustomEvent<{ courseId: string; state: string }>).detail;
+      if (detail?.courseId === params.courseId && detail.state === "ready") void reload();
+    }
+    window.addEventListener("oyevolve:auto-analysis", onStatus);
+    return () => window.removeEventListener("oyevolve:auto-analysis", onStatus);
+  }, [params.courseId, reload]);
 
   if (!ready) return null;
   if (!course) return null;
@@ -158,7 +168,8 @@ export default function CourseIntelligencePage() {
             </button>
           </p>
           <p className="form-hint">
-            Analysis runs only when you ask for it, and only over the evidence you have uploaded.
+            New uploads are analysed automatically after they have been read. Use this button to run
+            the analysis again.
           </p>
         </div>
       </section>

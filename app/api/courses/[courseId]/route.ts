@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/api-session";
 import { rateLimit } from "@/lib/api-rate-limit";
 import { RATE_LIMITS } from "@/lib/rate-limit";
-import { deleteCourse, ensureSeeded, getCourse, updateCourse } from "@/lib/repo/courses";
+import { deleteCourse, getCourse, updateCourse } from "@/lib/repo/courses";
 import { queueState } from "@/lib/jobs/policy";
 import { listQueuedJobs } from "@/lib/repo/jobs";
 import { deleteObject } from "@/lib/supabase-storage";
@@ -17,7 +17,6 @@ export async function GET(
   }
 
   const { courseId } = await params;
-  await ensureSeeded(user.id);
   const course = await getCourse(user.id, courseId);
   if (!course) {
     return NextResponse.json({ error: "Course not found." }, { status: 404 });

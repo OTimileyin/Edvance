@@ -10,6 +10,7 @@ import {
   failCourseAnalysis,
   getCourse,
   getCourseEvidence,
+  getExistingConcepts,
   markCourseAnalysisAnalyzing,
   saveCourseIntelligence,
 } from "@/lib/repo/courses";
@@ -98,10 +99,12 @@ export async function POST(
   await markCourseAnalysisAnalyzing(courseId, fingerprint);
 
   try {
+    const existingConcepts = await getExistingConcepts(user.id, courseId);
     const result = await analyseCourseEvidence({
       courseName: course.name,
       lesson: course.lesson,
       evidence,
+      existingConcepts,
       mockScenario,
     });
     await saveCourseIntelligence(courseId, fingerprint, result, evidence);

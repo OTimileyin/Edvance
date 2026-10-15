@@ -26,6 +26,11 @@ export type AiRequestKind = "course" | "assessment" | "revision";
 /** One analysed concept, as the deterministic provider sees it. */
 export type AiConceptInput = { id: string; name: string };
 
+export type ExistingConcept = AiConceptInput & {
+  instructorTerm: string | null;
+  definition: string | null;
+};
+
 /** A structured generation request handed to the provider. */
 export type AiRequest = {
   /** Defaults to `course` when absent. */
@@ -38,6 +43,7 @@ export type AiRequest = {
   evidence: EvidenceChunk[];
   /** Assessment/revision requests: the analysed concepts the prompt offered. */
   concepts?: AiConceptInput[];
+  existingConcepts?: ExistingConcept[];
   /** Assessment requests only: the question being judged. */
   question?: string;
   /**
@@ -51,6 +57,7 @@ export type AiRequest = {
 /** Safe usage metadata a provider may report; never contains prompt text. */
 export type AiUsage = {
   model: string;
+  conceptIdentity?: { modelIds: number; nameFallbacks: number; newConcepts: number };
   inputTokens?: number;
   outputTokens?: number;
 };
